@@ -5,7 +5,7 @@ export function CollectionByClass({
   data,
 }: CollectionByClassProps) {
   return (
-    <div className="bg-white border border-gray-200 rounded-xl p-6">
+    <div className="bg-white border border-gray-200 rounded-xl p-6 col-span-1">
       <div className="flex items-center justify-between mb-6">
         <h3 className="text-lg font-semibold text-gray-900">
           Collection by Class

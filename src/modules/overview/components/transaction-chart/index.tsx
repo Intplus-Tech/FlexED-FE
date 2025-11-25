@@ -2,6 +2,16 @@
 
 import { ChevronDownIcon } from "@/icon/dashbaord";
 import { useState } from "react";
+import {
+  BarChart,
+  Bar,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  Legend,
+  ResponsiveContainer,
+} from "recharts";
 
 interface TransactionData {
   day: string;
@@ -20,16 +30,8 @@ export function TransactionsChart({
 }: TransactionsChartProps) {
   const [period, setPeriod] = useState("Week");
 
-  const maxValue = Math.max(
-    ...data.map((d) => Math.max(d.fullPayment, d.partPayment))
-  );
-
-  const getBarHeight = (value: number) => {
-    return (value / maxValue) * 100;
-  };
-
   return (
-    <div className="bg-white border border-gray-200 rounded-xl p-6">
+    <div className="bg-white border border-gray-200 rounded-xl p-6 col-span-2 ">
       <div className="flex items-center justify-between mb-6">
         <div>
           <h3 className="text-lg font-semibold text-gray-900 mb-1">
@@ -44,41 +46,37 @@ export function TransactionsChart({
         </button>
       </div>
 
-      <div className="relative h-64">
-        <div className="absolute inset-0 flex items-end justify-around gap-2 px-4">
-          {data.map((item, index) => (
-            <div
-              key={index}
-              className="flex-1 flex flex-col items-center gap-1"
-            >
-              <div className="w-full flex gap-1 items-end h-52">
-                <div
-                  className="flex-1 bg-green-500 rounded-t transition-all hover:opacity-80"
-                  style={{ height: `${getBarHeight(item.fullPayment)}%` }}
-                  title={`Full Payment: ₦${item.fullPayment.toLocaleString()}`}
-                />
-                <div
-                  className="flex-1 bg-orange-400 rounded-t transition-all hover:opacity-80"
-                  style={{ height: `${getBarHeight(item.partPayment)}%` }}
-                  title={`Part Payment: ₦${item.partPayment.toLocaleString()}`}
-                />
-              </div>
-              <span className="text-sm text-gray-600 mt-2">{item.day}</span>
-            </div>
-          ))}
-        </div>
-      </div>
-
-      <div className="flex items-center justify-center gap-6 mt-6 pt-4 border-t border-gray-200">
-        <div className="flex items-center gap-2">
-          <div className="w-3 h-3 rounded-full bg-green-500"></div>
-          <span className="text-sm text-gray-600">Full Payment</span>
-        </div>
-        <div className="flex items-center gap-2">
-          <div className="w-3 h-3 rounded-full bg-orange-400"></div>
-          <span className="text-sm text-gray-600">Part Payment</span>
-        </div>
-      </div>
+      <ResponsiveContainer width="100%" height={300}>
+        <BarChart
+          data={data}
+          margin={{ top: 20, right: 30, left: 0, bottom: 5 }}
+        >
+          <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
+          <XAxis dataKey="day" stroke="#666" style={{ fontSize: "12px" }} />
+          <YAxis stroke="#666" style={{ fontSize: "12px" }} />
+          <Tooltip
+            formatter={(value) => `₦${(value as number).toLocaleString()}`}
+            contentStyle={{
+              backgroundColor: "#fff",
+              border: "1px solid #ccc",
+              borderRadius: "8px",
+            }}
+          />
+          <Legend />
+          <Bar
+            dataKey="fullPayment"
+            fill="#10b981"
+            name="Full Payment"
+            radius={[8, 8, 0, 0]}
+          />
+          <Bar
+            dataKey="partPayment"
+            fill="#f97316"
+            name="Part Payment"
+            radius={[8, 8, 0, 0]}
+          />
+        </BarChart>
+      </ResponsiveContainer>
     </div>
   );
 }

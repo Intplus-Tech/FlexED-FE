@@ -66,7 +66,7 @@ export default function VerifyOtpView() {
 
   const onSubmit = (data: OTPFormData) => {
     console.log("[v0] OTP verification data:", data);
-    router.push("/");
+    router.push("/auth/sign-in");
   };
 
   const handleResendOTP = () => {
