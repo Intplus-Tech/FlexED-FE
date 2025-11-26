@@ -123,7 +123,7 @@ export default function VerifyOtpView() {
         )}
 
         <div className="text-center">
-          <span className="text-gray-500">Don't Receive the OTP ? </span>
+          <span className="text-gray-500">Don&spos;t Receive the OTP ? </span>
           <button
             type="button"
             onClick={handleResendOTP}

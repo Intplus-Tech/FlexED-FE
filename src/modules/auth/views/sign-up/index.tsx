@@ -62,7 +62,7 @@ export default function SignupView() {
       {/* Header */}
       <div className="mb-8">
         <h2 className="text-3xl font-bold text-gray-900 mb-2">
-          Let's Get Started
+          Let&apos;s Get Started
         </h2>
         <p className="text-gray-500">
           Already have an account?{" "}

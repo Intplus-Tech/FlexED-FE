@@ -126,7 +126,7 @@ export default function ResetPasswordView() {
         )}
 
         <div className="text-center">
-          <span className="text-gray-500">Don't Receive the OTP ? </span>
+          <span className="text-gray-500">Don&apos;t Receive the OTP ? </span>
           <button
             type="button"
             onClick={handleResendOTP}
