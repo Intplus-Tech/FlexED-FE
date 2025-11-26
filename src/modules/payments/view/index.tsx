@@ -5,6 +5,10 @@ import { Pagination } from "@/components/pagination";
 import { useState, useMemo } from "react";
 import { PaymentTable } from "../components/payment-table";
 import { SearchInput } from "@/components/search-input";
+import {
+  PaymentStatus,
+  PaymentStatusModal,
+} from "../components/payment-status-modal";
 
 interface PaymentRecord {
   id: string;
@@ -146,7 +150,9 @@ const ITEMS_PER_PAGE = 10;
 export default function PaymentView() {
   const [searchQuery, setSearchQuery] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
-
+  const [selectedStatus, setSelectedStatus] =
+    useState<PaymentStatus>("fully-paid");
+  const [modalOpen, setModalOpen] = useState(false);
   const filteredPayments = useMemo(() => {
     if (!searchQuery.trim()) {
       return SAMPLE_PAYMENTS;
@@ -172,6 +178,11 @@ export default function PaymentView() {
     setCurrentPage(1);
   };
 
+  const handleViewList = (status: PaymentStatus) => {
+    setSelectedStatus(status);
+    setModalOpen(true);
+  };
+
   return (
     <div className="min-h-screen bg-white">
       <div className="space-y-6 ">
@@ -183,6 +194,7 @@ export default function PaymentView() {
             amount="₦24.1M"
             amountColor="green"
             studentCount={284}
+            onClick={() => handleViewList("fully-paid")}
             viewListHref="/dashboard/payments/fully-paid"
           />
           <MetricCard
@@ -190,6 +202,7 @@ export default function PaymentView() {
             amount="₦2.3M"
             amountColor="red"
             studentCount={284}
+            onClick={() => handleViewList("partially-paid")}
             viewListHref="/dashboard/payments/partially-paid"
           />
           <MetricCard
@@ -197,6 +210,7 @@ export default function PaymentView() {
             amount="₦5.5M"
             amountColor="gray"
             studentCount={63}
+            onClick={() => handleViewList("overdue")}
             viewListHref="/dashboard/payments/overdue"
           />
         </div>
@@ -230,6 +244,11 @@ export default function PaymentView() {
           />
         )}
       </div>
+      <PaymentStatusModal
+        isOpen={modalOpen}
+        onClose={() => setModalOpen(false)}
+        status={selectedStatus}
+      />
     </div>
   );
 }
