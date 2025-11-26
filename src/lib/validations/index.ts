@@ -47,3 +47,31 @@ export const teamMemberSchema = z.object({
 });
 
 export type TeamMemberFormData = z.infer<typeof teamMemberSchema>;
+
+export const addStudentSchema = z.object({
+  studentName: z.string().min(2, "Student name must be at least 2 characters"),
+  dateOfBirth: z.string().min(1, "Date of birth is required"),
+  gender: z.enum(["male", "female"], { message: "Please select a gender" }),
+  class: z.string().min(1, "Please select a class"),
+  relationship: z.enum(["parents", "guardian"], {
+    message: "Please select a relationship",
+  }),
+  fatherName: z
+    .string()
+    .min(2, "Father/Guardian name must be at least 2 characters"),
+  fatherEmail: z.string().email("Invalid email address"),
+  fatherPhone: z
+    .string()
+    .min(10, "Phone number must be at least 10 characters"),
+  fatherAddress: z.string().min(5, "Address must be at least 5 characters"),
+  motherName: z
+    .string()
+    .min(2, "Mother/Guardian name must be at least 2 characters"),
+  motherEmail: z.string().email("Invalid email address"),
+  motherPhone: z
+    .string()
+    .min(10, "Phone number must be at least 10 characters"),
+  motherAddress: z.string().optional(),
+});
+
+export type AddStudentFormData = z.infer<typeof addStudentSchema>;

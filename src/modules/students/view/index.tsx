@@ -6,10 +6,12 @@ import { StudentTable } from "../components/student-table";
 import { Pagination } from "@/components/pagination";
 import { SearchInput } from "@/components/search-input";
 import { ChevronDownIcon, ExportIcon, FilterIcon } from "@/icon/dashbaord";
+import { AddStudentModal } from "../components/add-student";
 
 export default function StudentView() {
   const [searchQuery, setSearchQuery] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
+  const [isAddStudentOpen, setIsAddStudentOpen] = useState(false);
   const [isLoading] = useState(false);
   const itemsPerPage = 10;
 
@@ -164,7 +166,10 @@ export default function StudentView() {
       </div>
 
       <div className="flex flex-col md:flex-row gap-4 items-start md:items-center justify-between">
-        <button className="flex items-center gap-2 px-6 py-3 bg-gray-900 text-white font-medium rounded-lg hover:bg-gray-800 transition-colors">
+        <button
+          onClick={() => setIsAddStudentOpen(true)}
+          className="flex items-center gap-2 px-6 py-3 bg-gray-900 text-white font-medium rounded-lg hover:bg-gray-800 transition-colors"
+        >
           Add Student
         </button>
 
@@ -187,6 +192,11 @@ export default function StudentView() {
       </div>
 
       <StudentTable students={currentStudents} isLoading={isLoading} />
+
+      <AddStudentModal
+        isOpen={isAddStudentOpen}
+        onClose={() => setIsAddStudentOpen(false)}
+      />
 
       {!isLoading && filteredStudents.length > 0 && (
         <Pagination

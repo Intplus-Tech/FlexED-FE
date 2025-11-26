@@ -1,6 +1,8 @@
 "use client";
 
+import { useState } from "react";
 import StudentTableLoader from "../../Loader/table-loader";
+import { StudentProfileModal } from "../student-profile";
 
 interface Student {
   id: string;
@@ -21,6 +23,14 @@ export function StudentTable({
   students,
   isLoading = false,
 }: StudentTableProps) {
+  const [selectedStudent, setSelectedStudent] = useState<Student | null>(null);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+
+  const handleViewStudent = (student: Student) => {
+    setSelectedStudent(student);
+    setIsModalOpen(true);
+  };
+
   if (isLoading) {
     <StudentTableLoader />;
   }
@@ -96,7 +106,10 @@ export function StudentTable({
                 </td>
                 <td className="px-6 py-4">
                   <div className="flex items-center gap-3">
-                    <button className="text-sm text-gray-700 hover:text-gray-900 underline">
+                    <button
+                      onClick={() => handleViewStudent(student)}
+                      className="text-sm text-gray-700 hover:text-gray-900 underline"
+                    >
                       View
                     </button>
                     <span className="text-gray-300">|</span>
@@ -110,6 +123,11 @@ export function StudentTable({
           </tbody>
         </table>
       </div>
+      <StudentProfileModal
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+        student={selectedStudent}
+      />
     </div>
   );
 }
