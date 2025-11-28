@@ -15,7 +15,6 @@ export default function DashboardLayout({
       {/* Fixed Sidebar */}
       <DashboardSidebar />
 
-      {/* Main Content Area */}
       <main className="ml-[250px] lg:ml-[300px] flex-1 overflow-y-auto p-6">
         {children}
       </main>

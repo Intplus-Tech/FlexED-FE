@@ -145,7 +145,7 @@ export default function StudentView() {
           change="+ 15.6%"
           changeLabel="From Previous Term"
           valueColor="green"
-          viewListHref="/dashboard/students/all"
+          // viewListHref="/dashboard/students/all"
         />
         <StudentMetricCard
           title="Total Paid"
@@ -153,7 +153,7 @@ export default function StudentView() {
           change="+ 15.6%"
           changeLabel="From Previous Term"
           valueColor="red"
-          viewListHref="/dashboard/students/paid"
+          // viewListHref="/dashboard/students/paid"
         />
         <StudentMetricCard
           title="Total Outstanding"
@@ -161,7 +161,7 @@ export default function StudentView() {
           change="+ 15.6%"
           changeLabel="From Previous Term"
           valueColor="gray"
-          viewListHref="/dashboard/students/outstanding"
+          // viewListHref="/dashboard/students/outstanding"
         />
       </div>
 
