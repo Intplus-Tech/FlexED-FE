@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import {
   DashboardIcon,
   PaymentsIcon,
@@ -14,6 +14,8 @@ import {
   LogoutIcon,
 } from "@/icon/dashbaord";
 import { Logo } from "@/icon/auth/icon";
+import { signOut } from "next-auth/react";
+import { showinfo } from "@/utils/toast";
 
 interface NavItem {
   label: string;
@@ -60,9 +62,20 @@ const bottomNavItems: NavItem[] = [
 export default function DashboardSidebar() {
   const pathname = usePathname();
   const [showProfileMenu, setShowProfileMenu] = useState(false);
-
+  const router = useRouter();
   const isActive = (href: string) => {
     return pathname === href;
+  };
+
+  const handleLogOut = async () => {
+    try {
+      setShowProfileMenu(false);
+      await signOut();
+      router.push("/auth/sign-in");
+      showinfo("Logged out successfully");
+    } catch (error) {
+      console.log(error);
+    }
   };
 
   return (
@@ -146,10 +159,7 @@ export default function DashboardSidebar() {
           {showProfileMenu && (
             <div className="absolute bottom-full left-0 right-0 mb-2 rounded-lg border border-gray-200 bg-white shadow-lg">
               <button
-                onClick={() => {
-                  setShowProfileMenu(false);
-                  // Handle logout
-                }}
+                onClick={handleLogOut}
                 className="flex w-full items-center gap-3 px-4 py-3 text-sm text-gray-700 hover:bg-gray-50 rounded-lg"
               >
                 <LogoutIcon />

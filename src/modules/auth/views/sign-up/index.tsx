@@ -15,6 +15,7 @@ import {
   Lock,
   Eye,
   EyeOff,
+  Loader,
 } from "lucide-react";
 import {
   LockIcon,
@@ -23,18 +24,21 @@ import {
   SchoolNameIcon,
   SchoolTypeIcon,
 } from "@/icon/auth/icon";
+import { useSignUpMutation } from "@/redux/api/auth";
+import { showerror, showsuccess } from "@/utils/toast";
 
-const schoolType = z.enum(["private", "public"] as const);
+const schoolType = z.enum(["Private", "Public"] as const);
 const signUpSchema = z.object({
-  schoolName: z.string().min(2, "School name must be at least 2 characters"),
+  name: z.string().min(2, "School name must be at least 2 characters"),
+  address: z.string().min(2, "School address must be at least 5 characters"),
   schoolType: schoolType,
-  contactPerson: z.string().min(2, "Contact person name is required"),
-  phoneNumber: z.string().regex(/^\d{10}$/, "Phone number must be 10 digits"),
-  email: z.string().email("Invalid email address"),
+  contactName: z.string().min(2, "Contact person name is required"),
+  contactPhone: z.string().regex(/^\d{11}$/, "Phone number must be 11 digits"),
+  contactEmail: z.string().email("Invalid email address"),
   password: z.string().min(8, "Password must be at least 8 characters"),
-  agreeToTerms: z.boolean().refine((val) => val === true, {
-    message: "You must agree to the terms and conditions",
-  }),
+  // agreeToTerms: z.boolean().refine((val) => val === true, {
+  //   message: "You must agree to the terms and conditions",
+  // }),
 });
 
 type SignUpFormData = z.infer<typeof signUpSchema>;
@@ -42,7 +46,7 @@ type SignUpFormData = z.infer<typeof signUpSchema>;
 export default function SignupView() {
   const router = useRouter();
   const [showPassword, setShowPassword] = React.useState(false);
-
+  const [signUp, { isLoading }] = useSignUpMutation();
   const {
     register,
     handleSubmit,
@@ -51,10 +55,28 @@ export default function SignupView() {
     resolver: zodResolver(signUpSchema),
   });
 
-  const onSubmit = (data: SignUpFormData) => {
+  const onSubmit = async (data: SignUpFormData) => {
+    try {
+      const res = await signUp({
+        name: data.name,
+        address: data.address,
+        contactEmail: data.contactEmail,
+        contactName: data.contactName,
+        contactPhone: data.contactPhone,
+        schoolType: data.schoolType,
+        password: data.password,
+      }).unwrap();
+      console.log("Sign up successful:", res);
+      showsuccess("Sign up successful! Please verify your email.");
+      router.push(
+        "/auth/verify-otp?email=" + encodeURIComponent(data.contactEmail)
+      );
+    } catch (error: any) {
+      showerror(error.data?.message || "Sign up failed. Please try again.");
+    }
     console.log("[v0] Sign up form data:", data);
     // Navigate to OTP verification
-    router.push("/auth/verify-otp");
+    // router.push("/auth/verify-otp");
   };
 
   return (
@@ -90,16 +112,38 @@ export default function SignupView() {
           <div className="relative">
             <SchoolNameIcon className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-5 h-5" />
             <input
-              {...register("schoolName")}
+              {...register("name")}
               id="schoolName"
               type="text"
               placeholder="School name"
               className="w-full pl-10 pr-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-violet-500 focus:border-transparent outline-none transition-all"
             />
           </div>
-          {errors.schoolName && (
+          {errors.name && (
+            <p className="mt-1 text-sm text-red-600">{errors.name.message}</p>
+          )}
+        </div>
+
+        <div>
+          <label
+            htmlFor="address"
+            className="block text-sm font-medium text-gray-700 mb-1.5"
+          >
+            School Address
+          </label>
+          <div className="relative">
+            <SchoolNameIcon className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-5 h-5" />
+            <input
+              {...register("address")}
+              id="schoolName"
+              type="text"
+              placeholder="School name"
+              className="w-full pl-10 pr-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-violet-500 focus:border-transparent outline-none transition-all"
+            />
+          </div>
+          {errors.address && (
             <p className="mt-1 text-sm text-red-600">
-              {errors.schoolName.message}
+              {errors.address.message}
             </p>
           )}
         </div>
@@ -120,8 +164,8 @@ export default function SignupView() {
               className="w-full pl-10 pr-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-violet-500 focus:border-transparent outline-none transition-all appearance-none bg-white"
             >
               <option value="">School Type</option>
-              <option value="private">Private School</option>
-              <option value="public">Public School</option>
+              <option value="Private">Private School</option>
+              <option value="Public">Public School</option>
             </select>
             <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none">
               <svg width="12" height="8" viewBox="0 0 12 8" fill="none">
@@ -145,7 +189,7 @@ export default function SignupView() {
         {/* Primary Contact Person */}
         <div>
           <label
-            htmlFor="contactPerson"
+            htmlFor="contactName"
             className="block text-sm font-medium text-gray-700 mb-1.5"
           >
             Primary Contact Person
@@ -153,16 +197,16 @@ export default function SignupView() {
           <div className="relative">
             <PersonIcon className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-5 h-5" />
             <input
-              {...register("contactPerson")}
-              id="contactPerson"
+              {...register("contactName")}
+              id="contactName"
               type="text"
               placeholder="Narayan Murthy"
               className="w-full pl-10 pr-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-violet-500 focus:border-transparent outline-none transition-all"
             />
           </div>
-          {errors.contactPerson && (
+          {errors.contactName && (
             <p className="mt-1 text-sm text-red-600">
-              {errors.contactPerson.message}
+              {errors.contactName.message}
             </p>
           )}
         </div>
@@ -170,7 +214,7 @@ export default function SignupView() {
         {/* Phone Number */}
         <div>
           <label
-            htmlFor="phoneNumber"
+            htmlFor="contactPhone"
             className="block text-sm font-medium text-gray-700 mb-1.5"
           >
             Phone Number
@@ -178,16 +222,16 @@ export default function SignupView() {
           <div className="relative">
             <PhoneIcon className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-5 h-5" />
             <input
-              {...register("phoneNumber")}
-              id="phoneNumber"
+              {...register("contactPhone")}
+              id="contactPhone"
               type="tel"
               placeholder="0801234567"
               className="w-full pl-10 pr-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-violet-500 focus:border-transparent outline-none transition-all"
             />
           </div>
-          {errors.phoneNumber && (
+          {errors.contactPhone && (
             <p className="mt-1 text-sm text-red-600">
-              {errors.phoneNumber.message}
+              {errors.contactPhone.message}
             </p>
           )}
         </div>
@@ -195,7 +239,7 @@ export default function SignupView() {
         {/* Email Address */}
         <div>
           <label
-            htmlFor="email"
+            htmlFor="contactEmail"
             className="block text-sm font-medium text-gray-700 mb-1.5"
           >
             Email address
@@ -203,15 +247,17 @@ export default function SignupView() {
           <div className="relative">
             <Mail className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-5 h-5" />
             <input
-              {...register("email")}
-              id="email"
-              type="email"
+              {...register("contactEmail")}
+              id="contactEmail"
+              type="contactEmail"
               placeholder="NarayanMurthy@gmail.com"
               className="w-full pl-10 pr-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-violet-500 focus:border-transparent outline-none transition-all"
             />
           </div>
-          {errors.email && (
-            <p className="mt-1 text-sm text-red-600">{errors.email.message}</p>
+          {errors.contactEmail && (
+            <p className="mt-1 text-sm text-red-600">
+              {errors.contactEmail.message}
+            </p>
           )}
         </div>
 
@@ -251,7 +297,7 @@ export default function SignupView() {
           )}
         </div>
 
-        <div className="flex items-start gap-2">
+        {/* <div className="flex items-start gap-2">
           <input
             {...register("agreeToTerms")}
             id="agreeToTerms"
@@ -271,14 +317,14 @@ export default function SignupView() {
         </div>
         {errors.agreeToTerms && (
           <p className="text-sm text-red-600">{errors.agreeToTerms.message}</p>
-        )}
+        )} */}
 
         {/* Submit Button */}
         <button
           type="submit"
-          className="w-full bg-violet-600 hover:bg-violet-700 text-white font-medium py-3 rounded-lg transition-colors"
+          className="w-full bg-violet-600 hover:bg-violet-700 text-white font-medium py-3 rounded-lg active:scale-95  transition-all disabled:opacity-70 disabled:cursor-not-allowed"
         >
-          Register
+          {isLoading ? <Loader className="mx-auto animate-spin" /> : "Register"}
         </button>
       </form>
     </div>

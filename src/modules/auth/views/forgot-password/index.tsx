@@ -6,7 +6,9 @@ import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
-import { Mail, Lock, Eye, EyeOff } from "lucide-react";
+import { Mail, Lock, Eye, EyeOff, Loader } from "lucide-react";
+import { useForgotPasswordMutation } from "@/redux/api/auth";
+import { showsuccess } from "@/utils/toast";
 
 const forgotPasswordSchema = z.object({
   email: z.email("Invalid email address"),
@@ -17,6 +19,7 @@ type ForgotPasswordFormData = z.infer<typeof forgotPasswordSchema>;
 export default function ForgotPasswordView() {
   const router = useRouter();
   const [showPassword, setShowPassword] = React.useState(false);
+  const [forgotPassword, { isLoading }] = useForgotPasswordMutation();
 
   const {
     register,
@@ -26,9 +29,16 @@ export default function ForgotPasswordView() {
     resolver: zodResolver(forgotPasswordSchema),
   });
 
-  const onSubmit = (data: ForgotPasswordFormData) => {
-    console.log("[v0] Login form data:", data);
-    router.push("/auth/reset-password");
+  const onSubmit = async (data: ForgotPasswordFormData) => {
+    try {
+      const res = await forgotPassword(data).unwrap();
+      router.push(
+        `/auth/reset-password?email=${encodeURIComponent(data.email)}`
+      );
+      showsuccess(res?.message || "OTP sent successfully");
+    } catch (error) {
+      console.log(error);
+    }
   };
 
   return (
@@ -67,9 +77,13 @@ export default function ForgotPasswordView() {
 
         <button
           type="submit"
-          className="w-full bg-violet-600 hover:bg-violet-700 text-white font-medium py-3 rounded-lg transition-colors"
+          className="w-full bg-violet-600 hover:bg-violet-700 text-white font-medium py-3 active:scale-95  rounded-lg transition-colors"
         >
-          Reset Password
+          {isLoading ? (
+            <Loader className="mx-auto animaate-spin" />
+          ) : (
+            "Reset Password"
+          )}
         </button>
       </form>
     </div>

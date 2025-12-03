@@ -1,11 +1,14 @@
 "use client";
 
-import React from "react";
+import React, { useEffect } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
+import { useVerifyAccountMutation } from "@/redux/api/auth";
+import { showerror, showsuccess } from "@/utils/toast";
+import { Loader } from "lucide-react";
 
 const otpSchema = z.object({
   otp: z.string().length(6, "OTP must be 6 digits"),
@@ -17,6 +20,15 @@ export default function VerifyOtpView() {
   const router = useRouter();
   const [otp, setOtp] = React.useState(["", "", "", "", "", ""]);
   const inputRefs = React.useRef<(HTMLInputElement | null)[]>([]);
+  const searchParams = useSearchParams();
+  const email = searchParams.get("email") || "";
+  const [verifyAccount, { isLoading }] = useVerifyAccountMutation();
+
+  useEffect(() => {
+    if (!email) {
+      router.push("/auth/sign-up");
+    }
+  }, [email, router]);
 
   const {
     handleSubmit,
@@ -64,9 +76,16 @@ export default function VerifyOtpView() {
     inputRefs.current[nextIndex]?.focus();
   };
 
-  const onSubmit = (data: OTPFormData) => {
-    console.log("[v0] OTP verification data:", data);
-    router.push("/auth/sign-in");
+  const onSubmit = async (data: OTPFormData) => {
+    try {
+      const response = await verifyAccount({ email, otp: data.otp }).unwrap();
+      showsuccess(response?.message || "OTP verified successfully");
+      router.push("/auth/sign-in");
+    } catch (error: any) {
+      showerror(
+        error.data?.message || "OTP verification failed. Please try again."
+      );
+    }
   };
 
   const handleResendOTP = () => {
@@ -137,7 +156,11 @@ export default function VerifyOtpView() {
           type="submit"
           className="w-full bg-violet-600 hover:bg-violet-700 text-white font-medium py-3 rounded-lg transition-colors"
         >
-          Verify and Proceed
+          {isLoading ? (
+            <Loader className="mx-auto animate-spin" />
+          ) : (
+            "Verify and Proceed"
+          )}
         </button>
       </form>
     </div>

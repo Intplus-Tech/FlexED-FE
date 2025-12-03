@@ -1,7 +1,12 @@
+import DashboardLayout from "@/components/layout/dashbaord";
 import SeettingsView from "@/modules/settings/view";
 
 const SettingsPage = () => {
-  return <SeettingsView />;
+  return (
+    <DashboardLayout>
+      <SeettingsView />
+    </DashboardLayout>
+  );
 };
 
 export default SettingsPage;

@@ -6,7 +6,12 @@ import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
-import { Mail, Lock, Eye, EyeOff } from "lucide-react";
+import { Mail, Lock, Eye, EyeOff, Loader } from "lucide-react";
+import { getSession, signIn } from "next-auth/react";
+import { showerror, showsuccess } from "@/utils/toast";
+import { useDispatch } from "react-redux";
+import { setAuth } from "@/redux/slice/auth";
+import { SignInResponse } from "@/@types/auth";
 
 const loginSchema = z.object({
   email: z.email("Invalid email address"),
@@ -19,7 +24,8 @@ type LoginFormData = z.infer<typeof loginSchema>;
 export default function LoginView() {
   const router = useRouter();
   const [showPassword, setShowPassword] = React.useState(false);
-
+  const [isLoading, setIsLoading] = React.useState(false);
+  const dispatch = useDispatch();
   const {
     register,
     handleSubmit,
@@ -28,9 +34,33 @@ export default function LoginView() {
     resolver: zodResolver(loginSchema),
   });
 
-  const onSubmit = (data: LoginFormData) => {
-    console.log("[v0] Login form data:", data);
-    router.push("/dashboard");
+  const onSubmit = async (data: LoginFormData) => {
+    if (data.email && data.password) {
+      setIsLoading(true);
+      const res = await signIn("credentials", {
+        email: data.email.trim(),
+        password: data.password.trim(),
+        redirect: false,
+      });
+
+      if (res?.ok) {
+        const newSession = await getSession();
+        showsuccess("Success");
+        const Data = newSession as any as {
+          accessToken: string;
+          user: SignInResponse["data"]["user"];
+        };
+
+        dispatch(
+          setAuth({
+            accessToken: Data.accessToken,
+            currentUser: Data.user,
+          })
+        );
+        router.push("/dashboard");
+      } else showerror(res?.error ?? "Something went wrong");
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -121,7 +151,7 @@ export default function LoginView() {
             </label>
           </div>
           <Link
-            href="#"
+            href="/auth/forgot-password"
             className="text-sm text-violet-600 hover:text-violet-700"
           >
             Forgot password?
@@ -130,9 +160,9 @@ export default function LoginView() {
 
         <button
           type="submit"
-          className="w-full bg-violet-600 hover:bg-violet-700 text-white font-medium py-3 rounded-lg transition-colors"
+          className="w-full bg-violet-600 hover:bg-violet-700 text-white font-medium py-3 rounded-lg transition-colors active:scale-95 disabled:opacity-70 disabled:cursor-not-allowed"
         >
-          Login
+          {isLoading ? <Loader className="mx-auto animate-spin" /> : "Login"}
         </button>
       </form>
     </div>

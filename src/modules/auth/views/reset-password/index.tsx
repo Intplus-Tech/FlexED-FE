@@ -1,148 +1,156 @@
 "use client";
-
-import React from "react";
-import Link from "next/link";
-import { useRouter } from "next/navigation";
-import { useForm } from "react-hook-form";
+import { useForm, type SubmitHandler } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import * as z from "zod";
+import { z } from "zod";
+import { useSearchParams } from "next/navigation";
+import { useResetPasswordMutation } from "@/redux/api/auth";
+import { showsuccess } from "@/utils/toast";
+import { LockIcon } from "@/icon/dashbaord";
 
-const otpSchema = z.object({
-  otp: z.string().length(6, "OTP must be 6 digits"),
-});
-
-type OTPFormData = z.infer<typeof otpSchema>;
-
-export default function ResetPasswordView() {
-  const router = useRouter();
-  const [otp, setOtp] = React.useState(["", "", "", "", "", ""]);
-  const inputRefs = React.useRef<(HTMLInputElement | null)[]>([]);
-
-  const {
-    handleSubmit,
-    setValue,
-    formState: { errors },
-  } = useForm<OTPFormData>({
-    resolver: zodResolver(otpSchema),
+const resetPasswordSchema = z
+  .object({
+    newPassword: z
+      .string()
+      .min(8, "Password must be at least 8 characters")
+      .regex(/[A-Z]/, "Password must contain an uppercase letter")
+      .regex(/[0-9]/, "Password must contain a number"),
+    confirmNewPassword: z.string(),
+  })
+  .refine((data) => data.newPassword === data.confirmNewPassword, {
+    message: "Passwords don't match",
+    path: ["confirmNewPassword"],
   });
 
-  const handleChange = (index: number, value: string) => {
-    if (value && !/^\d$/.test(value)) return;
+type ResetPasswordFormData = z.infer<typeof resetPasswordSchema>;
 
-    const newOtp = [...otp];
-    newOtp[index] = value;
-    setOtp(newOtp);
-    setValue("otp", newOtp.join(""));
+export default function ResetPasswordView() {
+  const searchParams = useSearchParams();
+  const email = searchParams.get("email") || "";
+  const [resetPassword, { isLoading }] = useResetPasswordMutation();
+  const {
+    register,
+    handleSubmit,
+    formState: { errors },
+    watch,
+  } = useForm<ResetPasswordFormData>({
+    resolver: zodResolver(resetPasswordSchema),
+  });
 
-    if (value && index < 5) {
-      inputRefs.current[index + 1]?.focus();
+  const newPassword = watch("newPassword");
+
+  const onSubmit: SubmitHandler<ResetPasswordFormData> = async (data) => {
+    try {
+      const res = await resetPassword({
+        email,
+        newPassword: data.newPassword,
+        confirmNewPassword: data.confirmNewPassword,
+      }).unwrap();
+      showsuccess(res?.message || "Password reset successful");
+    } catch (error) {
+      console.log(error);
     }
-  };
-
-  const handleKeyDown = (
-    index: number,
-    e: React.KeyboardEvent<HTMLInputElement>
-  ) => {
-    if (e.key === "Backspace" && !otp[index] && index > 0) {
-      inputRefs.current[index - 1]?.focus();
-    }
-  };
-
-  const handlePaste = (e: React.ClipboardEvent) => {
-    e.preventDefault();
-    const pastedData = e.clipboardData.getData("text").slice(0, 6);
-
-    if (!/^\d+$/.test(pastedData)) return;
-
-    const newOtp = pastedData
-      .split("")
-      .concat(Array(6 - pastedData.length).fill(""));
-    setOtp(newOtp);
-    setValue("otp", newOtp.join(""));
-
-    const nextIndex = Math.min(pastedData.length, 5);
-    inputRefs.current[nextIndex]?.focus();
-  };
-
-  const onSubmit = (data: OTPFormData) => {
-    console.log("[v0] OTP verification data:", data);
-    router.push("/");
-  };
-
-  const handleResendOTP = () => {
-    console.log("[v0] Resending OTP...");
-    setOtp(["", "", "", "", "", ""]);
-    setValue("otp", "");
-    inputRefs.current[0]?.focus();
   };
 
   return (
-    <div className="w-full">
-      <div className="mb-8 text-center">
-        <h2 className="text-2xl font-bold text-gray-900 mb-3 text-center">
-          Password Reset
-        </h2>
-        <p className="text-gray-500 mx-auto max-w-[360px] mb-3 text-center">
-          We Have Sent You An OTP On Registered E-mail Address
-        </p>
-        <p className="text-gray-500 text-xs">
-          NarayanMurthy@gmail.com,{" "}
-          <Link
-            href="/sign-up"
-            className="text-violet-600 hover:text-violet-700 font-medium"
-          >
-            Change E-mail address
-          </Link>
-        </p>
-      </div>
-
-      <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
-        <div className="flex justify-center gap-3">
-          {otp.map((digit, index) => (
-            <input
-              key={index}
-              ref={(el) => {
-                inputRefs.current[index] = el;
-              }}
-              type="password"
-              inputMode="numeric"
-              maxLength={1}
-              value={digit}
-              onChange={(e) => handleChange(index, e.target.value)}
-              onKeyDown={(e) => handleKeyDown(index, e)}
-              onPaste={handlePaste}
-              className="w-14 h-14 text-center text-2xl font-bold border-b-2 border-gray-300 focus:border-violet-600 outline-none transition-colors"
-              style={{
-                color: digit ? "#7C3AED" : "#D1D5DB",
-              }}
-            />
-          ))}
-        </div>
-
-        {errors.otp && (
-          <p className="text-sm text-red-600 text-center">
-            {errors.otp.message}
+    <div className=" flex items-center justify-center px-4 py-12">
+      <div className="w-full max-w-md">
+        <div className="text-center mb-12">
+          <h1 className="text-4xl font-bold text-gray-800 mb-4">
+            Reset Password
+          </h1>
+          <p className="text-gray-500 text-lg">
+            No worries, We will send you reset instructions.
           </p>
-        )}
-
-        <div className="text-center">
-          <span className="text-gray-500">Don&apos;t Receive the OTP ? </span>
-          <button
-            type="button"
-            onClick={handleResendOTP}
-            className="text-violet-600 hover:text-violet-700 font-medium"
-          >
-            Resend OTP
-          </button>
         </div>
 
-        <button
-          type="submit"
-          className="w-full bg-violet-600 hover:bg-violet-700 text-white font-medium py-3 rounded-lg transition-colors"
-        >
-          Verify and Proceed
-        </button>
-      </form>
+        <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
+          {/* New Password Field */}
+          <div>
+            <label
+              htmlFor="newPassword"
+              className="block text-sm font-medium text-gray-700 mb-2"
+            >
+              New Password
+            </label>
+            <div className="relative">
+              <span className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400">
+                <LockIcon />
+              </span>
+              <input
+                type="password"
+                id="newPassword"
+                {...register("newPassword")}
+                className="w-full pl-12 pr-12 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                placeholder="••••••••••••••••"
+              />
+              <span className="absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-400 cursor-pointer hover:text-gray-600">
+                <svg
+                  width="20"
+                  height="20"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                >
+                  <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+                  <circle cx="12" cy="12" r="3"></circle>
+                </svg>
+              </span>
+            </div>
+            {errors.newPassword && (
+              <p className="text-red-500 text-sm mt-2">
+                {errors.newPassword.message}
+              </p>
+            )}
+          </div>
+
+          {/* Confirm Password Field */}
+          <div>
+            <label
+              htmlFor="confirmPassword"
+              className="block text-sm font-medium text-gray-700 mb-2"
+            >
+              Re- Enter Password
+            </label>
+            <div className="relative">
+              <span className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400">
+                <LockIcon />
+              </span>
+              <input
+                type="password"
+                id="confirmPassword"
+                {...register("confirmNewPassword")}
+                className="w-full pl-12 pr-12 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                placeholder="••••••••••••••••"
+              />
+              <span className="absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-400 cursor-pointer hover:text-gray-600">
+                <svg
+                  width="20"
+                  height="20"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                >
+                  <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+                  <circle cx="12" cy="12" r="3"></circle>
+                </svg>
+              </span>
+            </div>
+            {errors.confirmNewPassword && (
+              <p className="text-red-500 text-sm mt-2">
+                {errors.confirmNewPassword.message}
+              </p>
+            )}
+          </div>
+
+          {/* Submit Button */}
+          <button
+            type="submit"
+            className="w-full bg-gradient-to-r from-purple-500 to-purple-600 hover:from-purple-600 hover:to-purple-700 text-white font-medium py-3 px-4 rounded-lg transition duration-200"
+          >
+            Verify Proceed
+          </button>
+        </form>
+      </div>
     </div>
   );
 }
