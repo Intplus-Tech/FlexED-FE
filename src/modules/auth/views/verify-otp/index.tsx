@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect } from "react";
+import React, { Suspense, useEffect } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useForm } from "react-hook-form";
@@ -16,7 +16,7 @@ const otpSchema = z.object({
 
 type OTPFormData = z.infer<typeof otpSchema>;
 
-export default function VerifyOtpView() {
+function VerifyOtp() {
   const router = useRouter();
   const [otp, setOtp] = React.useState(["", "", "", "", "", ""]);
   const inputRefs = React.useRef<(HTMLInputElement | null)[]>([]);
@@ -164,5 +164,19 @@ export default function VerifyOtpView() {
         </button>
       </form>
     </div>
+  );
+}
+
+export default function VerifyOtpView() {
+  return (
+    <Suspense
+      fallback={
+        <div className="h-screen flex items-center justify-center">
+          <Loader />
+        </div>
+      }
+    >
+      <VerifyOtp />
+    </Suspense>
   );
 }

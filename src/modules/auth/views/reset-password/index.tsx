@@ -6,6 +6,8 @@ import { useSearchParams } from "next/navigation";
 import { useResetPasswordMutation } from "@/redux/api/auth";
 import { showsuccess } from "@/utils/toast";
 import { LockIcon } from "@/icon/dashbaord";
+import { Suspense } from "react";
+import { Loader } from "lucide-react";
 
 const resetPasswordSchema = z
   .object({
@@ -23,7 +25,7 @@ const resetPasswordSchema = z
 
 type ResetPasswordFormData = z.infer<typeof resetPasswordSchema>;
 
-export default function ResetPasswordView() {
+function ResetPassword() {
   const searchParams = useSearchParams();
   const email = searchParams.get("email") || "";
   const [resetPassword, { isLoading }] = useResetPasswordMutation();
@@ -145,12 +147,26 @@ export default function ResetPasswordView() {
           {/* Submit Button */}
           <button
             type="submit"
-            className="w-full bg-gradient-to-r from-purple-500 to-purple-600 hover:from-purple-600 hover:to-purple-700 text-white font-medium py-3 px-4 rounded-lg transition duration-200"
+            className="w-full bg-linear-to-r from-purple-500 to-purple-600 hover:from-purple-600 hover:to-purple-700 text-white font-medium py-3 px-4 rounded-lg transition duration-200"
           >
             Verify Proceed
           </button>
         </form>
       </div>
     </div>
+  );
+}
+
+export default function ResetPasswordView() {
+  return (
+    <Suspense
+      fallback={
+        <div className="h-screen flex items-center justify-center">
+          <Loader />
+        </div>
+      }
+    >
+      <ResetPassword />
+    </Suspense>
   );
 }

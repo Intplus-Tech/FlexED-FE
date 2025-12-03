@@ -139,7 +139,7 @@ export default function DashboardSidebar() {
             onClick={() => setShowProfileMenu(!showProfileMenu)}
             className="flex w-full items-center gap-3 hover:opacity-80 transition-opacity"
           >
-            <div className="h-10 w-10 flex-shrink-0 rounded-full bg-gradient-to-br from-blue-400 to-purple-500 flex items-center justify-center text-white font-semibold">
+            <div className="h-10 w-10 shrink-0 rounded-full bg-linear-to-br from-blue-400 to-purple-500 flex items-center justify-center text-white font-semibold">
               AB
             </div>
             <div className="flex-1 text-left min-w-0">
