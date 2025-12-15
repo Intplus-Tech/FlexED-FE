@@ -227,6 +227,7 @@ export default function PaymentView() {
           {schoolMetric?.map((category) => {
             return (
               <MetricCard
+                key={category?.label}
                 title={category.label}
                 amount={formatNaira(category.totalAmount)}
                 amountColor={category.color}

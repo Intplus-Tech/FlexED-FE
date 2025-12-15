@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-empty-object-type */
 export function QueryHelper<T extends {}>(url: string, query: T) {
   return `${url}?${queryToString(query)}`;
 }

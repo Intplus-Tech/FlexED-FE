@@ -106,22 +106,6 @@ export interface CreatePaymentItemRequest {
   discount?: Discount;
 }
 
-type FeeFormValues = {
-  name: string;
-  class: string[];
-  amount: number;
-  applicableTo: string;
-  category: string;
-  academicPeriod: string;
-  period: string;
-  description: string;
-  dueDate: string;
-  discount: {
-    value?: string;
-    expiresAt?: Date | undefined;
-  };
-};
-
 export interface Discount {
   // type: DiscountType;
   expiresAt?: string | null | undefined;

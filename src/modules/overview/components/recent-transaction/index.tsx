@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { RecentTransactionsProps } from "../../@types";
 import TableLoader from "../../loader/table-loader";
 

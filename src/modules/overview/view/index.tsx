@@ -58,7 +58,6 @@ export default function DashboardView() {
     isFetching: isFetchingCollection,
     isLoading: isLoadingCollection,
   } = useGetClassCollectionsQuery();
-  console.log(smsMetrics, "sms");
 
   const transactionData = [
     { day: "Mon", fullPayment: 3500000, partPayment: 2200000 },
@@ -68,45 +67,6 @@ export default function DashboardView() {
     { day: "Fri", fullPayment: 3000000, partPayment: 2200000 },
     { day: "Sat", fullPayment: 1800000, partPayment: 2200000 },
     { day: "Sun", fullPayment: 2100000, partPayment: 300000 },
-  ];
-
-  const collectionData = [
-    {
-      className: "JSS 1:",
-      percentage: "84%",
-      collected: "₦4.5M",
-      total: "₦5.4M",
-    },
-    {
-      className: "JSS 2:",
-      percentage: "83%",
-      collected: "₦4.5M",
-      total: "₦5.4M",
-    },
-    {
-      className: "JSS 3:",
-      percentage: "83%",
-      collected: "₦4.5M",
-      total: "₦5.4M",
-    },
-    {
-      className: "SSS 1:",
-      percentage: "87%",
-      collected: "₦4.5M",
-      total: "₦5.4M",
-    },
-    {
-      className: "SSS 2:",
-      percentage: "83%",
-      collected: "₦4.5M",
-      total: "₦5.4M",
-    },
-    {
-      className: "SSS 3:",
-      percentage: "83%",
-      collected: "₦4.5M",
-      total: "₦5.4M",
-    },
   ];
 
   return (
@@ -150,6 +110,7 @@ export default function DashboardView() {
         <CollectionByClass
           totalStudents={collection?.data?.totalPaid ?? 0}
           data={collection?.data?.items ?? []}
+          isLoading={isFetchingCollection || isLoadingCollection}
         />
       </div>
 

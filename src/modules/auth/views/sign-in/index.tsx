@@ -46,7 +46,7 @@ export default function LoginView() {
       if (res?.ok) {
         const newSession = await getSession();
         showsuccess("Success");
-        const Data = newSession as any as {
+        const Data = newSession as unknown as {
           accessToken: string;
           user: SignInResponse["data"]["user"];
         };

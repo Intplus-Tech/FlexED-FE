@@ -7,19 +7,6 @@ interface AcademicTableProps {
   isLoading: boolean;
 }
 
-const getStatusColor = (status: string) => {
-  switch (status) {
-    case "Active":
-      return "text-green-600";
-    case "Upcoming":
-      return "text-blue-600";
-    case "Completed":
-      return "text-gray-600";
-    default:
-      return "text-gray-600";
-  }
-};
-
 export default function AcademicTable({
   periods,
   isLoading,

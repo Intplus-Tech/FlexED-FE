@@ -6,17 +6,7 @@ import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
-import {
-  GraduationCap,
-  Building2,
-  User,
-  Phone,
-  Mail,
-  Lock,
-  Eye,
-  EyeOff,
-  Loader,
-} from "lucide-react";
+import { Mail, Eye, EyeOff, Loader } from "lucide-react";
 import {
   LockIcon,
   PersonIcon,
@@ -71,6 +61,7 @@ export default function SignupView() {
       router.push(
         "/auth/verify-otp?email=" + encodeURIComponent(data.contactEmail)
       );
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (error: any) {
       showerror(error.data?.message || "Sign up failed. Please try again.");
     }

@@ -1,12 +1,11 @@
 "use client";
 
 import React from "react";
-import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
-import { Mail, Lock, Eye, EyeOff, Loader } from "lucide-react";
+import { Mail, Loader } from "lucide-react";
 import { useForgotPasswordMutation } from "@/redux/api/auth";
 import { showsuccess } from "@/utils/toast";
 
@@ -18,7 +17,6 @@ type ForgotPasswordFormData = z.infer<typeof forgotPasswordSchema>;
 
 export default function ForgotPasswordView() {
   const router = useRouter();
-  const [showPassword, setShowPassword] = React.useState(false);
   const [forgotPassword, { isLoading }] = useForgotPasswordMutation();
 
   const {

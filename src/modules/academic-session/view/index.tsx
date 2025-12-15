@@ -55,40 +55,13 @@ const mockData: AcademicPeriod[] = [
 ];
 
 export default function AcademicSessionView() {
-  const [periods, setPeriods] = useState<AcademicPeriod[]>(mockData);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
-  const [isLoading, setIsLoading] = useState(false);
   const {
     data: academicPeriods,
     isLoading: isLoadingAcademicPeriod,
     isFetching: isFetchingAcademicPeriod,
   } = useGetAllAcademicSessionQuery();
-
-  const [createAcademicSession, { isLoading: createAcademicSessionLoading }] =
-    useCreateAcademicSessionMutation();
-
-  const filteredPeriods = useMemo(() => {
-    return periods.filter((period) =>
-      period.name.toLowerCase().includes(searchTerm.toLowerCase())
-    );
-  }, [periods, searchTerm]);
-
-  const handleAddPeriod = async (newPeriod: CreateAcademicSessionRequest) => {
-    const period = {
-      name: newPeriod.name,
-      startDate: newPeriod.startDate,
-      endDate: newPeriod.endDate,
-      isActive: true,
-    };
-    try {
-      const res = await createAcademicSession(period).unwrap();
-      showsuccess(res?.message || "Academic period created successfully");
-      setIsModalOpen(false);
-    } catch (error: any) {
-      showerror(error.data?.message || "Failed to create academic period");
-    }
-  };
 
   return (
     <main className="min-h-screen ">
@@ -183,7 +156,7 @@ export default function AcademicSessionView() {
         <div className="bg-card border border-border rounded-lg overflow-hidden">
           <AcademicTable
             periods={academicPeriods?.data ?? []}
-            isLoading={isLoading}
+            isLoading={isLoadingAcademicPeriod || isFetchingAcademicPeriod}
           />
         </div>
       </div>

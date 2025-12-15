@@ -1,6 +1,7 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
 
-import { useForm } from "react-hook-form";
+import { Controller, useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { Switch } from "@/components/ui/switch";
@@ -39,16 +40,13 @@ export default function AddPeriodModal({
     handleSubmit,
     formState: { errors },
     reset,
-    watch,
-    setValue,
+    control,
   } = useForm({
     resolver: zodResolver(periodFormSchema),
     defaultValues: {
       isActive: true,
     },
   });
-
-  const isActive = watch("isActive");
 
   const [createAcademicSession, { isLoading: createAcademicSessionLoading }] =
     useCreateAcademicSessionMutation();
@@ -60,6 +58,8 @@ export default function AddPeriodModal({
         endDate: newPeriod.endDate,
         isActive: newPeriod.isActive,
       };
+
+      console.log(period, "period");
       const res = await createAcademicSession(period).unwrap();
       showsuccess(res?.message || "Academic period created successfully");
       handleClose();
@@ -192,12 +192,18 @@ export default function AddPeriodModal({
               >
                 Active Status
               </label>
-              <Switch
-                id="isActive"
-                checked={isActive}
-                onCheckedChange={(checked: boolean) =>
-                  setValue("isActive", checked)
-                }
+              <Controller
+                name="isActive"
+                control={control}
+                render={({ field }) => (
+                  <Switch
+                    id="isActive"
+                    checked={field.value}
+                    onCheckedChange={(checked) => {
+                      field.onChange(checked); // RHF update
+                    }}
+                  />
+                )}
               />
             </div>
 

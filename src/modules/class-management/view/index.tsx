@@ -1,34 +1,19 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { SearchIcon, FilterIcon, ExportIcon } from "@/icon/dashbaord/class";
 import type { ClassFormData } from "@/lib/validations";
 import { AddClassModal } from "../components/add-class";
 import ClassTable from "../components/class-table";
 
-const ITEMS_PER_PAGE = 6;
-
 export function ClassManagementView() {
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [isLoading, setIsLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
-  const [currentPage, setCurrentPage] = useState(1);
-  const [selectedRows, setSelectedRows] = useState<Set<string>>(new Set());
 
   const handleAddClass = async (data: ClassFormData) => {
     // Simulate API call
     console.log("Adding class:", data);
     // You would typically make an API call here
-  };
-
-  const handleEdit = (id: string) => {
-    console.log("Edit class:", id);
-    // Handle edit action
-  };
-
-  const handleDelete = (id: string) => {
-    console.log("Delete class:", id);
-    // Handle delete action
   };
 
   return (

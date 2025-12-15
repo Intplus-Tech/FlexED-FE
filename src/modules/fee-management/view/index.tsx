@@ -12,52 +12,8 @@ import { CreateFeeModal } from "../components/add-fee";
 import { CreateFeeCategoryModal } from "../components/fee-category";
 import { FeeCategoryTable } from "../components/fee-category-table";
 
-const mockFees = [
-  {
-    id: "1",
-    name: "Tuition Fee",
-    amount: "₦350,000",
-    applicableTo: "SSS 3",
-    tenure: "Per Term",
-    status: true,
-  },
-  {
-    id: "2",
-    name: "Tuition Fee",
-    amount: "₦350,000",
-    applicableTo: "SSS 1",
-    tenure: "Per Term",
-    status: true,
-  },
-  {
-    id: "3",
-    name: "Tuition Fee",
-    amount: "₦350,000",
-    applicableTo: "SSS 2",
-    tenure: "Per Term",
-    status: true,
-  },
-  {
-    id: "4",
-    name: "Early Bird Discount",
-    amount: "5%",
-    applicableTo: "Universal",
-    tenure: "Term, Session",
-    status: true,
-  },
-  {
-    id: "5",
-    name: "Staff Discount",
-    amount: "5%",
-    applicableTo: "Universal",
-    tenure: "Term, Session",
-    status: true,
-  },
-];
-
 export default function FeeManagementView() {
   const [searchQuery, setSearchQuery] = useState("");
-  const [isLoading, setIsLoading] = useState(false);
   const [open, setOpen] = useState(false);
   const [categoryOpen, setCategoryOpen] = useState(false);
   const {
@@ -73,11 +29,6 @@ export default function FeeManagementView() {
   } = useGetPaymentListQuery();
 
   console.log(fees, "fees");
-
-  const handleSubmit = (data: any) => {
-    console.log("Fee created:", data);
-    setOpen(false);
-  };
 
   return (
     <div className="space-y-6">
@@ -117,7 +68,7 @@ export default function FeeManagementView() {
 
       <FeeCategoryTable
         categories={feeCategories?.data ?? []}
-        isLoading={isFetching || isLoadingFees}
+        isLoading={isLoadingCategories || isFetchingCategories}
         searchQuery={searchQuery}
       />
 

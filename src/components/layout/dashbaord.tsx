@@ -20,7 +20,7 @@ export default function DashboardLayout({
 
   useEffect(() => {
     if (status === "authenticated") {
-      const Data = data as any as {
+      const Data = data as unknown as {
         accessToken: string;
         refreshToken: string;
         user: SignInResponse["data"]["user"];

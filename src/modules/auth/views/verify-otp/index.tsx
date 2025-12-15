@@ -81,6 +81,7 @@ function VerifyOtp() {
       const response = await verifyAccount({ email, otp: data.otp }).unwrap();
       showsuccess(response?.message || "OTP verified successfully");
       router.push("/auth/sign-in");
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (error: any) {
       showerror(
         error.data?.message || "OTP verification failed. Please try again."

@@ -10,6 +10,7 @@ export interface ClassCollectionData {
 export interface CollectionByClassProps {
   totalStudents: number;
   data: ClassCollectionItem[];
+  isLoading?: boolean;
 }
 
 export interface FeeMetricsProps {
@@ -21,6 +22,7 @@ export interface FeeMetricsProps {
 
 export interface RecentTransactionsProps {
   // transactions: Transaction[];
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   transactions: any;
   isLoading?: boolean;
 }

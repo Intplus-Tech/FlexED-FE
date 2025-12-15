@@ -33,12 +33,9 @@ function ResetPassword() {
     register,
     handleSubmit,
     formState: { errors },
-    watch,
   } = useForm<ResetPasswordFormData>({
     resolver: zodResolver(resetPasswordSchema),
   });
-
-  const newPassword = watch("newPassword");
 
   const onSubmit: SubmitHandler<ResetPasswordFormData> = async (data) => {
     try {

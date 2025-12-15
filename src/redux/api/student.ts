@@ -1,6 +1,6 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { ApiEndpoints } from "@/utils/endpoints";
 import apiSlice from "..";
-import { QueryHelper } from "@/utils/functions";
 import { GetPaymentsSummaryResponse } from "@/@types/transaction";
 import { methods } from "@/utils/methods";
 import { CreateStudentRequest } from "@/@types/student";

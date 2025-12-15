@@ -1,9 +1,8 @@
 "use client";
 
 import { useState } from "react";
-import { Pagination } from "@/components/pagination";
 import FeeTableLoader from "../../loader/fee-table-loader";
-import { PaymentItem, Transaction } from "@/@types/transaction";
+import { PaymentItem } from "@/@types/transaction";
 
 interface Fee {
   id: string;
@@ -25,12 +24,6 @@ export function FeeTable({
   isLoading = false,
   searchQuery = "",
 }: FeeTableProps) {
-  const [currentPage, setCurrentPage] = useState(1);
-
-  const handlePageChange = (page: number) => {
-    setCurrentPage(page);
-  };
-
   if (isLoading) {
     return <FeeTableLoader />;
   }

@@ -47,13 +47,10 @@ export function CreateFeeCategoryModal({
       showsuccess(res?.message);
       reset();
       onOpenChange(false);
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (error: any) {
       showerror(error?.data?.message);
     }
-  };
-
-  const handleReset = () => {
-    reset();
   };
 
   const handleCancel = () => {

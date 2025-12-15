@@ -64,6 +64,7 @@ export function AddClassModal({ open, onOpenChange }: AddClassModalProps) {
       showsuccess(res?.message);
       reset();
       onOpenChange(false);
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (error: any) {
       showerror(error?.data?.message);
       console.log(error);

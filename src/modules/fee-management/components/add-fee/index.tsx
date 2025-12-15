@@ -21,7 +21,7 @@ import { useState } from "react";
 import { showerror, showsuccess } from "@/utils/toast";
 import { RootState } from "@/redux/store";
 import { useSelector } from "react-redux";
-import { formatDate, toISOStringSafe } from "@/utils/functions";
+import { toISOStringSafe } from "@/utils/functions";
 
 const feeFormSchema = z.object({
   name: z.string().min(1, "Fee name is required"),
@@ -53,7 +53,6 @@ export const FEE_TYPE_OPTIONS = [
   },
 ];
 
-const CLASS_OPTIONS = ["JSS 1", "JSS 2", "JSS 3", "SSS 1", "SSS2", "SSS3"];
 export const APPLICABLE_TO_OPTIONS = [
   {
     key: "NEW_STUDENTS_ONLY",
@@ -72,13 +71,6 @@ export const APPLICABLE_TO_OPTIONS = [
     label: "Individual Selection",
   },
 ];
-
-const AUTO_REMINDER_OPTIONS = [
-  "3 days before due date",
-  "7 days before due date",
-  "10 days before due date",
-];
-const INSTALMENT_OPTIONS = ["1", "2", "3", "4", "5"];
 
 interface CreateFeeModalProps {
   open: boolean;
@@ -130,10 +122,6 @@ export function CreateFeeModal({ open, onOpenChange }: CreateFeeModalProps) {
 
   const [createPayment, { isLoading }] = useCreatePaymentItemsMutation();
 
-  const formValues = watch();
-
-  console.log(errors, "errors");
-
   const onFormSubmit = async (data: FeeFormValues) => {
     try {
       const payload = {
@@ -153,6 +141,7 @@ export function CreateFeeModal({ open, onOpenChange }: CreateFeeModalProps) {
       showsuccess(res?.message);
       reset();
       onOpenChange(false);
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (error: any) {
       showerror(error?.data?.message);
     }

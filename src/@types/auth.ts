@@ -19,7 +19,7 @@ export interface CreateSchoolRequest {
   contactPhone: string;
   logoUrl?: string;
   metadata?: {
-    additionalProp1: {};
+    additionalProp1: unknown;
   };
   schoolType: "Public" | "Private";
   password: string;

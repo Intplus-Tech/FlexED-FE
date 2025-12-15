@@ -1,18 +1,8 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
 
 import { useState } from "react";
 import { TableSkeleton } from "../../Loader/table-loader";
-
-interface PaymentRow {
-  id: string;
-  timeDate: string;
-  transactionId: string;
-  studentName: string;
-  class: string;
-  amountPaid: string;
-  percentRemaining: number;
-  status: "Successful" | "Failed";
-}
 
 interface PaymentTableProps {
   data?: any;
