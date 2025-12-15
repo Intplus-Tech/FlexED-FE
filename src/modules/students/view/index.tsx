@@ -7,14 +7,26 @@ import { Pagination } from "@/components/pagination";
 import { SearchInput } from "@/components/search-input";
 import { ChevronDownIcon, ExportIcon, FilterIcon } from "@/icon/dashbaord";
 import { AddStudentModal } from "../components/add-student";
+import { useGetAllStudentQuery } from "@/redux/api/student";
+import { useSelector } from "react-redux";
+import { RootState } from "@/redux/store";
 
 export default function StudentView() {
   const [searchQuery, setSearchQuery] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
   const [isAddStudentOpen, setIsAddStudentOpen] = useState(false);
-  const [isLoading] = useState(false);
   const itemsPerPage = 10;
 
+  const { currentUser } = useSelector((state: RootState) => state.authState);
+  const {
+    data: students,
+    isFetching: isFetchingStudents,
+    isLoading: isLoadingStudents,
+  } = useGetAllStudentQuery({
+    schoolId: currentUser?.schoolId as string,
+  });
+
+  console.log(students, "students");
   const allStudents = [
     {
       id: "1",
@@ -191,14 +203,17 @@ export default function StudentView() {
         </div>
       </div>
 
-      <StudentTable students={currentStudents} isLoading={isLoading} />
+      <StudentTable
+        students={students?.data ?? []}
+        isLoading={isFetchingStudents || isLoadingStudents}
+      />
 
       <AddStudentModal
         isOpen={isAddStudentOpen}
         onClose={() => setIsAddStudentOpen(false)}
       />
 
-      {!isLoading && filteredStudents.length > 0 && (
+      {!isLoadingStudents && filteredStudents.length > 0 && (
         <Pagination
           currentPage={currentPage}
           totalPages={totalPages}
@@ -206,7 +221,7 @@ export default function StudentView() {
         />
       )}
 
-      {!isLoading && filteredStudents.length === 0 && (
+      {!isLoadingStudents && filteredStudents.length === 0 && (
         <div className="text-center py-12">
           <p className="text-gray-500 text-lg">
             No students found matching your search.

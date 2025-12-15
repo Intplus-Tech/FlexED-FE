@@ -7,7 +7,6 @@ import { middleware } from "./middleware";
 export const store = configureStore({
   reducer: {
     authState: authReducerer,
-
     [apiSlice.reducerPath]: apiSlice.reducer,
   },
   middleware: (getDefaultMiddleware) =>

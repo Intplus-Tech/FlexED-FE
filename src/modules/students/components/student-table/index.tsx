@@ -15,7 +15,7 @@ interface Student {
 }
 
 interface StudentTableProps {
-  students: Student[];
+  students: any;
   isLoading?: boolean;
 }
 
@@ -32,7 +32,7 @@ export function StudentTable({
   };
 
   if (isLoading) {
-    <StudentTableLoader />;
+    return <StudentTableLoader />;
   }
 
   return (
@@ -73,7 +73,7 @@ export function StudentTable({
             </tr>
           </thead>
           <tbody className="divide-y divide-gray-200">
-            {students.map((student) => (
+            {students.map((student: any) => (
               <tr
                 key={student.id}
                 className="hover:bg-gray-50 transition-colors"

@@ -15,7 +15,7 @@ interface PaymentRow {
 }
 
 interface PaymentTableProps {
-  data?: PaymentRow[];
+  data?: any;
   isLoading?: boolean;
 }
 
@@ -27,7 +27,7 @@ export function PaymentTable({
 
   const handleSelectAll = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.checked) {
-      setSelectedRows(new Set(data.map((row) => row.id)));
+      setSelectedRows(new Set(data.map((row: any) => row.id)));
     } else {
       setSelectedRows(new Set());
     }
@@ -93,7 +93,7 @@ export function PaymentTable({
                 </td>
               </tr>
             ) : (
-              data.map((row) => (
+              data.map((row: any) => (
                 <tr
                   key={row.id}
                   className="border-b border-gray-200 hover:bg-gray-50 transition-colors"

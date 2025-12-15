@@ -6,9 +6,59 @@ import { SmsBalance } from "../components/sms-balance";
 import { TransactionsChart } from "../components/transaction-chart";
 import { CollectionByClass } from "../components/collection-by-class";
 import { RecentTransactions } from "../components/recent-transaction";
+import { useGetSmsMetricsQuery } from "@/redux/api/sms";
+import { useSelector } from "react-redux";
+import { RootState } from "@/redux/store";
+import {
+  useGetClassCollectionsQuery,
+  useGetPaymentMetricsQuery,
+  useGetTransactionsQuery,
+} from "@/redux/api/transaction";
+import { formatNaira } from "@/utils/functions";
 
 export default function DashboardView() {
-  const [isLoading] = useState(false);
+  const authState = useSelector((state: RootState) => state.authState);
+  const { data, isFetching, isLoading } = useGetSmsMetricsQuery(
+    {
+      schoolId: authState.currentUser?.schoolId as string,
+    },
+    { skip: !authState.currentUser }
+  );
+
+  const {
+    data: transactions,
+    isFetching: isTrasactionFetching,
+    isLoading: isTransactionLoading,
+  } = useGetTransactionsQuery(
+    {
+      schoolId: String(authState.currentUser?.schoolId),
+    },
+    { skip: !authState.currentUser }
+  );
+
+  const {
+    data: smsMetrics,
+    isFetching: isFetchingSmsMetrics,
+    isLoading: isLoadingSmsMetrics,
+  } = useGetSmsMetricsQuery(
+    {
+      schoolId: String(authState.currentUser?.schoolId),
+    },
+    { skip: !authState.currentUser }
+  );
+
+  const {
+    data: paymentMetrics,
+    isFetching: isFetchingMetrics,
+    isLoading: isLoadingMetrics,
+  } = useGetPaymentMetricsQuery();
+
+  const {
+    data: collection,
+    isFetching: isFetchingCollection,
+    isLoading: isLoadingCollection,
+  } = useGetClassCollectionsQuery();
+  console.log(smsMetrics, "sms");
 
   const transactionData = [
     { day: "Mon", fullPayment: 3500000, partPayment: 2200000 },
@@ -59,29 +109,6 @@ export default function DashboardView() {
     },
   ];
 
-  const recentTransactions = [
-    {
-      id: "1",
-      time: "2:34pm",
-      transactionId: "32353213",
-      studentName: "Chiamaka Adebayo",
-      class: "SSS 3",
-      amountPaid: "₦150,000",
-      percentRemaining: "75%",
-      status: "Successful" as const,
-    },
-    {
-      id: "2",
-      time: "2:34pm",
-      transactionId: "62889208",
-      studentName: "Aisha Mohammed",
-      class: "JSS 1",
-      amountPaid: "₦150,000",
-      percentRemaining: "25%",
-      status: "Failed" as const,
-    },
-  ];
-
   return (
     <div className=" space-y-6">
       <h1 className="text-3xl font-bold text-gray-900">Dashboard</h1>
@@ -89,17 +116,30 @@ export default function DashboardView() {
       <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
         <div className="lg:col-span-2">
           <FeeMetrics
-            feesThisTerm="₦24,750,000"
-            feesCollected="₦1,450,000"
-            totalOutstanding="₦8,250,000"
-            percentageOutstanding="24.6%"
+            feesThisTerm={formatNaira(
+              paymentMetrics?.data?.totalExpectedAll ?? 0
+            )}
+            feesCollected={formatNaira(paymentMetrics?.data?.totalPaidAll ?? 0)}
+            totalOutstanding={formatNaira(
+              (paymentMetrics?.data?.totalExpectedAll ?? 0) -
+                (paymentMetrics?.data?.totalPaidAll ?? 0)
+            )}
+            percentageOutstanding={
+              paymentMetrics?.data?.totalExpectedAll
+                ? (
+                    (paymentMetrics.data.totalPaidAll /
+                      paymentMetrics.data.totalExpectedAll) *
+                    100
+                  ).toFixed(2)
+                : "0.00"
+            }
           />
         </div>
         <div>
           <SmsBalance
-            available="₦20,000"
-            smsCount="5,000"
-            lastSent="450"
+            available={smsMetrics?.data?.avalable ?? "0"}
+            smsCount={smsMetrics?.data?.sms ?? "0"}
+            lastSent={smsMetrics?.data?.totalSent ?? "0"}
             onTopUp={() => console.log("Top up clicked")}
           />
         </div>
@@ -107,13 +147,16 @@ export default function DashboardView() {
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <TransactionsChart data={transactionData} totalAmount="₦14,000,000" />
-        <CollectionByClass totalStudents={324} data={collectionData} />
+        <CollectionByClass
+          totalStudents={collection?.data?.totalPaid ?? 0}
+          data={collection?.data?.items ?? []}
+        />
       </div>
 
       <div>
         <RecentTransactions
-          transactions={recentTransactions}
-          isLoading={isLoading}
+          transactions={transactions?.data ?? []}
+          isLoading={isFetching || isLoading}
         />
       </div>
     </div>

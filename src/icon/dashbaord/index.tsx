@@ -51,6 +51,40 @@ export const StudentsIcon = () => (
     />
   </svg>
 );
+export const ClassIcon = () => (
+  <svg
+    width="17"
+    height="17"
+    viewBox="0 0 17 17"
+    fill="none"
+    xmlns="http://www.w3.org/2000/svg"
+  >
+    <g clip-path="url(#clip0_2804_1707)">
+      <path
+        d="M8.5 7.7915C10.2604 7.7915 11.6875 6.36441 11.6875 4.604C11.6875 2.8436 10.2604 1.4165 8.5 1.4165C6.73959 1.4165 5.3125 2.8436 5.3125 4.604C5.3125 6.36441 6.73959 7.7915 8.5 7.7915Z"
+        fill="white"
+        stroke="white"
+        stroke-linejoin="round"
+      />
+      <path
+        d="M1.77051 15.583C1.77051 12.5949 3.95749 9.80584 5.80801 9.20801C5.80801 9.20801 7.4903 11.0012 8.49967 12.1965L11.1913 9.20801C12.7054 9.4074 15.2288 12.5949 15.2288 15.583"
+        stroke="white"
+        stroke-linejoin="round"
+      />
+      <path
+        d="M0.708008 15.583H16.2913"
+        stroke="white"
+        stroke-linecap="round"
+        stroke-linejoin="round"
+      />
+    </g>
+    <defs>
+      <clipPath id="clip0_2804_1707">
+        <rect width="17" height="17" fill="white" />
+      </clipPath>
+    </defs>
+  </svg>
+);
 
 export const FeeManagementIcon = () => (
   <svg
@@ -339,3 +373,5 @@ export const DownloadIcon = ({ className }: { className?: string }) => (
     <line x1="12" y1="15" x2="12" y2="3"></line>
   </svg>
 );
+
+// SVG Icons for the class management page

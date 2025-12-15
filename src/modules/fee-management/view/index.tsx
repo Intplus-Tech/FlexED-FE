@@ -4,6 +4,13 @@ import { useState } from "react";
 import { SearchInput } from "@/components/search-input";
 import { DownloadIcon, FilterIcon } from "@/icon/dashbaord";
 import { FeeTable } from "../components/fee-table";
+import {
+  useGetPaymentCategoriesQuery,
+  useGetPaymentListQuery,
+} from "@/redux/api/transaction";
+import { CreateFeeModal } from "../components/add-fee";
+import { CreateFeeCategoryModal } from "../components/fee-category";
+import { FeeCategoryTable } from "../components/fee-category-table";
 
 const mockFees = [
   {
@@ -51,6 +58,26 @@ const mockFees = [
 export default function FeeManagementView() {
   const [searchQuery, setSearchQuery] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const [open, setOpen] = useState(false);
+  const [categoryOpen, setCategoryOpen] = useState(false);
+  const {
+    data: feeCategories,
+    isLoading: isLoadingCategories,
+    isFetching: isFetchingCategories,
+  } = useGetPaymentCategoriesQuery();
+
+  const {
+    data: fees,
+    isFetching,
+    isLoading: isLoadingFees,
+  } = useGetPaymentListQuery();
+
+  console.log(fees, "fees");
+
+  const handleSubmit = (data: any) => {
+    console.log("Fee created:", data);
+    setOpen(false);
+  };
 
   return (
     <div className="space-y-6">
@@ -58,11 +85,17 @@ export default function FeeManagementView() {
 
       <div className="flex items-center justify-between gap-4 flex-wrap">
         <div className="flex items-center gap-3">
-          <button className="px-6 py-2.5 bg-gray-900 text-white rounded-lg hover:bg-gray-800 transition-colors">
+          <button
+            onClick={() => setOpen(true)}
+            className="px-6 py-2.5 bg-gray-900 text-white rounded-lg hover:bg-gray-800 transition-colors"
+          >
             Create Fee
           </button>
-          <button className="px-6 py-2.5 bg-gray-900 text-white rounded-lg hover:bg-gray-800 transition-colors">
-            Create Plan
+          <button
+            onClick={() => setCategoryOpen(true)}
+            className="px-6 py-2.5 bg-gray-900 text-white rounded-lg hover:bg-gray-800 transition-colors"
+          >
+            Create Fee Category
           </button>
         </div>
 
@@ -82,10 +115,23 @@ export default function FeeManagementView() {
         </div>
       </div>
 
-      <FeeTable
-        fees={mockFees}
-        isLoading={isLoading}
+      <FeeCategoryTable
+        categories={feeCategories?.data ?? []}
+        isLoading={isFetching || isLoadingFees}
         searchQuery={searchQuery}
+      />
+
+      <FeeTable
+        fees={fees?.data ?? []}
+        isLoading={isFetching || isLoadingFees}
+        searchQuery={searchQuery}
+      />
+
+      <CreateFeeModal open={open} onOpenChange={setOpen} />
+
+      <CreateFeeCategoryModal
+        open={categoryOpen}
+        onOpenChange={setCategoryOpen}
       />
     </div>
   );

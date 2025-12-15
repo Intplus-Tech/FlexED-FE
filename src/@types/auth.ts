@@ -6,6 +6,7 @@ export interface SignInResponse {
       email: string;
       role: string;
       isVerified: boolean;
+      schoolId: string;
     };
   };
 }

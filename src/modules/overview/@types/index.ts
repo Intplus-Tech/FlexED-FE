@@ -1,3 +1,5 @@
+import { ClassCollectionItem, Transaction } from "@/@types/transaction";
+
 export interface ClassCollectionData {
   className: string;
   percentage: string;
@@ -7,7 +9,7 @@ export interface ClassCollectionData {
 
 export interface CollectionByClassProps {
   totalStudents: number;
-  data: ClassCollectionData[];
+  data: ClassCollectionItem[];
 }
 
 export interface FeeMetricsProps {
@@ -17,25 +19,15 @@ export interface FeeMetricsProps {
   percentageOutstanding: string;
 }
 
-export interface Transaction {
-  id: string;
-  time: string;
-  transactionId: string;
-  studentName: string;
-  class: string;
-  amountPaid: string;
-  percentRemaining: string;
-  status: "Successful" | "Failed";
-}
-
 export interface RecentTransactionsProps {
-  transactions: Transaction[];
+  // transactions: Transaction[];
+  transactions: any;
   isLoading?: boolean;
 }
 
 export interface SmsBalanceProps {
-  available: string;
-  smsCount: string;
-  lastSent: string;
+  available: string | number;
+  smsCount: string | number;
+  lastSent: string | number;
   onTopUp?: () => void;
 }

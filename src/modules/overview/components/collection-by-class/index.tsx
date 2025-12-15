@@ -22,7 +22,7 @@ export function CollectionByClass({
             <span className="text-gray-700 font-medium">{item.className}</span>
             <div className="text-right">
               <p className="text-gray-900 font-semibold">
-                {item.percentage} ({item.collected}/{item.total})
+                {item.percentPaid} ({item.paidAmount}/{item.expectedAmount})
               </p>
             </div>
           </div>

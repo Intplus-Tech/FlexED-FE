@@ -9,6 +9,14 @@ import {
   PaymentStatus,
   PaymentStatusModal,
 } from "../components/payment-status-modal";
+import {
+  useGetPaymentMetricsQuery,
+  useGetTransactionsQuery,
+} from "@/redux/api/transaction";
+import { useSelector } from "react-redux";
+import { RootState } from "@/redux/store";
+import { formatNaira } from "@/utils/functions";
+import { useGetSchoolMetricsQuery } from "@/redux/api/school";
 
 interface PaymentRecord {
   id: string;
@@ -151,8 +159,35 @@ export default function PaymentView() {
   const [searchQuery, setSearchQuery] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
   const [selectedStatus, setSelectedStatus] =
-    useState<PaymentStatus>("fully-paid");
+    useState<PaymentStatus>("FULLY_PAID");
   const [modalOpen, setModalOpen] = useState(false);
+  const authstate = useSelector((state: RootState) => state.authState);
+  const { data, isFetching, isLoading } = useGetTransactionsQuery(
+    {
+      schoolId: String(authstate.currentUser?.schoolId),
+    },
+    { skip: !authstate.currentUser }
+  );
+
+  const {
+    data: schoolMetrics,
+    isFetching: isFetchingMetrics,
+    isLoading: isLoadingMetrics,
+  } = useGetSchoolMetricsQuery(
+    {
+      schoolId: String(authstate.currentUser?.schoolId),
+    },
+    { skip: !authstate.currentUser }
+  );
+
+  const colors = ["green", "red", "gray"] as const;
+
+  const schoolMetric =
+    schoolMetrics?.data?.categories?.map((category, index) => ({
+      ...category,
+      color: colors[index],
+    })) ?? [];
+
   const filteredPayments = useMemo(() => {
     if (!searchQuery.trim()) {
       return SAMPLE_PAYMENTS;
@@ -189,30 +224,17 @@ export default function PaymentView() {
         <h1 className="text-3xl font-bold text-gray-900">Payments</h1>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          <MetricCard
-            title="Fully Paid"
-            amount="₦24.1M"
-            amountColor="green"
-            studentCount={284}
-            onClick={() => handleViewList("fully-paid")}
-            viewListHref="/dashboard/payments/fully-paid"
-          />
-          <MetricCard
-            title="Partially Paid"
-            amount="₦2.3M"
-            amountColor="red"
-            studentCount={284}
-            onClick={() => handleViewList("partially-paid")}
-            viewListHref="/dashboard/payments/partially-paid"
-          />
-          <MetricCard
-            title="Overdue"
-            amount="₦5.5M"
-            amountColor="gray"
-            studentCount={63}
-            onClick={() => handleViewList("overdue")}
-            viewListHref="/dashboard/payments/overdue"
-          />
+          {schoolMetric?.map((category) => {
+            return (
+              <MetricCard
+                title={category.label}
+                amount={formatNaira(category.totalAmount)}
+                amountColor={category.color}
+                studentCount={category.studentCount}
+                onClick={() => handleViewList(category.category)}
+              />
+            );
+          })}
         </div>
 
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
@@ -234,7 +256,10 @@ export default function PaymentView() {
           </button>
         </div>
 
-        <PaymentTable data={paginatedPayments} isLoading={false} />
+        <PaymentTable
+          data={data?.data ?? []}
+          isLoading={isFetching || isLoading}
+        />
 
         {totalPages > 1 && (
           <Pagination

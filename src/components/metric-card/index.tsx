@@ -5,7 +5,6 @@ interface MetricCardProps {
   amount: string;
   amountColor?: "green" | "red" | "gray";
   studentCount: number;
-  viewListHref?: string;
   onClick?: () => void;
 }
 
@@ -14,7 +13,6 @@ export function MetricCard({
   amount,
   amountColor = "gray",
   studentCount,
-  viewListHref,
   onClick,
 }: MetricCardProps) {
   const colorClasses = {
@@ -27,14 +25,13 @@ export function MetricCard({
     <div className="border border-gray-200 rounded-lg p-6 bg-white">
       <div className="flex items-start justify-between mb-4">
         <h3 className="text-sm text-gray-600 font-medium">{title}</h3>
-        {viewListHref && (
-          <button
-            onClick={onClick}
-            className="px-4 py-2 text-sm text-purple-600 border border-purple-300 rounded-lg hover:bg-purple-50 transition-colors"
-          >
-            View List
-          </button>
-        )}
+
+        <button
+          onClick={onClick}
+          className="px-4 py-2 text-sm text-purple-600 border border-purple-300 rounded-lg hover:bg-purple-50 transition-colors"
+        >
+          View List
+        </button>
       </div>
 
       <div className="mb-4">

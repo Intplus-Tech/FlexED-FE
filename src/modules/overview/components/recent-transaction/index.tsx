@@ -47,50 +47,58 @@ export function RecentTransactions({
             </tr>
           </thead>
           <tbody className="divide-y divide-gray-200">
-            {transactions.map((transaction) => (
-              <tr
-                key={transaction.id}
-                className="hover:bg-gray-50 transition-colors"
-              >
-                <td className="px-6 py-4">
-                  <div className="flex items-center gap-3">
-                    <input
-                      type="checkbox"
-                      className="w-4 h-4 border-2 border-gray-300 rounded cursor-pointer"
-                    />
-                    <span className="text-sm text-gray-900">
-                      {transaction.time}
-                    </span>
-                  </div>
-                </td>
-                <td className="px-6 py-4 text-sm text-gray-600">
-                  {transaction.transactionId}
-                </td>
-                <td className="px-6 py-4 text-sm text-gray-900">
-                  {transaction.studentName}
-                </td>
-                <td className="px-6 py-4 text-sm text-gray-600">
-                  {transaction.class}
-                </td>
-                <td className="px-6 py-4 text-sm font-medium text-gray-900">
-                  {transaction.amountPaid}
-                </td>
-                <td className="px-6 py-4 text-sm text-gray-600">
-                  {transaction.percentRemaining}
-                </td>
-                <td className="px-6 py-4">
-                  <span
-                    className={`inline-flex px-3 py-1 text-sm font-medium rounded-full ${
-                      transaction.status === "Successful"
-                        ? "text-green-700 bg-green-50"
-                        : "text-red-700 bg-red-50"
-                    }`}
-                  >
-                    {transaction.status}
-                  </span>
+            {transactions.length === 0 ? (
+              <tr>
+                <td colSpan={7} className="text-center py-4">
+                  No recent transactions
                 </td>
               </tr>
-            ))}
+            ) : (
+              transactions.map((transaction: any) => (
+                <tr
+                  key={transaction.id}
+                  className="hover:bg-gray-50 transition-colors"
+                >
+                  <td className="px-6 py-4">
+                    <div className="flex items-center gap-3">
+                      <input
+                        type="checkbox"
+                        className="w-4 h-4 border-2 border-gray-300 rounded cursor-pointer"
+                      />
+                      <span className="text-sm text-gray-900">
+                        {transaction.time}
+                      </span>
+                    </div>
+                  </td>
+                  <td className="px-6 py-4 text-sm text-gray-600">
+                    {transaction._id}
+                  </td>
+                  <td className="px-6 py-4 text-sm text-gray-900">
+                    {transaction.studentName}
+                  </td>
+                  <td className="px-6 py-4 text-sm text-gray-600">
+                    {transaction.class}
+                  </td>
+                  <td className="px-6 py-4 text-sm font-medium text-gray-900">
+                    {transaction.amount}
+                  </td>
+                  <td className="px-6 py-4 text-sm text-gray-600">
+                    {transaction.percentage}
+                  </td>
+                  <td className="px-6 py-4">
+                    <span
+                      className={`inline-flex px-3 py-1 text-sm font-medium rounded-full ${
+                        transaction.status === "Successful"
+                          ? "text-green-700 bg-green-50"
+                          : "text-red-700 bg-red-50"
+                      }`}
+                    >
+                      {transaction.status}
+                    </span>
+                  </td>
+                </tr>
+              ))
+            )}
           </tbody>
         </table>
       </div>

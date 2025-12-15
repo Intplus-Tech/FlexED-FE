@@ -6,7 +6,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 
-export type PaymentStatus = "fully-paid" | "partially-paid" | "overdue";
+export type PaymentStatus = "FULLY_PAID" | "PARTIALLY_PAID" | "OVERDUE";
 
 interface PaymentStatusModalProps {
   isOpen: boolean;
@@ -24,7 +24,7 @@ interface ModalConfig {
 }
 
 const MODAL_CONFIGS: Record<PaymentStatus, ModalConfig> = {
-  "fully-paid": {
+  FULLY_PAID: {
     title: "Fully Paid",
     amount: "₦24,082,675.53",
     amountColor: "text-green-600",
@@ -74,7 +74,7 @@ const MODAL_CONFIGS: Record<PaymentStatus, ModalConfig> = {
       },
     ],
   },
-  "partially-paid": {
+  PARTIALLY_PAID: {
     title: "Partially Paid",
     amount: "₦2,317,748.45",
     amountColor: "text-red-600",
@@ -130,7 +130,7 @@ const MODAL_CONFIGS: Record<PaymentStatus, ModalConfig> = {
       },
     ],
   },
-  overdue: {
+  OVERDUE: {
     title: "Outstanding",
     amount: "₦5,401,095",
     amountColor: "text-gray-600",

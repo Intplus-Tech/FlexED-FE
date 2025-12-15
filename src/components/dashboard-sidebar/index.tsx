@@ -12,6 +12,7 @@ import {
   SettingsIcon,
   MoreIcon,
   LogoutIcon,
+  ClassIcon,
 } from "@/icon/dashbaord";
 import { Logo } from "@/icon/auth/icon";
 import { signOut } from "next-auth/react";
@@ -38,6 +39,16 @@ const navItems: NavItem[] = [
     label: "Students",
     href: "/dashboard/students",
     icon: <StudentsIcon />,
+  },
+  {
+    label: "Class Management",
+    href: "/dashboard/class-management",
+    icon: <ClassIcon />,
+  },
+  {
+    label: "Academic Sessions",
+    href: "/dashboard/academic-session",
+    icon: <ClassIcon />,
   },
   {
     label: "Fee management",

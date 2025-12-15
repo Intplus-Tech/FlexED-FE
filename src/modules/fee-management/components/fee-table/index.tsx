@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { Pagination } from "@/components/pagination";
 import FeeTableLoader from "../../loader/fee-table-loader";
+import { PaymentItem, Transaction } from "@/@types/transaction";
 
 interface Fee {
   id: string;
@@ -14,7 +15,7 @@ interface Fee {
 }
 
 interface FeeTableProps {
-  fees: Fee[];
+  fees: PaymentItem[];
   isLoading?: boolean;
   searchQuery?: string;
 }
@@ -25,23 +26,6 @@ export function FeeTable({
   searchQuery = "",
 }: FeeTableProps) {
   const [currentPage, setCurrentPage] = useState(1);
-  const itemsPerPage = 10;
-
-  const filteredFees = fees.filter((fee) => {
-    const query = searchQuery.toLowerCase();
-    return (
-      fee.name.toLowerCase().includes(query) ||
-      fee.applicableTo.toLowerCase().includes(query) ||
-      fee.amount.toLowerCase().includes(query)
-    );
-  });
-
-  const totalPages = Math.ceil(filteredFees.length / itemsPerPage);
-  const startIndex = (currentPage - 1) * itemsPerPage;
-  const paginatedFees = filteredFees.slice(
-    startIndex,
-    startIndex + itemsPerPage
-  );
 
   const handlePageChange = (page: number) => {
     setCurrentPage(page);
@@ -74,18 +58,21 @@ export function FeeTable({
                   Applicable To
                 </th>
                 <th className="px-6 py-4 text-left text-sm font-medium text-gray-600">
+                  Description
+                </th>
+                <th className="px-6 py-4 text-left text-sm font-medium text-gray-600">
                   Tenure
                 </th>
                 <th className="px-6 py-4 text-left text-sm font-medium text-gray-600">
                   Status
                 </th>
-                <th className="px-6 py-4 text-left text-sm font-medium text-gray-600">
+                {/* <th className="px-6 py-4 text-left text-sm font-medium text-gray-600">
                   Action
-                </th>
+                </th> */}
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-200">
-              {paginatedFees.length === 0 ? (
+              {fees?.length === 0 ? (
                 <tr>
                   <td
                     colSpan={7}
@@ -95,9 +82,9 @@ export function FeeTable({
                   </td>
                 </tr>
               ) : (
-                paginatedFees.map((fee) => (
+                fees?.map((fee) => (
                   <tr
-                    key={fee.id}
+                    key={fee._id}
                     className="hover:bg-gray-50 transition-colors"
                   >
                     <td className="px-6 py-4">
@@ -106,33 +93,27 @@ export function FeeTable({
                         className="w-4 h-4 rounded border-gray-300"
                       />
                     </td>
-                    <td className="px-6 py-4 text-sm text-gray-900">
-                      {fee.name}
+                    <td className="px-6 py-4 text-sm text-gray-900 whitespace-nowrap">
+                      {fee?.name}
                     </td>
                     <td className="px-6 py-4 text-sm text-gray-900">
                       {fee.amount}
                     </td>
                     <td className="px-6 py-4 text-sm text-gray-600">
-                      {fee.applicableTo}
+                      {fee?.applicableTo}
                     </td>
                     <td className="px-6 py-4 text-sm text-gray-600">
-                      {fee.tenure}
+                      {fee?.description}
                     </td>
-                    <td className="px-6 py-4">
-                      <label className="relative inline-flex items-center cursor-pointer">
-                        <input
-                          type="checkbox"
-                          className="sr-only peer"
-                          defaultChecked={fee.status}
-                        />
-                        <div className="w-11 h-6 bg-gray-300 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-green-500"></div>
-                      </label>
+                    <td className="px-6 py-4 text-sm text-gray-600">
+                      {fee?.period}
                     </td>
-                    <td className="px-6 py-4">
+                    <td className="px-6 py-4">{fee?.status}</td>
+                    {/* <td className="px-6 py-4">
                       <button className="text-sm text-gray-900 hover:text-purple-600 underline underline-offset-2">
                         Edit
                       </button>
-                    </td>
+                    </td> */}
                   </tr>
                 ))
               )}
@@ -141,7 +122,7 @@ export function FeeTable({
         </div>
       </div>
 
-      {filteredFees.length > itemsPerPage && (
+      {/* {filteredFees.length > itemsPerPage && (
         <div className="mt-6">
           <Pagination
             currentPage={currentPage}
@@ -149,7 +130,7 @@ export function FeeTable({
             onPageChange={handlePageChange}
           />
         </div>
-      )}
+      )} */}
     </>
   );
 }

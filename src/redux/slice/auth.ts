@@ -5,13 +5,11 @@ import { createSlice, PayloadAction } from "@reduxjs/toolkit";
 
 interface AuthState {
   accessToken: string | null;
-
   currentUser: SignInResponse["data"]["user"] | null;
 }
 
 const initialState: AuthState = {
   accessToken: null,
-
   currentUser: null,
 };
 
