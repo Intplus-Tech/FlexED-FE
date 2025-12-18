@@ -74,53 +74,61 @@ export function StudentTable({
             </tr>
           </thead>
           <tbody className="divide-y divide-gray-200">
-            {students.map((student: any) => (
-              <tr
-                key={student.id}
-                className="hover:bg-gray-50 transition-colors"
-              >
-                <td className="px-6 py-4">
-                  <div className="flex items-center gap-3">
-                    <input
-                      type="checkbox"
-                      className="w-4 h-4 border-2 border-gray-300 rounded cursor-pointer"
-                    />
-                    <span className="text-sm text-gray-900">
-                      {student.studentId}
-                    </span>
-                  </div>
-                </td>
-                <td className="px-6 py-4 text-sm text-gray-900">
-                  {student.studentName}
-                </td>
-                <td className="px-6 py-4 text-sm text-gray-600">
-                  {student.class}
-                </td>
-                <td className="px-6 py-4 text-sm font-medium text-gray-900">
-                  {student.amountFee}
-                </td>
-                <td className="px-6 py-4 text-sm font-medium text-gray-900">
-                  {student.paidTD}
-                </td>
-                <td className="px-6 py-4 text-sm font-medium text-gray-900">
-                  {student.balance}
-                </td>
-                <td className="px-6 py-4">
-                  <div className="flex items-center gap-3">
-                    <button
-                      onClick={() => handleViewStudent(student)}
-                      className="text-sm text-gray-700 hover:text-gray-900 underline"
-                    >
-                      View
-                    </button>
-                    <span className="text-gray-300">|</span>
-                    <button className="text-sm text-gray-700 hover:text-gray-900 underline">
-                      Edit
-                    </button>
-                  </div>
+            {students.length === 0 ? (
+              <tr>
+                <td colSpan={7} className="px-6 py-4 text-center">
+                  No data available
                 </td>
               </tr>
-            ))}
+            ) : (
+              students.map((student: any) => (
+                <tr
+                  key={student.id}
+                  className="hover:bg-gray-50 transition-colors"
+                >
+                  <td className="px-6 py-4">
+                    <div className="flex items-center gap-3">
+                      <input
+                        type="checkbox"
+                        className="w-4 h-4 border-2 border-gray-300 rounded cursor-pointer"
+                      />
+                      <span className="text-sm text-gray-900">
+                        {student.studentId}
+                      </span>
+                    </div>
+                  </td>
+                  <td className="px-6 py-4 text-sm text-gray-900">
+                    {student.studentName}
+                  </td>
+                  <td className="px-6 py-4 text-sm text-gray-600">
+                    {student.class}
+                  </td>
+                  <td className="px-6 py-4 text-sm font-medium text-gray-900">
+                    {student.amountFee}
+                  </td>
+                  <td className="px-6 py-4 text-sm font-medium text-gray-900">
+                    {student.paidTD}
+                  </td>
+                  <td className="px-6 py-4 text-sm font-medium text-gray-900">
+                    {student.balance}
+                  </td>
+                  <td className="px-6 py-4">
+                    <div className="flex items-center gap-3">
+                      <button
+                        onClick={() => handleViewStudent(student)}
+                        className="text-sm text-gray-700 hover:text-gray-900 underline"
+                      >
+                        View
+                      </button>
+                      <span className="text-gray-300">|</span>
+                      <button className="text-sm text-gray-700 hover:text-gray-900 underline">
+                        Edit
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+              ))
+            )}
           </tbody>
         </table>
       </div>

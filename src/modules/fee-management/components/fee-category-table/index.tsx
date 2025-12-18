@@ -1,7 +1,5 @@
 "use client";
 
-import { useState } from "react";
-import { Pagination } from "@/components/pagination";
 import FeeTableLoader from "../../loader/fee-table-loader";
 import { PaymentCategory } from "@/@types/transaction";
 
@@ -16,8 +14,6 @@ export function FeeCategoryTable({
   isLoading = false,
   searchQuery = "",
 }: FeeTableProps) {
-  const [currentPage, setCurrentPage] = useState(1);
-
   if (isLoading) {
     return <FeeTableLoader />;
   }

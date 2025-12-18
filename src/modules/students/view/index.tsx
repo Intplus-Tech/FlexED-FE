@@ -10,6 +10,7 @@ import { AddStudentModal } from "../components/add-student";
 import { useGetAllStudentQuery } from "@/redux/api/student";
 import { useSelector } from "react-redux";
 import { RootState } from "@/redux/store";
+import { useGetSchoolMetricsQuery } from "@/redux/api/school";
 
 export default function StudentView() {
   const [searchQuery, setSearchQuery] = useState("");
@@ -26,116 +27,25 @@ export default function StudentView() {
     schoolId: currentUser?.schoolId as string,
   });
 
-  console.log(students, "students");
-  const allStudents = [
+  const {
+    data: schoolMetrics,
+    isFetching: isFetchingMetrics,
+    isLoading: isLoadingMetrics,
+  } = useGetSchoolMetricsQuery(
     {
-      id: "1",
-      studentId: "8723",
-      studentName: "Chiamaka Adebayo",
-      class: "SSS 3",
-      amountFee: "₦350,000",
-      paidTD: "₦150,000",
-      balance: "₦200,000",
+      schoolId: String(currentUser?.schoolId),
     },
-    {
-      id: "2",
-      studentId: "8723",
-      studentName: "Aisha Mohammed",
-      class: "JSS 1",
-      amountFee: "₦350,000",
-      paidTD: "₦150,000",
-      balance: "₦200,000",
-    },
-    {
-      id: "3",
-      studentId: "8723",
-      studentName: "Emeka Okoro",
-      class: "SSS 3",
-      amountFee: "₦350,000",
-      paidTD: "₦150,000",
-      balance: "₦200,000",
-    },
-    {
-      id: "4",
-      studentId: "8724",
-      studentName: "Fatima Bello",
-      class: "JSS 2",
-      amountFee: "₦350,000",
-      paidTD: "₦150,000",
-      balance: "₦200,000",
-    },
-    {
-      id: "5",
-      studentId: "8725",
-      studentName: "Chinedu Okafor",
-      class: "SSS 1",
-      amountFee: "₦350,000",
-      paidTD: "₦150,000",
-      balance: "₦200,000",
-    },
-    {
-      id: "6",
-      studentId: "8726",
-      studentName: "Zainab Ibrahim",
-      class: "JSS 3",
-      amountFee: "₦350,000",
-      paidTD: "₦150,000",
-      balance: "₦200,000",
-    },
-    {
-      id: "7",
-      studentId: "8727",
-      studentName: "Oluwaseun Adeyemi",
-      class: "SSS 2",
-      amountFee: "₦350,000",
-      paidTD: "₦150,000",
-      balance: "₦200,000",
-    },
-    {
-      id: "8",
-      studentId: "8728",
-      studentName: "Blessing Nwankwo",
-      class: "JSS 1",
-      amountFee: "₦350,000",
-      paidTD: "₦150,000",
-      balance: "₦200,000",
-    },
-    {
-      id: "9",
-      studentId: "8729",
-      studentName: "Yusuf Musa",
-      class: "SSS 3",
-      amountFee: "₦350,000",
-      paidTD: "₦150,000",
-      balance: "₦200,000",
-    },
-    {
-      id: "10",
-      studentId: "8730",
-      studentName: "Ngozi Eze",
-      class: "JSS 2",
-      amountFee: "₦350,000",
-      paidTD: "₦150,000",
-      balance: "₦200,000",
-    },
-  ];
+    { skip: !currentUser }
+  );
+  console.log(schoolMetrics, "students");
 
-  const filteredStudents = useMemo(() => {
-    if (!searchQuery) return allStudents;
-
-    const query = searchQuery.toLowerCase();
-    return allStudents.filter(
-      (student) =>
-        student.studentName.toLowerCase().includes(query) ||
-        student.studentId.toLowerCase().includes(query) ||
-        student.class.toLowerCase().includes(query)
-    );
-  }, [searchQuery]);
-
-  const totalPages = Math.ceil(filteredStudents.length / itemsPerPage);
-  const startIndex = (currentPage - 1) * itemsPerPage;
-  const endIndex = startIndex + itemsPerPage;
-  const currentStudents = filteredStudents.slice(startIndex, endIndex);
+  const colors = ["green", "red", "gray"] as const;
+  const formattedSchoolMetrics = useMemo(() => {
+    return schoolMetrics?.data?.categories?.map((category, index) => ({
+      ...category,
+      color: colors[index],
+    }));
+  }, [schoolMetrics]);
 
   const handleSearch = (query: string) => {
     setSearchQuery(query);
@@ -151,30 +61,14 @@ export default function StudentView() {
       <h1 className="text-3xl font-bold text-gray-900">Students</h1>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <StudentMetricCard
-          title="Total Students"
-          value="2295"
-          change="+ 15.6%"
-          changeLabel="From Previous Term"
-          valueColor="green"
-          // viewListHref="/dashboard/students/all"
-        />
-        <StudentMetricCard
-          title="Total Paid"
-          value="2145"
-          change="+ 15.6%"
-          changeLabel="From Previous Term"
-          valueColor="red"
-          // viewListHref="/dashboard/students/paid"
-        />
-        <StudentMetricCard
-          title="Total Outstanding"
-          value="150"
-          change="+ 15.6%"
-          changeLabel="From Previous Term"
-          valueColor="gray"
-          // viewListHref="/dashboard/students/outstanding"
-        />
+        {formattedSchoolMetrics?.map((metric, index) => (
+          <StudentMetricCard
+            key={index}
+            title={metric.label}
+            value={String(metric.studentCount)}
+            valueColor={metric.color}
+          />
+        ))}
       </div>
 
       <div className="flex flex-col md:flex-row gap-4 items-start md:items-center justify-between">
@@ -213,7 +107,7 @@ export default function StudentView() {
         onClose={() => setIsAddStudentOpen(false)}
       />
 
-      {!isLoadingStudents && filteredStudents.length > 0 && (
+      {/* {!isLoadingStudents && filteredStudents.length > 0 && (
         <Pagination
           currentPage={currentPage}
           totalPages={totalPages}
@@ -221,13 +115,13 @@ export default function StudentView() {
         />
       )}
 
-      {!isLoadingStudents && filteredStudents.length === 0 && (
+      {!isLoadingStudents &&  (
         <div className="text-center py-12">
           <p className="text-gray-500 text-lg">
             No students found matching your search.
           </p>
         </div>
-      )}
+      )} */}
     </div>
   );
 }

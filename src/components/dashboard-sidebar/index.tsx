@@ -17,6 +17,7 @@ import {
 import { Logo } from "@/icon/auth/icon";
 import { signOut } from "next-auth/react";
 import { showinfo } from "@/utils/toast";
+import Image from "next/image";
 
 interface NavItem {
   label: string;
@@ -92,9 +93,9 @@ export default function DashboardSidebar() {
   return (
     <aside className="fixed left-0 top-0 h-screen w-[250px] lg:w-[300px] border-r border-gray-200 bg-white  flex flex-col">
       <div className="flex items-center gap-3 border-b border-gray-200 px-6 py-6">
-        <Logo />
+        <Image src="/images/logo.svg" alt="logo" width={50} height={50} />
         <div className="flex-1 overflow-hidden">
-          <h1 className="text-lg font-bold text-gray-900">FlexED</h1>
+          <h1 className="text-lg font-bold text-gray-900">Sanctum</h1>
           <p className="truncate text-xs text-gray-600">Powered By Int+</p>
         </div>
       </div>

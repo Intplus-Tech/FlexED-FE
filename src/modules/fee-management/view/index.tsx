@@ -28,11 +28,9 @@ export default function FeeManagementView() {
     isLoading: isLoadingFees,
   } = useGetPaymentListQuery();
 
-  console.log(fees, "fees");
-
   return (
     <div className="space-y-6">
-      <h1 className="text-2xl font-semibold text-gray-900">Fee Management</h1>
+      <h1 className="text-2xl font-semibold text-gray-900">Fee Category</h1>
 
       <div className="flex items-center justify-between gap-4 flex-wrap">
         <div className="flex items-center gap-3">
@@ -72,11 +70,15 @@ export default function FeeManagementView() {
         searchQuery={searchQuery}
       />
 
-      <FeeTable
-        fees={fees?.data ?? []}
-        isLoading={isFetching || isLoadingFees}
-        searchQuery={searchQuery}
-      />
+      <>
+        <h1 className="text-2xl font-semibold text-gray-900">Fee Management</h1>
+
+        <FeeTable
+          fees={fees?.data ?? []}
+          isLoading={isFetching || isLoadingFees}
+          searchQuery={searchQuery}
+        />
+      </>
 
       <CreateFeeModal open={open} onOpenChange={setOpen} />
 

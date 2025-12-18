@@ -2,7 +2,8 @@
 
 import React, { useEffect } from "react";
 import gsap from "gsap";
-import { Logo } from "@/icon/auth/icon";
+// import { Logo } from "@/icon/auth/icon";
+import Image from "next/image";
 
 export default function AuthLayout({
   children,
@@ -59,15 +60,16 @@ export default function AuthLayout({
       <div className="hidden lg:flex lg:w-1/2 p-12 flex-col  items-center justify-center">
         <div className="max-w-md">
           <div className="mb-8 auth-logo">
-            <Logo />
+            {/* <Logo /> */}
+            <Image src="/images/logo.svg" width={100} height={100} alt="" />
           </div>
 
           <h1 className="text-4xl font-bold mb-2 text-gray-900 auth-heading-1">
             Welcome to
           </h1>
           <h1 className="text-4xl  mb-6 auth-heading-2">
-            <span className="text-[#9E97FF] font-bold">FlexED</span>{" "}
-            <span className="text-[#9E97FF]">Systems</span>
+            <span className="text-[#9E97FF] font-bold">Sanctum</span>{" "}
+            <span className="text-[#9E97FF]">Startup College</span>
           </h1>
 
           <p className="text-lg text-gray-600 leading-relaxed auth-description">

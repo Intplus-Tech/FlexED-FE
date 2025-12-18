@@ -203,10 +203,6 @@ export default function PaymentView() {
   }, [searchQuery]);
 
   const totalPages = Math.ceil(filteredPayments.length / ITEMS_PER_PAGE);
-  const paginatedPayments = useMemo(() => {
-    const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
-    return filteredPayments.slice(startIndex, startIndex + ITEMS_PER_PAGE);
-  }, [filteredPayments, currentPage]);
 
   const handleSearch = (query: string) => {
     setSearchQuery(query);
@@ -272,6 +268,7 @@ export default function PaymentView() {
       </div>
       <PaymentStatusModal
         isOpen={modalOpen}
+        schoolData={schoolMetrics?.data?.categories}
         onClose={() => setModalOpen(false)}
         status={selectedStatus}
       />
