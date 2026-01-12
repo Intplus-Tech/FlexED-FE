@@ -2,11 +2,12 @@
 import { SignInResponse } from "@/@types/auth";
 import DashboardSidebar from "@/components/dashboard-sidebar";
 import { setAuth } from "@/redux/slice/auth";
+import { RootState } from "@/redux/store";
 import { Loader } from "lucide-react";
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import { useEffect } from "react";
-import { useDispatch } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 
 export default function DashboardLayout({
   children,
@@ -15,7 +16,8 @@ export default function DashboardLayout({
 }) {
   const dispatch = useDispatch();
   const { data, status } = useSession();
-  console.log(data, "data");
+  console.log(data, status, "data");
+  const { currentUser } = useSelector((state: RootState) => state.authState);
   const router = useRouter();
 
   useEffect(() => {
@@ -34,16 +36,18 @@ export default function DashboardLayout({
     }
   }, [status, data, dispatch]);
 
-  if (status === "loading") {
+  useEffect(() => {
+    if (status === "unauthenticated" && !currentUser) {
+      router.push("/auth/sign-in");
+    }
+  }, [status, router]);
+
+  if (status === "loading" || !currentUser) {
     return (
       <div className="h-screen flex items-center justify-center">
         <Loader className="animate-spin" />
       </div>
     );
-  }
-
-  if (status === "unauthenticated") {
-    router.push("/auth/sign-in");
   }
 
   return (

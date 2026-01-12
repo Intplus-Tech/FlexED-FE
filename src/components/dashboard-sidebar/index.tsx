@@ -18,6 +18,8 @@ import { Logo } from "@/icon/auth/icon";
 import { signOut } from "next-auth/react";
 import { showinfo } from "@/utils/toast";
 import Image from "next/image";
+import { useSelector } from "react-redux";
+import { RootState } from "@/redux/store";
 
 interface NavItem {
   label: string;
@@ -75,6 +77,8 @@ export default function DashboardSidebar() {
   const pathname = usePathname();
   const [showProfileMenu, setShowProfileMenu] = useState(false);
   const router = useRouter();
+  const { currentUser } = useSelector((state: RootState) => state.authState);
+
   const isActive = (href: string) => {
     return pathname === href;
   };
@@ -82,8 +86,8 @@ export default function DashboardSidebar() {
   const handleLogOut = async () => {
     try {
       setShowProfileMenu(false);
-      await signOut();
       router.push("/auth/sign-in");
+      await signOut();
       showinfo("Logged out successfully");
     } catch (error) {
       console.log(error);
@@ -152,14 +156,17 @@ export default function DashboardSidebar() {
             className="flex w-full items-center gap-3 hover:opacity-80 transition-opacity"
           >
             <div className="h-10 w-10 shrink-0 rounded-full bg-linear-to-br from-blue-400 to-purple-500 flex items-center justify-center text-white font-semibold">
-              AB
+              SA
             </div>
             <div className="flex-1 text-left min-w-0">
               <p className="text-sm font-semibold text-gray-900 truncate">
-                Amara Bling
+                {currentUser?.role
+                  .split("_")
+                  .map((word) => word[0].toUpperCase() + word.slice(1))
+                  .join(" ")}
               </p>
               <p className="text-xs text-gray-600 truncate">
-                amarablings@gmail.com
+                {currentUser?.email}
               </p>
             </div>
             <div className="flex h-6 w-6 items-center justify-center shrink-0">

@@ -9,37 +9,35 @@ import {
   DialogContent,
   DialogHeader,
   DialogTitle,
-  DialogClose,
 } from "@/components/ui/dialog";
-import { z } from "zod";
-import { useGetAllClassesQuery } from "@/redux/api/class";
+
 import { useSelector } from "react-redux";
 import { RootState } from "@/redux/store";
 import { useCreateStudentMutation } from "@/redux/api/student";
 import { AddStudentFormData, addStudentSchema } from "@/lib/validations";
 import { showerror, showsuccess } from "@/utils/toast";
 import { toISOStringSafe } from "@/utils/functions";
+import { Loader } from "lucide-react";
+import { ClassItem } from "@/@types/class";
 
-// ----- Zod Schema -----
-
-// ----- Component -----
 interface AddStudentModalProps {
   isOpen: boolean;
   onClose: () => void;
+  classItems: ClassItem[];
+  isClassesLoading: boolean;
 }
 
-export function AddStudentModal({ isOpen, onClose }: AddStudentModalProps) {
+export function AddStudentModal({
+  isOpen,
+  onClose,
+  classItems,
+  isClassesLoading,
+}: AddStudentModalProps) {
   const [step, setStep] = useState(1);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const [imageFile, setImageFile] = useState<File | null>(null);
-  // const [showSuccess, setShowSuccess] = useState(false);
 
   const { currentUser } = useSelector((state: RootState) => state.authState);
-  const {
-    data: classes,
-    isFetching: isFetchingClasses,
-    isLoading: isLoadingClasses,
-  } = useGetAllClassesQuery();
 
   const [createStudent, { isLoading }] = useCreateStudentMutation();
 
@@ -47,9 +45,7 @@ export function AddStudentModal({ isOpen, onClose }: AddStudentModalProps) {
     register,
     handleSubmit,
     control,
-    watch,
     formState: { errors },
-    reset,
     trigger,
   } = useForm<AddStudentFormData>({
     resolver: zodResolver(addStudentSchema),
@@ -76,12 +72,12 @@ export function AddStudentModal({ isOpen, onClose }: AddStudentModalProps) {
     },
   });
 
+  console.log(errors, "errors ");
   const { fields, append, remove } = useFieldArray({
     control,
     name: "parentDetails",
   });
 
-  console.log(errors, "errors");
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
@@ -104,11 +100,6 @@ export function AddStudentModal({ isOpen, onClose }: AddStudentModalProps) {
   };
 
   const onSubmit = async (data: AddStudentFormData) => {
-    const finalData = {
-      ...data,
-      studentPicture: imageFile?.name || "No file selected",
-      imagePreview,
-    };
     try {
       const res = await createStudent({
         firstName: data.firstName,
@@ -116,19 +107,14 @@ export function AddStudentModal({ isOpen, onClose }: AddStudentModalProps) {
         dateOfBirth: toISOStringSafe(data.dateOfBirth),
         gender: data.gender,
         class: data.class,
-        admissionNumber: data.admissionNumber,
-        parents: [data.parentDetails[0].email],
-        parentsDetails: data.parentDetails,
+        admissionNumber: data?.admissionNumber as string,
+        parentDetails: data.parentDetails,
         school: currentUser?.schoolId as string,
-        // studentPicture: imageFile?.name || "No file selected",
-        // imagePreview,
       }).unwrap();
       showsuccess(res?.message);
     } catch (error: any) {
       showerror(error?.data?.message);
     }
-    console.log("Submitted Data:", finalData);
-    // setShowSuccess(true);
   };
 
   return (
@@ -236,7 +222,7 @@ export function AddStudentModal({ isOpen, onClose }: AddStudentModalProps) {
                 {/* Date of Birth */}
                 <div>
                   <label className="block mb-1 font-medium">
-                    Admission Number
+                    Admission Number (optional)
                   </label>
                   <input
                     type="string"
@@ -279,14 +265,14 @@ export function AddStudentModal({ isOpen, onClose }: AddStudentModalProps) {
                 {/* Class */}
                 <div>
                   <label className="block mb-1 font-medium">Class</label>
-                  {isFetchingClasses || isLoadingClasses ? (
+                  {isClassesLoading ? (
                     <div className="h-10 w-full bg-gray-200 animate-pulse"></div>
                   ) : (
                     <select
                       {...register("class")}
                       className="w-full p-2 border rounded"
                     >
-                      {classes?.data?.map((classItem) => (
+                      {classItems?.map((classItem) => (
                         <option key={classItem._id} value={classItem._id}>
                           {classItem.name}
                         </option>
@@ -442,7 +428,11 @@ export function AddStudentModal({ isOpen, onClose }: AddStudentModalProps) {
                     type="submit"
                     className="w-full py-2 bg-purple-600 text-white rounded"
                   >
-                    Submit
+                    {isLoading ? (
+                      <Loader className="mx-auto animate-spin" />
+                    ) : (
+                      "Submit"
+                    )}
                   </button>
                 </div>
               </div>

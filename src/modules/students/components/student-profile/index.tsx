@@ -7,25 +7,22 @@ import {
   DialogHeader,
   DialogClose,
 } from "@/components/ui/dialog";
+import Image from "next/image";
+import { Student } from "@/@types/student";
+import { ClassItem } from "@/@types/class";
 
 interface StudentProfileModalProps {
   isOpen: boolean;
   onClose: () => void;
-  student: {
-    id: string;
-    studentId: string;
-    studentName: string;
-    class: string;
-    amountFee: string;
-    paidTD: string;
-    balance: string;
-  } | null;
+  student: Student | null;
+  classItems: ClassItem[];
 }
 
 export function StudentProfileModal({
   isOpen,
   onClose,
   student,
+  classItems,
 }: StudentProfileModalProps) {
   const [activeTab, setActiveTab] = useState<"parent" | "fees" | "payment">(
     "parent"
@@ -33,27 +30,35 @@ export function StudentProfileModal({
 
   if (!student) return null;
 
+  const getClassById = (classId: string) => {
+    const classItem = classItems?.find((item) => item._id === classId);
+    return classItem ? classItem.name : "";
+  };
+
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="max-w-5xl! w-full max-h-[90vh] overflow-y-auto">
         <h1 className="text-2xl font-medium my-2">Student Profile</h1>
         <DialogHeader className="flex flex-row items-start justify-between">
           <div className="flex items-start gap-6 flex-1">
-            {/* Student Avatar and Info */}
             <div className="flex items-start gap-4">
-              <img
-                src="https://api.dicebear.com/7.x/avataaars/svg?seed=student"
+              <Image
+                src="/images/avatar.svg"
                 alt="Student"
+                height={80}
+                width={80}
                 className="w-20 h-20 rounded-lg object-cover"
               />
               <div>
                 <h2 className="text-xl font-semibold text-gray-900">
-                  {student.studentName}
+                  {student.firstName} {student.lastName}
                 </h2>
                 <p className="text-sm text-gray-600">
-                  Student ID: {student.studentId}
+                  Student ID: {student._id}
                 </p>
-                <p className="text-sm text-gray-600">Class: {student.class}</p>
+                <p className="text-sm text-gray-600">
+                  Class: {getClassById(student.class)}
+                </p>
                 <p className="text-sm text-gray-600">Gender: Female</p>
               </div>
             </div>
@@ -62,13 +67,11 @@ export function StudentProfileModal({
             <div className="flex gap-4 flex-1">
               <div className="bg-purple-50 rounded-lg p-4 flex-1">
                 <p className="text-xs text-gray-600 mb-1">Total Amount TD</p>
-                <p className="text-2xl font-bold text-purple-600">
-                  ₦15,000,000
-                </p>
+                <p className="text-2xl font-bold text-purple-600">₦0</p>
               </div>
               <div className="bg-red-50 rounded-lg p-4 flex-1">
                 <p className="text-xs text-gray-600 mb-1">Outstanding TD</p>
-                <p className="text-2xl font-bold text-red-600">₦350,000</p>
+                <p className="text-2xl font-bold text-red-600">₦0</p>
               </div>
             </div>
           </div>
@@ -88,7 +91,7 @@ export function StudentProfileModal({
             >
               Parent Guardian Information
             </button>
-            <button
+            {/* <button
               onClick={() => setActiveTab("fees")}
               className={`pb-3 text-sm font-medium transition-colors ${
                 activeTab === "fees"
@@ -107,48 +110,40 @@ export function StudentProfileModal({
               }`}
             >
               Payment History
-            </button>
+            </button> */}
           </div>
         </div>
 
         {/* Tab Content */}
         <div className="mt-8">
-          {/* Parent Guardian Information Tab */}
           {activeTab === "parent" && (
             <div className="space-y-6">
               <div className="grid grid-cols-2 gap-8">
                 <div>
                   <label className="text-sm font-medium text-gray-900">
-                    Mother&apos;s name:
+                    Gurdian&apos;s name:
                   </label>
-                  <p className="text-gray-700 mt-1">Mr. Adebayo Johnson</p>
+                  <p className="text-gray-700 mt-1">{`${
+                    student?.parentDetails?.[0]?.firstName ?? "N/A"
+                  } ${student?.parentDetails?.[0]?.lastName}`}</p>
                 </div>
                 <div>
                   <label className="text-sm font-medium text-gray-900">
-                    Address
+                    Address:
                   </label>
                   <p className="text-gray-700 mt-1">
-                    Plot no. 116, 4, Bashorun Crescent, Ikoyi, Lagos
+                    {/* Plot no. 116, 4, Bashorun Crescent, Ikoyi, Lagos */}
                   </p>
                 </div>
               </div>
 
               <div className="grid grid-cols-2 gap-8">
                 <div>
-                  <label className="text-sm font-medium text-gray-900">
-                    Father&apos;s name:
-                  </label>
-                  <p className="text-gray-700 mt-1">Mukesh Anadkat</p>
-                </div>
-                <div>
-                  <label className="text-sm font-medium text-gray-900">
-                    Father&apos;s Contact
-                  </label>
                   <p className="flex items-center gap-2 text-gray-700 mt-1">
-                    📞 0701 234 9870
+                    📞 {student?.parentDetails?.[0]?.phone ?? "N/A"}
                   </p>
                   <p className="flex items-center gap-2 text-gray-700 mt-1">
-                    ✉️ adebayoJulius@gmail.com
+                    ✉️ {student?.parentDetails?.[0]?.email ?? "N/A"}
                   </p>
                 </div>
               </div>
@@ -158,9 +153,11 @@ export function StudentProfileModal({
                   <label className="text-sm font-medium text-gray-900">
                     Join Date:
                   </label>
-                  <p className="text-gray-700 mt-1">17 Jan 2023</p>
+                  <p className="text-gray-700 mt-1">
+                    {new Date(student?.createdAt).toDateString() ?? "N/A"}
+                  </p>
                 </div>
-                <div>
+                {/* <div>
                   <label className="text-sm font-medium text-gray-900">
                     Mother&apos;s Contact
                   </label>
@@ -170,14 +167,16 @@ export function StudentProfileModal({
                   <p className="flex items-center gap-2 text-gray-700 mt-1">
                     ✉️ adebayoJulius@gmail.com
                   </p>
-                </div>
+                </div> */}
               </div>
 
               <div>
                 <label className="text-sm font-medium text-gray-900">
                   Joined Class:
                 </label>
-                <p className="text-gray-700 mt-1">Nursery 2</p>
+                <p className="text-gray-700 mt-1">
+                  {getClassById(student.class)}
+                </p>
               </div>
             </div>
           )}
@@ -215,14 +214,14 @@ export function StudentProfileModal({
                 </div>
               </div>
 
-              <div className="border-t border-gray-200 pt-6">
+              {/* <div className="border-t border-gray-200 pt-6">
                 <label className="text-sm font-medium text-gray-900">
                   Address
                 </label>
                 <p className="text-gray-700 mt-2">
                   Plot no. 116, 4, Bashorun Crescent, Ikoyi, Lagos
                 </p>
-              </div>
+              </div> */}
 
               <div>
                 <label className="text-sm font-medium text-gray-900">

@@ -11,11 +11,16 @@ import { useGetAllStudentQuery } from "@/redux/api/student";
 import { useSelector } from "react-redux";
 import { RootState } from "@/redux/store";
 import { useGetSchoolMetricsQuery } from "@/redux/api/school";
+import { useGetAllClassesQuery } from "@/redux/api/class";
+import { Dialog } from "@/components/ui/dialog";
+import AddBulkStudentModal from "../components/add-bulk-student";
 
 export default function StudentView() {
   const [searchQuery, setSearchQuery] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
   const [isAddStudentOpen, setIsAddStudentOpen] = useState(false);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isBulkModalOpen, setIsBulkModalOpen] = useState(false);
   const itemsPerPage = 10;
 
   const { currentUser } = useSelector((state: RootState) => state.authState);
@@ -28,6 +33,12 @@ export default function StudentView() {
   });
 
   const {
+    data: classes,
+    isFetching: isFetchingClasses,
+    isLoading: isLoadingClasses,
+  } = useGetAllClassesQuery();
+
+  const {
     data: schoolMetrics,
     isFetching: isFetchingMetrics,
     isLoading: isLoadingMetrics,
@@ -37,7 +48,6 @@ export default function StudentView() {
     },
     { skip: !currentUser }
   );
-  console.log(schoolMetrics, "students");
 
   const colors = ["green", "red", "gray"] as const;
   const formattedSchoolMetrics = useMemo(() => {
@@ -72,12 +82,31 @@ export default function StudentView() {
       </div>
 
       <div className="flex flex-col md:flex-row gap-4 items-start md:items-center justify-between">
-        <button
-          onClick={() => setIsAddStudentOpen(true)}
-          className="flex items-center gap-2 px-6 py-3 bg-gray-900 text-white font-medium rounded-lg hover:bg-gray-800 transition-colors"
-        >
-          Add Student
-        </button>
+        <div className="relative">
+          <button
+            onClick={() => setIsModalOpen(!isModalOpen)}
+            className="flex items-center gap-2 px-6 py-3 bg-gray-900 text-white font-medium rounded-lg hover:bg-gray-800 transition-colors"
+          >
+            Add Student
+          </button>
+
+          {isModalOpen && (
+            <div className=" absolute top-12 flex flex-col  bg-white shadow-lg rounded-lg">
+              <button
+                onClick={() => setIsAddStudentOpen(true)}
+                className="text-sm whitespace-nowrap py-4 hover:bg-gray-100 px-2 "
+              >
+                Add Single student
+              </button>
+              <button
+                onClick={() => setIsBulkModalOpen(true)}
+                className="text-sm whitespace-nowrap pt-2 pb-4 hover:bg-gray-100 px-2"
+              >
+                Add Bulk student
+              </button>
+            </div>
+          )}
+        </div>
 
         <div className="flex flex-col md:flex-row gap-4 items-start md:items-center w-full md:w-auto">
           <SearchInput onSearch={handleSearch} placeholder="Search" />
@@ -100,11 +129,21 @@ export default function StudentView() {
       <StudentTable
         students={students?.data ?? []}
         isLoading={isFetchingStudents || isLoadingStudents}
+        classItems={classes?.data ?? []}
       />
 
       <AddStudentModal
+        classItems={classes?.data ?? []}
+        isClassesLoading={isFetchingClasses || isLoadingClasses}
         isOpen={isAddStudentOpen}
         onClose={() => setIsAddStudentOpen(false)}
+      />
+
+      <AddBulkStudentModal
+        isbulkModalOpen={isBulkModalOpen}
+        setIsBulkModalOpen={setIsBulkModalOpen}
+        classItems={classes?.data ?? []}
+        isClassLoading={isFetchingClasses || isLoadingClasses}
       />
 
       {/* {!isLoadingStudents && filteredStudents.length > 0 && (

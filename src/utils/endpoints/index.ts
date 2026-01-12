@@ -1,3 +1,5 @@
+import { id } from "zod/locales";
+
 export const auth = {
   login: "auth/login",
   changePassword: "auth/change-password",
@@ -45,7 +47,14 @@ export const student = {
   getStudentByParent: (parentId: string) => `/students/parent/${parentId}`,
   getAllPendingPaymentForStudent: (studentId: string) =>
     `/students/${studentId}/payments/pending`,
-  getAllStudent: (schoolId: string) => `/students/school/${schoolId}`,
+  getAllStudent: `/students/school/`,
+  getStudentById: (id: string) => `/students/${id}`,
+  deleteStudent: (id: string) => `/students/${id}`,
+  updateStudent: (id: string) => `/students/${id}`,
+  getStudentByAdmissionNumber: (admissionNumber: string) =>
+    `/students/admission/${admissionNumber}`,
+  dowloadStudentCSVFormat: `/students/bulk/template`,
+  uploadBulkStudent: (id: string) => `/students/bulk/upload/${id}`,
 };
 
 export const classes = {
