@@ -13,36 +13,9 @@ interface TeamMember {
   isActive: boolean;
 }
 
-const mockTeamMembers: TeamMember[] = [
-  {
-    id: "1",
-    userId: "8723",
-    firstName: "Lanre",
-    lastName: "Bidemi",
-    email: "bidlan@gmail.com",
-    isActive: true,
-  },
-  {
-    id: "2",
-    userId: "8723",
-    firstName: "Lanre",
-    lastName: "Bidemi",
-    email: "bidlan@gmail.com",
-    isActive: true,
-  },
-  {
-    id: "3",
-    userId: "8723",
-    firstName: "Lanre",
-    lastName: "Bidemi",
-    email: "bidlan@gmail.com",
-    isActive: false,
-  },
-];
-
 export function TeamSettingsTab() {
   const [searchQuery, setSearchQuery] = useState("");
-  const [teamMembers] = useState<TeamMember[]>(mockTeamMembers);
+  const [teamMembers] = useState<TeamMember[]>([]);
 
   const filteredMembers = teamMembers.filter((member) => {
     const query = searchQuery.toLowerCase();
@@ -107,42 +80,52 @@ export function TeamSettingsTab() {
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-200">
-              {filteredMembers.map((member) => (
-                <tr
-                  key={member.id}
-                  className="hover:bg-gray-50 transition-colors"
-                >
-                  <td className="px-6 py-4">
-                    <input
-                      type="checkbox"
-                      className="w-4 h-4 rounded border-gray-300"
-                    />
-                  </td>
-                  <td className="px-6 py-4 text-sm text-gray-900">
-                    {member.userId}
-                  </td>
-                  <td className="px-6 py-4 text-sm text-gray-900">
-                    {member.firstName}
-                  </td>
-                  <td className="px-6 py-4 text-sm text-gray-900">
-                    {member.lastName}
-                  </td>
-                  <td className="px-6 py-4 text-sm text-gray-900">
-                    {member.email}
-                  </td>
-                  <td className="px-6 py-4 text-sm text-gray-600">*********</td>
-                  <td className="px-6 py-4">
-                    <label className="relative inline-flex items-center cursor-pointer">
-                      <input
-                        type="checkbox"
-                        className="sr-only peer"
-                        defaultChecked={member.isActive}
-                      />
-                      <div className="w-11 h-6 bg-gray-300 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-green-500"></div>
-                    </label>
+              {filteredMembers.length === 0 ? (
+                <tr>
+                  <td colSpan={7} className="px-6 py-4 text-center h-60">
+                    No members found
                   </td>
                 </tr>
-              ))}
+              ) : (
+                filteredMembers.map((member) => (
+                  <tr
+                    key={member.id}
+                    className="hover:bg-gray-50 transition-colors"
+                  >
+                    <td className="px-6 py-4">
+                      <input
+                        type="checkbox"
+                        className="w-4 h-4 rounded border-gray-300"
+                      />
+                    </td>
+                    <td className="px-6 py-4 text-sm text-gray-900">
+                      {member.userId}
+                    </td>
+                    <td className="px-6 py-4 text-sm text-gray-900">
+                      {member.firstName}
+                    </td>
+                    <td className="px-6 py-4 text-sm text-gray-900">
+                      {member.lastName}
+                    </td>
+                    <td className="px-6 py-4 text-sm text-gray-900">
+                      {member.email}
+                    </td>
+                    <td className="px-6 py-4 text-sm text-gray-600">
+                      *********
+                    </td>
+                    <td className="px-6 py-4">
+                      <label className="relative inline-flex items-center cursor-pointer">
+                        <input
+                          type="checkbox"
+                          className="sr-only peer"
+                          defaultChecked={member.isActive}
+                        />
+                        <div className="w-11 h-6 bg-gray-300 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-green-500"></div>
+                      </label>
+                    </td>
+                  </tr>
+                ))
+              )}
             </tbody>
           </table>
         </div>

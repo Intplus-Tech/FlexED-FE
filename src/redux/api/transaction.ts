@@ -7,6 +7,7 @@ import {
   CreatePaymentItemRequest,
   GetClassCollectionsSummaryResponse,
   GetPaymentItemsResponse,
+  GetTransactionChartDataResponse,
   GetTransactionsResponse,
   MakePaymentRequest,
 } from "@/@types/transaction";
@@ -81,6 +82,15 @@ export const transactionApi = apiSlice.injectEndpoints({
       query: () => ApiEndpoints.payment.getClassCollection,
       providesTags: ["Transaction"],
     }),
+
+    getTransactionChartData: builder.query<
+      GetTransactionChartDataResponse,
+      { schoolId: string }
+    >({
+      query: ({ schoolId }) =>
+        ApiEndpoints.payment.getTransactionChartData(schoolId),
+      providesTags: ["Transaction"],
+    }),
   }),
 });
 
@@ -93,4 +103,5 @@ export const {
   useMakePaymentMutation,
   useCreatePaymentItemsMutation,
   useGetClassCollectionsQuery,
+  useGetTransactionChartDataQuery,
 } = transactionApi;

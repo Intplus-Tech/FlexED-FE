@@ -2,83 +2,41 @@
 
 import { useState } from "react";
 import { TableSkeleton } from "../../loader/table-loader";
-import { useGetAllClassesQuery } from "@/redux/api/class";
-
-interface ClassData {
-  id: string;
-  className: string;
-  level: string;
-  classType: string;
-  subClass: string;
-  students: number;
-  status: "Active" | "Inactive";
-}
-
-const classes: ClassData[] = [
-  {
-    id: "1",
-    className: "JSS 1",
-    level: "Junior Secondary 1",
-    classType: "Native",
-    subClass: "Science",
-    students: 45,
-    status: "Active",
-  },
-  {
-    id: "2",
-    className: "JSS 2",
-    level: "Junior Secondary 2",
-    classType: "Native",
-    subClass: "Arts",
-    students: 42,
-    status: "Active",
-  },
-  {
-    id: "3",
-    className: "JSS 3",
-    level: "Junior Secondary 3",
-    classType: "Native",
-    subClass: "Commercial",
-    students: 48,
-    status: "Active",
-  },
-  {
-    id: "4",
-    className: "SSS 1",
-    level: "Senior Secondary 1",
-    classType: "Native",
-    subClass: "Science",
-    students: 52,
-    status: "Active",
-  },
-  {
-    id: "5",
-    className: "SSS 2",
-    level: "Senior Secondary 2",
-    classType: "Special",
-    subClass: "Remedial",
-    students: 47,
-    status: "Inactive",
-  },
-  {
-    id: "6",
-    className: "SSS 3",
-    level: "Senior Secondary 3",
-    classType: "Special",
-    subClass: "Extra Lesson",
-    students: 46,
-    status: "Active",
-  },
-];
+import {
+  useDeleteClassMutation,
+  useGetAllClassesQuery,
+} from "@/redux/api/class";
+import { DeleteModal } from "@/components/delete-modal";
+import { showerror, showsuccess } from "@/utils/toast";
+import { ClassItem } from "@/@types/class";
 
 const ClassTable = () => {
-  const [isLoading, setIsLoading] = useState(false);
-
+  const [isDeleteOpen, setIsDeleteOpen] = useState(false);
+  const [selectedClass, setSelectedClass] = useState<ClassItem | null>(null);
   const {
     data: classes,
     isFetching: isClassesFetching,
     isLoading: isClassesLoading,
   } = useGetAllClassesQuery();
+
+  const [deleteClass, { isLoading: isDeleteLoading }] =
+    useDeleteClassMutation();
+
+  const handleDeleteConfirm = async () => {
+    if (!selectedClass) {
+      console.error("No class selected for deletion");
+      return;
+    }
+    try {
+      const res = await deleteClass(selectedClass?._id).unwrap();
+      showsuccess(res.message);
+      console.log("Class deleted successfully");
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    } catch (error: any) {
+      showerror(error.data.message);
+      console.error("Error deleting class:", error);
+    }
+  };
 
   if (isClassesFetching || isClassesLoading) {
     return <TableSkeleton />;
@@ -147,7 +105,13 @@ const ClassTable = () => {
                     <button className="text-gray-600 hover:text-gray-900 font-medium transition-colors">
                       Edit
                     </button>
-                    <button className="text-gray-600 hover:text-gray-900 font-medium transition-colors">
+                    <button
+                      onClick={() => {
+                        setIsDeleteOpen(true);
+                        setSelectedClass(cls);
+                      }}
+                      className="text-gray-600 hover:text-gray-900 font-medium transition-colors"
+                    >
                       Delete
                     </button>
                   </div>
@@ -157,6 +121,16 @@ const ClassTable = () => {
           )}
         </tbody>
       </table>
+
+      <DeleteModal
+        isOpen={isDeleteOpen}
+        onClose={() => setIsDeleteOpen(false)}
+        onConfirm={handleDeleteConfirm}
+        isLoading={isDeleteLoading}
+        title="Delete Account"
+        description="Are you sure you want to delete this class"
+        itemName="Sanctum Startup College"
+      />
     </div>
   );
 };

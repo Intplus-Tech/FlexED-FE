@@ -5,6 +5,8 @@ import { SchoolInformationTab } from "../components/school-information";
 import { PaymentSettingsTab } from "../components/payment-setting";
 import { TeamSettingsTab } from "../components/team-settings";
 import { SecuritySettingsTab } from "../components/security-settings";
+import { useSelector } from "react-redux";
+import { RootState } from "@/redux/store";
 
 type TabType = "school" | "payment" | "team" | "security";
 
@@ -31,7 +33,8 @@ const tabs: Tab[] = [
 
 export default function SeettingsView() {
   const [activeTab, setActiveTab] = useState<TabType>("school");
-
+  const authState = useSelector((state: RootState) => state.authState);
+  console.log(authState, "suth");
   const ActiveComponent = tabs.find((tab) => tab.id === activeTab)?.component;
 
   return (

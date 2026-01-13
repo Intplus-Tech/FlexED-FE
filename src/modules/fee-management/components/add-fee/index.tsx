@@ -21,7 +21,6 @@ import { useState } from "react";
 import { showerror, showsuccess } from "@/utils/toast";
 import { RootState } from "@/redux/store";
 import { useSelector } from "react-redux";
-import { toISOStringSafe } from "@/utils/functions";
 
 const feeFormSchema = z.object({
   name: z.string().min(1, "Fee name is required"),
@@ -33,11 +32,14 @@ const feeFormSchema = z.object({
   period: z.string().min(1, "Period is required"),
   description: z.string().min(1, "Description is required"),
   dueDate: z.string().min(1, "Due date is required"),
-  discount: z.object({
-    value: z.number().optional(),
-    expiresAt: z.string().optional(),
-    type: z.string().optional(),
-  }),
+
+  discount: z
+    .object({
+      value: z.number().optional(),
+      expiresAt: z.string().optional(),
+      type: z.string().optional(),
+    })
+    .optional(),
 });
 
 type FeeFormValues = z.infer<typeof feeFormSchema>;
@@ -94,9 +96,6 @@ export function CreateFeeModal({ open, onOpenChange }: CreateFeeModalProps) {
       amount: 0,
       applicableTo: "",
       category: "",
-      // earlyPaymentDiscount: "0%",
-      // autoReminderSchedule: "7 days before due date",
-      // numberOfInstalment: "2",
     },
   });
   const [isOpen, setIsOpen] = useState(false);
@@ -124,20 +123,20 @@ export function CreateFeeModal({ open, onOpenChange }: CreateFeeModalProps) {
 
   const onFormSubmit = async (data: FeeFormValues) => {
     try {
-      const payload = {
-        ...data,
+      const hasDiscount = !!data.discount?.type;
+      const res = await createPayment({
         school: String(currentUser?.schoolId),
-        dueDate: new Date(data.dueDate).toISOString(),
-        discount: {
-          type: data.discount?.type || "PERCENTAGE",
-          ...(data?.discount?.value && { value: data.discount?.value }),
-          ...(data.discount?.expiresAt && {
-            expiresAt: toISOStringSafe(data.discount.expiresAt),
-          }),
-        },
-      };
-      console.log(payload, "payload");
-      const res = await createPayment(payload).unwrap();
+        academicPeriod: data.academicPeriod,
+        amount: data.amount,
+        applicableTo: data.applicableTo,
+        category: data.category,
+        classes: data.classes,
+        description: data.description,
+        dueDate: data.dueDate,
+        name: data.name,
+        period: data.period,
+        ...(hasDiscount && { discount: data.discount }),
+      }).unwrap();
       showsuccess(res?.message);
       reset();
       onOpenChange(false);
@@ -168,7 +167,7 @@ export function CreateFeeModal({ open, onOpenChange }: CreateFeeModalProps) {
               {...register("name")}
               type="text"
               className={cn(
-                "w-full h-10 px-3 rounded-md border bg-background text-sm focus:outline-none focus:ring-2 focus:ring-ring",
+                "w-full h-10 px-3 rounded-md text-sm border border-gray-200 focus:outline-none",
                 errors.name && "border-destructive"
               )}
             />
@@ -189,7 +188,7 @@ export function CreateFeeModal({ open, onOpenChange }: CreateFeeModalProps) {
                   <select
                     {...register("academicPeriod")}
                     className={cn(
-                      "w-full h-10 px-3 pr-10 appearance-none rounded-md border bg-background text-sm focus:outline-none focus:ring-2 focus:ring-ring",
+                      "w-full h-10 px-3 pr-10 appearance-none rounded-md text-sm border border-gray-200 focus:outline-none",
                       errors.academicPeriod && "border-destructive"
                     )}
                   >
@@ -217,7 +216,7 @@ export function CreateFeeModal({ open, onOpenChange }: CreateFeeModalProps) {
             <select
               {...register("period")}
               className={cn(
-                "w-full h-10 px-3 pr-10 appearance-none rounded-md border bg-background text-sm focus:outline-none focus:ring-2 focus:ring-ring",
+                "w-full h-10 px-3 pr-10 appearance-none  text-sm rounded-md border border-gray-200 focus:outline-none",
                 errors.period && "border-destructive"
               )}
             >
@@ -234,7 +233,7 @@ export function CreateFeeModal({ open, onOpenChange }: CreateFeeModalProps) {
             <label className="text-sm font-medium">Classes</label>
 
             {isClassesFetching || isLoadingClasses ? (
-              <div className="h-10 bg-gray-200 w-full animate-pulse rounded-md"></div>
+              <div className="h-10 border border-gray-200 bg-gray-200 w-full animate-pulse rounded-md"></div>
             ) : (
               <>
                 <div className="relative">
@@ -242,7 +241,7 @@ export function CreateFeeModal({ open, onOpenChange }: CreateFeeModalProps) {
                     type="button"
                     onClick={() => setIsOpen(!isOpen)}
                     className={cn(
-                      "w-full h-10 px-3 pr-10 flex items-center justify-between rounded-md border bg-background text-sm focus:outline-none focus:ring-2 focus:ring-ring",
+                      "w-full h-10 px-3 pr-10 flex items-center justify-between rounded-md border border-gray-200 bg-background text-sm ",
                       errors.classes && "border-destructive"
                     )}
                   >
@@ -260,7 +259,7 @@ export function CreateFeeModal({ open, onOpenChange }: CreateFeeModalProps) {
                   </button>
 
                   {isOpen && (
-                    <div className="absolute z-10 w-full mt-1 bg-background border rounded-md shadow-lg max-h-60 overflow-auto">
+                    <div className="absolute z-10 w-full mt-1 bg-background border border-gray-200 rounded-md shadow-lg max-h-60 overflow-auto">
                       {classes?.data?.map((cls) => (
                         <label
                           key={cls?._id}
@@ -270,7 +269,7 @@ export function CreateFeeModal({ open, onOpenChange }: CreateFeeModalProps) {
                             type="checkbox"
                             value={cls?._id}
                             {...register("classes")}
-                            className="h-4 w-4 rounded border-gray-300 accent-purple-500"
+                            className="h-4 w-4 rounded border-gray-200 accent-purple-500"
                           />
                           <span className="text-sm flex-1">{cls?.name}</span>
                           {selectedClasses.includes(cls?._id) && (
@@ -310,7 +309,7 @@ export function CreateFeeModal({ open, onOpenChange }: CreateFeeModalProps) {
               })}
               type="number"
               className={cn(
-                "w-full h-10 px-3 rounded-md border bg-background text-sm focus:outline-none focus:ring-2 focus:ring-ring",
+                "w-full h-10 px-3 rounded-md border border-gray-200 bg-background text-sm ",
                 errors.amount && "border-destructive"
               )}
             />
@@ -328,7 +327,7 @@ export function CreateFeeModal({ open, onOpenChange }: CreateFeeModalProps) {
               <select
                 {...register("applicableTo")}
                 className={cn(
-                  "w-full h-10 px-3 pr-10 appearance-none rounded-md border bg-background text-sm focus:outline-none focus:ring-2 focus:ring-ring",
+                  "w-full h-10 px-3 pr-10 appearance-none rounded-md border border-gray-200 bg-background text-sm ",
                   errors.applicableTo && "border-destructive"
                 )}
               >
@@ -360,7 +359,7 @@ export function CreateFeeModal({ open, onOpenChange }: CreateFeeModalProps) {
                   <select
                     {...register("category")}
                     className={cn(
-                      "w-full h-10 px-3 pr-10 appearance-none rounded-md border bg-background text-sm focus:outline-none focus:ring-2 focus:ring-ring",
+                      "w-full h-10 px-3 pr-10 appearance-none rounded-md border border-gray-200 bg-background text-sm ",
                       errors.category && "border-destructive"
                     )}
                   >
@@ -387,7 +386,7 @@ export function CreateFeeModal({ open, onOpenChange }: CreateFeeModalProps) {
             <input
               type="date"
               {...register("dueDate")}
-              className="w-fit h-10 px-4 appearance-none  rounded-md border bg-background text-sm focus:outline-none focus:ring-2 focus:ring-ring"
+              className="w-fit h-10 px-4 appearance-none  rounded-md border border-gray-200 bg-background text-sm "
             />
           </div>
 
@@ -397,7 +396,7 @@ export function CreateFeeModal({ open, onOpenChange }: CreateFeeModalProps) {
               {...register("description")}
               rows={7}
               className={cn(
-                "w-full h-10 px-3 rounded-md border bg-background text-sm focus:outline-none focus:ring-2 focus:ring-ring"
+                "w-full min-h-20 px-3 rounded-md border border-gray-200 bg-background text-sm "
               )}
             />
             {errors.description && (
@@ -413,16 +412,27 @@ export function CreateFeeModal({ open, onOpenChange }: CreateFeeModalProps) {
               Tuition Payment Terms (Optional)
             </h3>
 
+            <div className="my-2">
+              <select
+                className="w-full outline-nont border border-gray-200 focus:outline-none py-2 rounded-md"
+                {...register("discount.type")}
+              >
+                <option value="">None</option>
+                <option value="FLAT">Flat Rate</option>
+                <option value="PERCENTAGE">Percentage</option>
+              </select>
+            </div>
+
             {/* Early Payment Discount */}
             <div className="space-y-2 mb-4">
               <label className="text-sm font-medium">
                 Early Payment Discount
               </label>
               <input
-                {...register("discount.value", { valueAsNumber: true })}
+                {...register("discount.value")}
                 type="text"
                 placeholder="0%"
-                className="w-full h-10 px-3 rounded-md border bg-background text-sm focus:outline-none focus:ring-2 focus:ring-ring"
+                className="w-full h-10 px-3 rounded-md border border-gray-200 bg-background text-sm "
               />
             </div>
 
@@ -431,47 +441,9 @@ export function CreateFeeModal({ open, onOpenChange }: CreateFeeModalProps) {
               <input
                 type="date"
                 {...register("discount.expiresAt")}
-                className="w-fit h-10 px-4 appearance-none  rounded-md border bg-background text-sm focus:outline-none focus:ring-2 focus:ring-ring"
+                className="w-fit h-10 px-4 appearance-none  rounded-md border border-gray-200 bg-background text-sm "
               />
             </div>
-
-            {/* Auto Reminder Schedule */}
-            {/* <div className="space-y-2 mb-4">
-              <label className="text-sm font-medium">
-                Auto Reminder Schedule
-              </label>
-              <div className="relative">
-                <select
-                  {...register("autoReminderSchedule")}
-                  className="w-full h-10 px-3 pr-10 appearance-none rounded-md border bg-background text-sm focus:outline-none focus:ring-2 focus:ring-ring"
-                >
-                  {AUTO_REMINDER_OPTIONS.map((option) => (
-                    <option key={option} value={option}>
-                      {option}
-                    </option>
-                  ))}
-                </select>
-                <ChevronDownIcon className="absolute right-3 top-1/2 -translate-y-1/2 size-4 text-muted-foreground pointer-events-none" />
-              </div>
-            </div> */}
-
-            {/* No. of Instalment */}
-            {/* <div className="space-y-2">
-              <label className="text-sm font-medium">No. of Instalment</label>
-              <div className="relative">
-                <select
-                  {...register("numberOfInstalment")}
-                  className="w-full h-10 px-3 pr-10 appearance-none rounded-md border bg-background text-sm focus:outline-none focus:ring-2 focus:ring-ring"
-                >
-                  {INSTALMENT_OPTIONS.map((option) => (
-                    <option key={option} value={option}>
-                      {option}
-                    </option>
-                  ))}
-                </select>
-                <ChevronDownIcon className="absolute right-3 top-1/2 -translate-y-1/2 size-4 text-muted-foreground pointer-events-none" />
-              </div>
-            </div> */}
           </div>
 
           {/* Buttons */}
@@ -480,7 +452,7 @@ export function CreateFeeModal({ open, onOpenChange }: CreateFeeModalProps) {
               type="submit"
               className="px-6 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-md text-sm font-medium transition-colors"
             >
-              Create Fee
+              {isLoading ? "Creating Fee" : "Create Fee"}
             </button>
             <button
               type="button"

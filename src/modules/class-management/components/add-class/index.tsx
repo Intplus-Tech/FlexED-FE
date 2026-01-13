@@ -30,7 +30,7 @@ const LEVELS = [
   "Senior Secondary 2",
   "Senior Secondary 3",
 ];
-const CLASS_TYPES = ["Native", "Special"];
+const CLASS_TYPES = ["NATIVE", "VOCATIONAL"];
 const SUB_CLASSES = [
   "Science",
   "Arts",

@@ -35,12 +35,6 @@ export default function FeeManagementView() {
       <div className="flex items-center justify-between gap-4 flex-wrap">
         <div className="flex items-center gap-3">
           <button
-            onClick={() => setOpen(true)}
-            className="px-6 py-2.5 bg-gray-900 text-white rounded-lg hover:bg-gray-800 transition-colors"
-          >
-            Create Fee
-          </button>
-          <button
             onClick={() => setCategoryOpen(true)}
             className="px-6 py-2.5 bg-gray-900 text-white rounded-lg hover:bg-gray-800 transition-colors"
           >
@@ -70,15 +64,26 @@ export default function FeeManagementView() {
         searchQuery={searchQuery}
       />
 
-      <>
-        <h1 className="text-2xl font-semibold text-gray-900">Fee Management</h1>
-
+      <div>
+        <div className="flex items-center justify-between mb-4">
+          <h1 className="text-2xl font-semibold text-gray-900">
+            Fee Management
+          </h1>
+          <div className="flex items-center gap-3">
+            <button
+              onClick={() => setOpen(true)}
+              className="px-6 py-2.5 bg-gray-900 text-white rounded-lg hover:bg-gray-800 transition-colors"
+            >
+              Create Fee
+            </button>
+          </div>
+        </div>
         <FeeTable
           fees={fees?.data ?? []}
           isLoading={isFetching || isLoadingFees}
           searchQuery={searchQuery}
         />
-      </>
+      </div>
 
       <CreateFeeModal open={open} onOpenChange={setOpen} />
 

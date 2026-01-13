@@ -1,6 +1,5 @@
 "use client";
 
-import { useState } from "react";
 import { FeeMetrics } from "../components/fee-metrics";
 import { SmsBalance } from "../components/sms-balance";
 import { TransactionsChart } from "../components/transaction-chart";
@@ -12,6 +11,7 @@ import { RootState } from "@/redux/store";
 import {
   useGetClassCollectionsQuery,
   useGetPaymentMetricsQuery,
+  useGetTransactionChartDataQuery,
   useGetTransactionsQuery,
 } from "@/redux/api/transaction";
 import { formatNaira } from "@/utils/functions";
@@ -58,6 +58,17 @@ export default function DashboardView() {
     isFetching: isFetchingCollection,
     isLoading: isLoadingCollection,
   } = useGetClassCollectionsQuery();
+
+  const {
+    isFetching: isFetchingChartData,
+    isLoading: isLoadingChartData,
+    data: chartData,
+  } = useGetTransactionChartDataQuery(
+    {
+      schoolId: String(authState.currentUser?.schoolId),
+    },
+    { skip: !authState.currentUser }
+  );
 
   const transactionData = [
     { day: "Mon", fullPayment: 3500000, partPayment: 2200000 },
@@ -106,7 +117,7 @@ export default function DashboardView() {
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <TransactionsChart data={transactionData} totalAmount="₦14,000,000" />
+        <TransactionsChart data={chartData?.data ?? []} totalAmount="" />
         <CollectionByClass
           totalStudents={collection?.data?.totalPaid ?? 0}
           data={collection?.data?.items ?? []}

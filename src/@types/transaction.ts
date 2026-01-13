@@ -107,10 +107,9 @@ export interface CreatePaymentItemRequest {
 }
 
 export interface Discount {
-  // type: DiscountType;
-  expiresAt?: string | null | undefined;
-  value?: number | undefined;
-  type: string;
+  type?: string;
+  expiresAt?: string;
+  value?: number;
 }
 
 export type DiscountType = "PERCENTAGE" | "FLAT";
@@ -200,4 +199,15 @@ export interface ClassCollectionItem {
   expectedAmount: number;
   percentPaid: number;
   totalStudents: number;
+}
+
+export interface GetTransactionChartDataResponse {
+  success: boolean;
+  data: ChartData[];
+}
+
+export interface ChartData {
+  day: string;
+  fullPayment: number;
+  partPayment: number;
 }

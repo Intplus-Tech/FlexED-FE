@@ -29,6 +29,8 @@ export const payment = {
   getPaymentMetrics: "/payments/collections-totals",
   makePayment: `/payments/initiate-student-payment`,
   getClassCollection: `/payments/class-collections`,
+  getTransactionChartData: (schoolId: string) =>
+    `/payments/school/${schoolId}/weekly-summary`,
 };
 
 export const academicSession = {
@@ -62,6 +64,7 @@ export const classes = {
   createClass: "/classes",
   getClassById: (id: string) => `/classes/${id}`,
   updateClass: (id: string) => `/classes/${id}`,
+  deleteClass: (id: string) => `/classes/${id}`,
 };
 
 export const sms = {

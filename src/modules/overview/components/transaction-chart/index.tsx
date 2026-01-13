@@ -1,7 +1,7 @@
 "use client";
 
-import { ChevronDownIcon } from "@/icon/dashbaord";
-import { useState } from "react";
+// import { ChevronDownIcon } from "@/icon/dashbaord";
+// import { useState } from "react";
 import {
   BarChart,
   Bar,
@@ -28,7 +28,7 @@ export function TransactionsChart({
   data,
   totalAmount,
 }: TransactionsChartProps) {
-  const [period, setPeriod] = useState("Week");
+  // const [period, setPeriod] = useState("Week");
 
   return (
     <div className="bg-white border border-gray-200 rounded-xl p-6 col-span-2 ">
@@ -40,10 +40,10 @@ export function TransactionsChart({
           <p className="text-3xl font-bold text-gray-900">{totalAmount}</p>
         </div>
 
-        <button className="flex items-center gap-2 px-4 py-2 border border-gray-300 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors">
+        {/* <button className="flex items-center gap-2 px-4 py-2 border border-gray-300 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors">
           {period}
           <ChevronDownIcon />
-        </button>
+        </button> */}
       </div>
 
       <ResponsiveContainer width="100%" height={300}>
