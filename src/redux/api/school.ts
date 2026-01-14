@@ -14,6 +14,11 @@ export const schoolApi = apiSlice.injectEndpoints({
     >({
       query: ({ schoolId }) => ApiEndpoints.school.getSchoolMetrics(schoolId),
     }),
+
+    getAllStaff: builder.query<GetPaymentsSummaryResponse, void>({
+      query: () => ApiEndpoints.school.getSchoolStaff,
+      providesTags: ["staff"],
+    }),
   }),
 });
 

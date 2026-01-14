@@ -14,6 +14,8 @@ export const school = {
   getSchools: "/schools",
   getSchoolMetrics: (schoolId: string) =>
     `/schools/${schoolId}/payments/summary`,
+
+  getSchoolStaff: `/school-staff`,
 };
 
 export const payment = {

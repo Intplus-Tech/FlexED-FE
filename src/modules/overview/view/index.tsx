@@ -70,16 +70,6 @@ export default function DashboardView() {
     { skip: !authState.currentUser }
   );
 
-  const transactionData = [
-    { day: "Mon", fullPayment: 3500000, partPayment: 2200000 },
-    { day: "Tue", fullPayment: 2700000, partPayment: 2900000 },
-    { day: "Wed", fullPayment: 1400000, partPayment: 2200000 },
-    { day: "Thur", fullPayment: 500000, partPayment: 3000000 },
-    { day: "Fri", fullPayment: 3000000, partPayment: 2200000 },
-    { day: "Sat", fullPayment: 1800000, partPayment: 2200000 },
-    { day: "Sun", fullPayment: 2100000, partPayment: 300000 },
-  ];
-
   return (
     <div className=" space-y-6">
       <h1 className="text-3xl font-bold text-gray-900">Dashboard</h1>
