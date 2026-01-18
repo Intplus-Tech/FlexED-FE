@@ -115,10 +115,10 @@ const AppData = [
 const AppCard = ({ app }: AppProps) => {
   return (
     <article>
-      {/* Icon Placeholder */}
-      <div />
+      <div className="">
+        {/* App image / loge */}
+      </div>
 
-      {/* Content */}
       <div>
         <div>
           <h3>{app.title}</h3>
@@ -139,42 +139,47 @@ const AppCard = ({ app }: AppProps) => {
 
 export default function AppView() {
   return (
-    <div>
-      {/* HEADER: Title and Search Area - ONLY ONCE AT THE TOP */}
-      <header>
-        <h1>Apps/Tools</h1>
+    <div className="max-w-[874px]">
+      
+      <section>
+        <h1 className="text-xl font-bold">Apps/Tools</h1>
         
-        {/* SECTION: Hero Banner - ONLY ONCE */}
-        <div className="relative h-[324px] w-full">
+        <div className="relative h-[324px] w-full my-[27px]">
           <Image
                 src="/images/Apps/back-school-cover-illustration.png"
                 alt="Back to school illustration"
                 fill
-                // width={874}
-                // height={323.62}
               />
         </div>
 
-        <div>
-          <h2>Apps</h2>
-          <div>
-            <input type="text" placeholder="Search Apps" />
+        <div className="flex justify-between items-center gap-4 mb-4">
+          <h2 className="text-[clamp(10px, 0.169vw + 10px, 12.44px)] font-bold flex-none">Apps</h2>
+          <div className="relative flex-1 min-w-0 max-w-82">
+            <input
+              type="text"
+              placeholder="Search Apps"
+              className="pl-10 pr-[7.11px] py-[7.11px] w-full rounded-[21.33px] bg-[#f3f3f3] border-[#c8c8c8] border-[0.89px] placeholder-[#6f6d6d]"
+            />
+            <Image
+              src="/images/Apps/search-icon.svg"
+              alt="Search"
+              width={24}
+              height={24}
+              className="absolute left-2 top-1/2 transform -translate-y-1/2 pointer-events-none"
+            />
           </div>
-          <select name="status">
+          <select name="status" className="w-fit p-[3.56px] border-[#c8c8c8] border-[0.89px] rounded-[7.11px]">
             <option value="all">All</option>
-            <option value="active">Active</option>
-            <option value="inactive">Inactive</option>
           </select>
         </div>
-      </header>
+      </section>
 
-      {/* MAIN: Grid container */}
-      <main className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* We call the AppCard blueprint here for every item in AppData */}
+      <article className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+        
         {AppData.map((app) => (
           <AppCard key={app.id} app={app} />
         ))}
-      </main>
+      </article>
     </div>
   );
 }
