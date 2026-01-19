@@ -1,4 +1,3 @@
-import React from "react";
 import Image from 'next/image';
 
 interface AppProps {
@@ -114,22 +113,35 @@ const AppData = [
 
 const AppCard = ({ app }: AppProps) => {
   return (
-    <article>
-      <div className="">
+    <article className="flex gap-[0.444rem] justify-center items-center max-w-[370px] bg-[#f8f8f8] rounded-[0.88875rem] p-[0.88875rem]">
+      <div className="relative flex-none w-[89px] h-[114px] rounded-[7.11px] bg-[#d9d9d9]">
         {/* App image / loge */}
+        {app.tag && (
+          <span className="absolute top-0 right-0 w-[46px] h-2.5 bg-[#f93333] rounded-tr-xs rounded-bl-xs text-white text-[0.33rem] text-center">
+            {app.tag}
+          </span>
+        )}
       </div>
 
-      <div>
-        <div>
-          <h3>{app.title}</h3>
-          <button>
+      <div className='flex flex-col justify-center gap-3 h-[114px] overflow-hidden text-[0.7775rem] leading-none'>
+        <div className='flex justify-between items-start gap-4'>
+          <h3 className='font-semibold text-pretty'>
+            {app.title}
+          </h3>
+          <button className={`border ${
+            app.status === 'active' 
+              ? 'bg-[#6366f1] border-[#6366f1] text-white shadow-sm' 
+              : 'border-[#c8c8c8] text-[#6f6d6d] bg-white hover:bg-gray-50'
+          }`}>
             {app.status === 'active' ? 'Active' : 'Activate'}
           </button>
         </div>
 
-        <p>{app.description}</p>
+        <p className="text-[#6f6d6d] leading-[1.1] line-clamp-3">
+          {app.description}
+        </p>
 
-        <div>
+        <div className='font-bold'>
           {app.price}
         </div>
       </div>
