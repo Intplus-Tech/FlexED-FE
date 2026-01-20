@@ -128,12 +128,24 @@ const AppCard = ({ app }: AppProps) => {
           <h3 className='font-semibold text-pretty'>
             {app.title}
           </h3>
-          <button className={`border ${
-            app.status === 'active' 
-              ? 'bg-[#6366f1] border-[#6366f1] text-white shadow-sm' 
-              : 'border-[#c8c8c8] text-[#6f6d6d] bg-white hover:bg-gray-50'
-          }`}>
+          <button
+            className={`flex items-center gap-2 text-[0.666875rem] border-2 rounded-full p-1 ${
+              app.status === 'active' 
+                ? 'bg-[#6932e2] border-[#6932e2] text-[#ebe2ff]' 
+                : 'border-[#c8c8c8] text-[#6f6d6d]'
+            }`}>
             {app.status === 'active' ? 'Active' : 'Activate'}
+
+            {/* <span className='relative w-[17.78px] h-[10.67px] border-[0.89px] rounded-full'>
+              <span className='absolute w-[5.33px] h-[5.33px] rounded-full'></span>
+            </span> */}
+            <span className='relative w-[17.78px] h-[10.67px] border-[0.89px] rounded-full'>
+              <span className={`absolute top-1/2 -translate-y-1/2 w-[5.33px] h-[5.33px] border-[0.89px] rounded-full transition-all duration-300 ease-in-out ${
+                app.status === 'active' 
+                  ? 'left-2.5' 
+                  : 'left-0.5'
+              }`}></span>
+            </span>
           </button>
         </div>
 
