@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { SearchInput } from "@/components/search-input";
 import { DownloadIcon, FilterIcon } from "@/icon/dashbaord";
+import { useGetAllStaffQuery } from "@/redux/api/school";
 
 interface TeamMember {
   id: string;
@@ -15,6 +16,14 @@ interface TeamMember {
 
 export function TeamSettingsTab() {
   const [searchQuery, setSearchQuery] = useState("");
+  const {
+    data,
+    isLoading: isLoadingStaff,
+    isFetching: isFetchingStaff,
+  } = useGetAllStaffQuery({
+    search: searchQuery,
+  });
+
   const [teamMembers] = useState<TeamMember[]>([]);
 
   const filteredMembers = teamMembers.filter((member) => {

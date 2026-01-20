@@ -34,7 +34,6 @@ const tabs: Tab[] = [
 export default function SeettingsView() {
   const [activeTab, setActiveTab] = useState<TabType>("school");
   const authState = useSelector((state: RootState) => state.authState);
-  console.log(authState, "suth");
   const ActiveComponent = tabs.find((tab) => tab.id === activeTab)?.component;
 
   return (

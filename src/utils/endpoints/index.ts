@@ -12,6 +12,7 @@ export const auth = {
 export const school = {
   registerSchool: "/schools/register",
   getSchools: "/schools",
+  getSchool: `/schools/me`,
   getSchoolMetrics: (schoolId: string) =>
     `/schools/${schoolId}/payments/summary`,
 

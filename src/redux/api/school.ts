@@ -1,8 +1,8 @@
 import { ApiEndpoints } from "@/utils/endpoints";
 import apiSlice from "..";
-import { QueryHelper } from "@/utils/functions";
 import { GetPaymentsSummaryResponse } from "@/@types/transaction";
-import { methods } from "@/utils/methods";
+import { QueryHelper } from "@/utils/functions";
+import { SchoolProfileResponse } from "@/@types/school";
 
 export const schoolApi = apiSlice.injectEndpoints({
   overrideExisting: true,
@@ -14,12 +14,22 @@ export const schoolApi = apiSlice.injectEndpoints({
     >({
       query: ({ schoolId }) => ApiEndpoints.school.getSchoolMetrics(schoolId),
     }),
-
-    getAllStaff: builder.query<GetPaymentsSummaryResponse, void>({
-      query: () => ApiEndpoints.school.getSchoolStaff,
+    getShoolProfile: builder.query<SchoolProfileResponse, void>({
+      query: () => ApiEndpoints.school.getSchool,
+    }),
+    getAllStaff: builder.query<
+      GetPaymentsSummaryResponse,
+      { limit?: string; page?: string; search?: string }
+    >({
+      query: (request) =>
+        QueryHelper(ApiEndpoints.school.getSchoolStaff, request),
       providesTags: ["staff"],
     }),
   }),
 });
 
-export const { useGetSchoolMetricsQuery } = schoolApi;
+export const {
+  useGetSchoolMetricsQuery,
+  useGetAllStaffQuery,
+  useGetShoolProfileQuery,
+} = schoolApi;

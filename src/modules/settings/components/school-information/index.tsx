@@ -5,11 +5,15 @@ import type React from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { schoolInfoSchema, type SchoolInfoFormData } from "@/lib/validations";
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Image from "next/image";
 import { ImageIcon } from "@/icon/dashbaord";
 
+import { useGetShoolProfileQuery } from "@/redux/api/school";
+
 export function SchoolInformationTab() {
+  const { data: SchoolProfile, isFetching: isFetchingSchoolProfile } =
+    useGetShoolProfileQuery();
   const {
     register,
     handleSubmit,
@@ -18,14 +22,27 @@ export function SchoolInformationTab() {
   } = useForm<SchoolInfoFormData>({
     resolver: zodResolver(schoolInfoSchema),
     defaultValues: {
-      schoolName: "Greensprings Secondary School",
-      phoneNumber: "0809 648 6382",
-      schoolType: "private-secondary",
-      address: "123 Education Road, Ikeja, Lagos",
-      contactEmail: "info@greensprings.edu.ng",
-      website: "www.greensprings.edu.ng",
+      schoolName: SchoolProfile?.data.name || "",
+      phoneNumber: SchoolProfile?.data.contactPhone || "",
+      schoolType: SchoolProfile?.data.schoolType || "",
+      address: SchoolProfile?.data.address || "",
+      contactEmail: SchoolProfile?.data.contactEmail || "",
+      // website: SchoolProfile?.data. || "www.greensprings.edu.ng",
     },
   });
+
+  useEffect(() => {
+    if (SchoolProfile) {
+      reset({
+        schoolName: SchoolProfile.data.name || "",
+        phoneNumber: SchoolProfile.data.contactPhone || "",
+        schoolType: SchoolProfile.data.schoolType || "",
+        address: SchoolProfile.data.address || "",
+        contactEmail: SchoolProfile.data.contactEmail || "",
+        // website: SchoolProfile?.data. || "www.greensprings.edu.ng",
+      });
+    }
+  }, [SchoolProfile]);
 
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [logoPreview, setLogoPreview] = useState<string | null>(null);
@@ -170,12 +187,8 @@ export function SchoolInformationTab() {
               className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent appearance-none bg-white"
             >
               <option value="">Select school type</option>
-              <option value="private-primary">Private Primary School</option>
-              <option value="private-secondary">
-                Private Secondary School
-              </option>
-              <option value="public-primary">Public Primary School</option>
-              <option value="public-secondary">Public Secondary School</option>
+              <option value="Private">Private </option>
+              <option value="Public">Public</option>
             </select>
             {errors.schoolType && (
               <p className="mt-1 text-sm text-red-600">
