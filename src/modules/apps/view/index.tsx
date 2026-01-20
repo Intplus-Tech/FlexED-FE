@@ -1,15 +1,22 @@
+'use client';
 import Image from 'next/image';
+import { useState } from 'react';
 
 interface AppProps {
-  app: {
-    id: number;
-    title: string;
-    description: string;
-    price: string;
-    status: string;
-    tag?: string | null; // The ? means this is optional
-  };
+  id: number;
+  title: string;
+  description: string;
+  price: string;
+  status: string;
+  tag?: string | null;
 }
+
+interface AppCardProps {
+  app: AppProps;
+  onClick: (app: AppProps) => void;
+  variant?: 'grid' | 'modal';
+}
+
 
 const AppData = [
   {
@@ -111,10 +118,11 @@ const AppData = [
 ];
 
 
-const AppCard = ({ app }: AppProps) => {
+const AppCard = ({ app, onClick, variant = 'grid' }: AppCardProps) => {
   return (
-    <article className="flex gap-[0.444rem] justify-center items-center max-w-[370px] bg-[#f8f8f8] rounded-[0.88875rem] p-[0.88875rem]">
-      <div className="relative flex-none w-[89px] h-[114px] rounded-[7.11px] bg-[#d9d9d9]">
+    <article onClick={() => onClick(app)} className={`flex ${
+      variant === 'modal' ? 'flex-col gap-3.75 p-4 max-w-[332px] max-h-[284px] rounded-2xl' : 'gap-[0.444rem] max-w-[370px] rounded-[0.88875rem] p-[0.88875rem]'} bg-[#f8f8f8] cursor-pointer`}>
+      <div className={`relative flex-none ${ variant === 'modal' ? 'w-full rounded-xl h-[100px]' : 'w-[89px] h-[114px] rounded-[7.11px]'} bg-[#d9d9d9]`}>
         {/* App image / loge */}
         {app.tag && (
           <span className="absolute top-0 right-0 w-[46px] h-2.5 bg-[#f93333] rounded-tr-xs rounded-bl-xs text-white text-[0.33rem] text-center">
@@ -123,7 +131,7 @@ const AppCard = ({ app }: AppProps) => {
         )}
       </div>
 
-      <div className='flex flex-col justify-center gap-3 h-[114px] overflow-hidden text-[0.7775rem] leading-none'>
+      <div className={`flex flex-col justify-center ${ variant === 'modal' ? 'gap-3.75' : 'gap-3 h-[114px]'} overflow-hidden text-[0.7775rem] leading-none`}>
         <div className='flex justify-between items-start gap-4'>
           <h3 className='font-semibold text-pretty'>
             {app.title}
@@ -136,9 +144,6 @@ const AppCard = ({ app }: AppProps) => {
             }`}>
             {app.status === 'active' ? 'Active' : 'Activate'}
 
-            {/* <span className='relative w-[17.78px] h-[10.67px] border-[0.89px] rounded-full'>
-              <span className='absolute w-[5.33px] h-[5.33px] rounded-full'></span>
-            </span> */}
             <span className='relative w-[17.78px] h-[10.67px] border-[0.89px] rounded-full'>
               <span className={`absolute top-1/2 -translate-y-1/2 w-[5.33px] h-[5.33px] border-[0.89px] rounded-full transition-all duration-300 ease-in-out ${
                 app.status === 'active' 
@@ -162,6 +167,8 @@ const AppCard = ({ app }: AppProps) => {
 };
 
 export default function AppView() {
+  const [selectedApp, setSelectedApp] = useState<AppProps | null>(null);
+
   return (
     <div className="max-w-[874px]">
       
@@ -201,9 +208,19 @@ export default function AppView() {
       <article className="grid grid-cols-1 lg:grid-cols-2 gap-4">
         
         {AppData.map((app) => (
-          <AppCard key={app.id} app={app} />
+          <AppCard key={app.id} app={app} onClick={setSelectedApp} />
         ))}
       </article>
+      {selectedApp && (
+        <div
+          className="fixed inset-0 z-50 bg-black/40 flex items-center justify-center"
+          onClick={() => setSelectedApp(null)}
+        >
+          <div onClick={(e) => e.stopPropagation()}>
+            <AppCard app={selectedApp} onClick={() => {}} variant="modal" />
+          </div>
+        </div>
+      )}
     </div>
   );
 }
