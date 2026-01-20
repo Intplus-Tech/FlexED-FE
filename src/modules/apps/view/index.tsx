@@ -121,7 +121,7 @@ const AppData = [
 const AppCard = ({ app, onClick, variant = 'grid' }: AppCardProps) => {
   return (
     <article onClick={() => onClick(app)} className={`flex ${
-      variant === 'modal' ? 'flex-col gap-3.75 p-4 max-w-[332px] max-h-[284px] rounded-2xl' : 'gap-[0.444rem] max-w-[370px] rounded-[0.88875rem] p-[0.88875rem]'} bg-[#f8f8f8] cursor-pointer`}>
+      variant === 'modal' ? 'flex-col gap-3.75 p-4 w-[332px] rounded-2xl' : 'gap-[0.444rem] max-w-[370px] rounded-[0.88875rem] p-[0.88875rem]'} bg-[#f8f8f8] cursor-pointer`}>
       <div className={`relative flex-none ${ variant === 'modal' ? 'w-full rounded-xl h-[100px]' : 'w-[89px] h-[114px] rounded-[7.11px]'} bg-[#d9d9d9]`}>
         {/* App image / loge */}
         {app.tag && (
@@ -133,7 +133,7 @@ const AppCard = ({ app, onClick, variant = 'grid' }: AppCardProps) => {
 
       <div className={`flex flex-col justify-center ${ variant === 'modal' ? 'gap-3.75' : 'gap-3 h-[114px]'} overflow-hidden text-[0.7775rem] leading-none`}>
         <div className='flex justify-between items-start gap-4'>
-          <h3 className='font-semibold text-pretty'>
+          <h3 className={`font-semibold text-pretty wrap-break-words leading-[1.2] tracking-tight ${ variant === 'modal' ? '' : 'max-w-36'}`}>
             {app.title}
           </h3>
           <button
@@ -154,7 +154,7 @@ const AppCard = ({ app, onClick, variant = 'grid' }: AppCardProps) => {
           </button>
         </div>
 
-        <p className="text-[#6f6d6d] leading-[1.1] line-clamp-3">
+        <p className='text-[#6f6d6d] leading-[1.1] line-clamp-3 h-[3.3em] max-w-[232px]'>
           {app.description}
         </p>
 
