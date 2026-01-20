@@ -73,7 +73,7 @@ export default function AcademicTable({
                 </td>
 
                 <td className="px-6 py-4">
-                  <div className="flex gap-4">
+                  {/* <div className="flex gap-4">
                     <a
                       href="#"
                       className="text-primary hover:underline text-sm font-medium"
@@ -86,7 +86,7 @@ export default function AcademicTable({
                     >
                       Edit
                     </a>
-                  </div>
+                  </div> */}
                 </td>
               </tr>
             ))
