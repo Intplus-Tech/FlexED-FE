@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import {
@@ -8,8 +8,11 @@ import {
   type SecuritySettingsFormData,
 } from "@/lib/validations";
 import { EyeIcon, EyeOffIcon, LockIcon, MailIcon } from "@/icon/dashbaord";
+import { useGetShoolProfileQuery } from "@/redux/api/school";
 
 export function SecuritySettingsTab() {
+  const { data: SchoolProfile, isFetching: isFetchingSchoolProfile } =
+    useGetShoolProfileQuery();
   const [showOldPassword, setShowOldPassword] = useState(false);
   const [showNewPassword, setShowNewPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
@@ -17,13 +20,22 @@ export function SecuritySettingsTab() {
   const {
     register,
     handleSubmit,
+    reset,
     formState: { errors, isSubmitting },
   } = useForm<SecuritySettingsFormData>({
     resolver: zodResolver(securitySettingsSchema),
     defaultValues: {
-      email: "NarayanMurthy@gmail.com",
+      email: SchoolProfile?.data.contactEmail || "",
     },
   });
+
+  useEffect(() => {
+    if (SchoolProfile) {
+      reset({
+        email: SchoolProfile.data.contactEmail || "",
+      });
+    }
+  }, [SchoolProfile]);
 
   const onSubmit = async (data: SecuritySettingsFormData) => {
     console.log("[v0] Security settings submitted:", data);
