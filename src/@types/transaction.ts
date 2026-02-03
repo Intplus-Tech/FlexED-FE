@@ -1,15 +1,78 @@
 export interface Transaction {
   _id: string;
   reference: string;
-  student: {
-    name: string;
-  };
-  paymentItem: Record<string, unknown>;
+  groupReference: string;
+  student: Student;
+  paymentItem: PaymentItems;
   school: string;
   amount: number;
-  status: string;
-  type: string;
+  status: "PENDING" | "PAID" | "FAILED";
+  type: "DEBIT" | "CREDIT";
+  walletCredited: boolean;
+  provider: "SQUAD";
+  providerReference: string;
+  meta: SquadMeta;
+  createdAt: string;
+  updatedAt: string;
+  __v: number;
 }
+
+export interface Student {
+  _id: string;
+  id: string;
+  firstName: string;
+  lastName: string;
+  admissionNumber: string;
+  school: string;
+  class: string;
+  dateOfBirth: string;
+  gender: "MALE" | "FEMALE";
+  isDeleted: boolean;
+  deletedAt: string | null;
+  deletedBy: string | null;
+  createdAt: string;
+  updatedAt: string;
+  __v: number;
+}
+
+export interface PaymentItems {
+  _id: string;
+  name: string;
+  amount: number;
+  category: string;
+  school: string;
+  academicPeriod: string;
+  period: "PER_SESSION" | "PER_TERM";
+  classes: string[];
+  applicableTo: "ALL_STUDENTS" | "RETURNING_STUDENTS_ONLY";
+  reminderSchedules: any[];
+  description: string;
+  dueDate: string;
+  status: "PENDING" | "PAID";
+  isSmsTopup: boolean;
+  createdAt: string;
+  updatedAt: string;
+  __v: number;
+}
+
+export interface SquadMeta {
+  status: number;
+  success: boolean;
+  message: string;
+  data: SquadMetaData;
+}
+
+export interface SquadMetaData {
+  is_blocked: boolean;
+  account_name: string;
+  account_number: string;
+  expected_amount: string;
+  expires_at: string;
+  transaction_reference: string;
+  bank: string;
+  currency: "NGN";
+}
+
 
 export interface GetTransactionsResponse {
   success: boolean;
@@ -131,7 +194,7 @@ export interface PaymentItem {
   period: PaymentPeriod;
   classes: SchoolClass[];
   applicableTo: ApplicableTo;
-  reminderSchedules: unknown[];
+  reminderSchedules: string[];
   discount?: Discount;
   description: string;
   dueDate: string;

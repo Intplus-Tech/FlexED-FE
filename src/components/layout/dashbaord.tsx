@@ -16,7 +16,6 @@ export default function DashboardLayout({
 }) {
   const dispatch = useDispatch();
   const { data, status } = useSession();
-  console.log(data, status, "data");
   const { currentUser } = useSelector((state: RootState) => state.authState);
   const router = useRouter();
 
@@ -31,7 +30,7 @@ export default function DashboardLayout({
         setAuth({
           accessToken: Data.accessToken,
           currentUser: Data.user,
-        })
+        }),
       );
     }
   }, [status, data, dispatch]);
