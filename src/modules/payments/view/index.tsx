@@ -17,6 +17,8 @@ import { useSelector } from "react-redux";
 import { RootState } from "@/redux/store";
 import { formatNaira } from "@/utils/functions";
 import { useGetSchoolMetricsQuery } from "@/redux/api/school";
+import { CardSim, Currency } from "lucide-react";
+import { useGetAllClassesQuery } from "@/redux/api/class";
 
 interface PaymentRecord {
   id: string;
@@ -166,7 +168,7 @@ export default function PaymentView() {
     {
       schoolId: String(authstate.currentUser?.schoolId),
     },
-    { skip: !authstate.currentUser }
+    { skip: !authstate.currentUser },
   );
 
   const {
@@ -177,8 +179,10 @@ export default function PaymentView() {
     {
       schoolId: String(authstate.currentUser?.schoolId),
     },
-    { skip: !authstate.currentUser }
+    { skip: !authstate.currentUser },
   );
+
+  const { data: classItems, isLoading: isLoadingClassItems, isFetching: isFetchingClassItems } = useGetAllClassesQuery()
 
   const colors = ["green", "red", "gray"] as const;
 
@@ -198,11 +202,12 @@ export default function PaymentView() {
       (payment) =>
         payment.studentName.toLowerCase().includes(query) ||
         payment.transactionId.toLowerCase().includes(query) ||
-        payment.class.toLowerCase().includes(query)
+        payment.class.toLowerCase().includes(query),
     );
   }, [searchQuery]);
 
   const totalPages = Math.ceil(filteredPayments.length / ITEMS_PER_PAGE);
+
 
   const handleSearch = (query: string) => {
     setSearchQuery(query);
@@ -235,7 +240,13 @@ export default function PaymentView() {
         </div>
 
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-          <SearchInput onSearch={handleSearch} placeholder="Search" />
+          <div className="flex items-center gap-6">
+            <button className="px-4 py-3 whitespace-nowrap bg-gray-900 text-white rounded-lg hover:bg-gray-800 transition-colors flex items-center gap-2 font-medium">
+              <CardSim />
+              Add Payment
+            </button>
+            <SearchInput onSearch={handleSearch} placeholder="Search" />
+          </div>
           <button className="px-4 py-3 bg-gray-900 text-white rounded-lg hover:bg-gray-800 transition-colors flex items-center gap-2 font-medium">
             <svg
               width="18"
@@ -256,6 +267,7 @@ export default function PaymentView() {
         <PaymentTable
           data={data?.data ?? []}
           isLoading={isFetching || isLoading}
+          classItems={classItems?.data ?? []}
         />
 
         {totalPages > 1 && (

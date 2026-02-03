@@ -1,6 +1,6 @@
-'use client';
-import Image from 'next/image';
-import { useState } from 'react';
+"use client";
+import Image from "next/image";
+import { useState } from "react";
 
 interface AppProps {
   id: number;
@@ -14,115 +14,133 @@ interface AppProps {
 interface AppCardProps {
   app: AppProps;
   onClick: (app: AppProps) => void;
-  variant?: 'grid' | 'modal';
+  variant?: "grid" | "modal";
 }
-
 
 const AppData = [
   {
     id: 1,
     title: "Admissions & Enrolment Management",
-    description: "Streamlining the journey from prospective applicant to enrolled student with automated workflows.",
+    description:
+      "Streamlining the journey from prospective applicant to enrolled student with automated workflows.",
     price: "₦599/month",
     status: "inactive",
-    tag: "Coming Soon"
+    tag: "Coming Soon",
   },
   {
     id: 2,
     title: "Discipline & Behavior Management",
-    description: "Logging incidents, assigning consequences, and tracking patterns to support student conduct.",
+    description:
+      "Logging incidents, assigning consequences, and tracking patterns to support student conduct.",
     price: "₦599/month",
     status: "inactive",
-    tag: "Coming Soon"
+    tag: "Coming Soon",
   },
   {
     id: 3,
     title: "Grade & Transcript Management",
-    description: "The official repository for report cards, historical grades, and the generation of formal transcripts.",
+    description:
+      "The official repository for report cards, historical grades, and the generation of formal transcripts.",
     price: "₦599/month",
     status: "inactive",
-    tag: "Coming Soon"
+    tag: "Coming Soon",
   },
   {
     id: 4,
     title: "Timetabling & Master Scheduling",
-    description: "Building conflict-free master schedules that balance teacher, room, and student course requests.",
+    description:
+      "Building conflict-free master schedules that balance teacher, room, and student course requests.",
     price: "₦599/month",
     status: "inactive",
-    tag: "Coming Soon"
+    tag: "Coming Soon",
   },
   {
     id: 5,
     title: "Curriculum Management",
-    description: "Aligning lessons, units, and assessments with state and national learning standards.",
+    description:
+      "Aligning lessons, units, and assessments with state and national learning standards.",
     price: "₦599/month",
     status: "inactive",
-    tag: "Coming Soon"
+    tag: "Coming Soon",
   },
   {
     id: 6,
     title: "Admissions & Enrollment Management",
-    description: "Streamlining the journey from prospective applicant to enrolled student with automated workflows.",
+    description:
+      "Streamlining the journey from prospective applicant to enrolled student with automated workflows.",
     price: "₦599/month",
     status: "inactive",
-    tag: "Coming Soon"
+    tag: "Coming Soon",
   },
   {
     id: 7,
     title: "Tuition & Fee Management",
-    description: "Configuring complex fee structures, payment plans, and generating automated invoices.",
+    description:
+      "Configuring complex fee structures, payment plans, and generating automated invoices.",
     price: "Free",
     status: "active",
-    tag: null
+    tag: null,
   },
   {
     id: 8,
     title: "Online Payment Portal",
-    description: "Enabling secure online payments for tuition, fees, activities, and more from families.",
+    description:
+      "Enabling secure online payments for tuition, fees, activities, and more from families.",
     price: "Free",
     status: "active",
-    tag: null
+    tag: null,
   },
   {
     id: 9,
     title: "Accounts Payable & Receivable",
-    description: "Managing cash flow by tracking money owed to vendors and money due from various sources.",
+    description:
+      "Managing cash flow by tracking money owed to vendors and money due from various sources.",
     price: "₦599/month",
     status: "inactive",
-    tag: "Coming Soon"
+    tag: "Coming Soon",
   },
   {
     id: 10,
     title: "Payroll Processing",
-    description: "Automating salary calculations, tax withholdings, and direct deposits for all staff.",
+    description:
+      "Automating salary calculations, tax withholdings, and direct deposits for all staff.",
     price: "₦599/month",
     status: "inactive",
-    tag: "Coming Soon"
+    tag: "Coming Soon",
   },
   {
     id: 11,
     title: "Employee Database & Records",
-    description: "A centralized digital filing cabinet for all staff contracts, certifications, and personal information.",
+    description:
+      "A centralized digital filing cabinet for all staff contracts, certifications, and personal information.",
     price: "₦599/month",
     status: "inactive",
-    tag: "Coming Soon"
+    tag: "Coming Soon",
   },
   {
     id: 12,
     title: "Parent Portal",
-    description: "A secure, personalized dashboard for families to view grades, fees, and announcements.",
+    description:
+      "A secure, personalized dashboard for families to view grades, fees, and announcements.",
     price: "Free",
     status: "active",
-    tag: null
+    tag: null,
   },
 ];
 
-
-const AppCard = ({ app, onClick, variant = 'grid' }: AppCardProps) => {
+const AppCard = ({ app, onClick, variant = "grid" }: AppCardProps) => {
   return (
-    <article onClick={() => onClick(app)} className={`flex ${
-      variant === 'modal' ? 'flex-col gap-3.75 p-4 w-[332px] rounded-2xl' : 'gap-[0.444rem] max-w-[370px] rounded-[0.88875rem] p-[0.88875rem]'} bg-[#f8f8f8] cursor-pointer`}>
-      <div className={`relative flex-none ${ variant === 'modal' ? 'w-full rounded-xl h-[100px]' : 'w-[89px] h-[114px] rounded-[7.11px]'} bg-[#d9d9d9]`}>
+    <article
+      onClick={() => onClick(app)}
+      className={`flex ${
+        variant === "modal"
+          ? "flex-col gap-3.75 p-4 w-[332px] rounded-2xl"
+          : "gap-[0.444rem] max-w-[370px] rounded-[0.88875rem] p-[0.88875rem]"
+      } bg-[#f8f8f8] cursor-pointer`}
+    >
+      <div
+        className={`relative flex-none ${variant === "modal" ? "w-full rounded-xl h-[100px]" : "w-[89px] h-[114px] rounded-[7.11px]"} bg-[#d9d9d9]`}
+      >
         {/* App image / loge */}
         {app.tag && (
           <span className="absolute top-0 right-0 w-[46px] h-2.5 bg-[#f93333] rounded-tr-xs rounded-bl-xs text-white text-[0.33rem] text-center">
@@ -131,36 +149,39 @@ const AppCard = ({ app, onClick, variant = 'grid' }: AppCardProps) => {
         )}
       </div>
 
-      <div className={`flex flex-col justify-center ${ variant === 'modal' ? 'gap-3.75' : 'gap-3 h-[114px]'} overflow-hidden text-[0.7775rem] leading-none`}>
-        <div className='flex justify-between items-start gap-4'>
-          <h3 className={`font-semibold text-pretty wrap-break-words leading-[1.2] tracking-tight ${ variant === 'modal' ? '' : 'max-w-36'}`}>
+      <div
+        className={`flex flex-col justify-center ${variant === "modal" ? "gap-3.75" : "gap-3 h-[114px]"} overflow-hidden text-[0.7775rem] leading-none`}
+      >
+        <div className="flex justify-between items-start gap-4">
+          <h3
+            className={`font-semibold text-pretty wrap-break-words leading-[1.2] tracking-tight ${variant === "modal" ? "" : "max-w-36"}`}
+          >
             {app.title}
           </h3>
           <button
             className={`flex items-center gap-2 text-[0.666875rem] border-2 rounded-full p-1 ${
-              app.status === 'active' 
-                ? 'bg-[#6932e2] border-[#6932e2] text-[#ebe2ff]' 
-                : 'border-[#c8c8c8] text-[#6f6d6d]'
-            }`}>
-            {app.status === 'active' ? 'Active' : 'Activate'}
+              app.status === "active"
+                ? "bg-[#6932e2] border-[#6932e2] text-[#ebe2ff]"
+                : "border-[#c8c8c8] text-[#6f6d6d]"
+            }`}
+          >
+            {app.status === "active" ? "Active" : "Activate"}
 
-            <span className='relative w-[17.78px] h-[10.67px] border-[0.89px] rounded-full'>
-              <span className={`absolute top-1/2 -translate-y-1/2 w-[5.33px] h-[5.33px] border-[0.89px] rounded-full transition-all duration-300 ease-in-out ${
-                app.status === 'active' 
-                  ? 'left-2.5' 
-                  : 'left-0.5'
-              }`}></span>
+            <span className="relative w-[17.78px] h-[10.67px] border-[0.89px] rounded-full">
+              <span
+                className={`absolute top-1/2 -translate-y-1/2 w-[5.33px] h-[5.33px] border-[0.89px] rounded-full transition-all duration-300 ease-in-out ${
+                  app.status === "active" ? "left-2.5" : "left-0.5"
+                }`}
+              ></span>
             </span>
           </button>
         </div>
 
-        <p className='text-[#6f6d6d] leading-[1.1] line-clamp-3 h-[3.3em] max-w-[232px]'>
+        <p className="text-[#6f6d6d] leading-[1.1] line-clamp-3 h-[3.3em] max-w-[232px]">
           {app.description}
         </p>
 
-        <div className='font-bold'>
-          {app.price}
-        </div>
+        <div className="font-bold">{app.price}</div>
       </div>
     </article>
   );
@@ -170,21 +191,22 @@ export default function AppView() {
   const [selectedApp, setSelectedApp] = useState<AppProps | null>(null);
 
   return (
-    <div className="max-w-[874px]">
-      
+    <div className="">
       <section>
         <h1 className="text-xl font-bold">Apps/Tools</h1>
-        
+
         <div className="relative h-[324px] w-full my-[27px]">
           <Image
-                src="/images/Apps/back-school-cover-illustration.png"
-                alt="Back to school illustration"
-                fill
-              />
+            src="/images/Apps/back-school-cover-illustration.png"
+            alt="Back to school illustration"
+            fill
+          />
         </div>
 
         <div className="flex justify-between items-center gap-4 mb-4">
-          <h2 className="text-[clamp(10px, 0.169vw + 10px, 12.44px)] font-bold flex-none">Apps</h2>
+          <h2 className="text-[clamp(10px, 0.169vw + 10px, 12.44px)] font-bold flex-none">
+            Apps
+          </h2>
           <div className="relative flex-1 min-w-0 max-w-82">
             <input
               type="text"
@@ -199,14 +221,16 @@ export default function AppView() {
               className="absolute left-2 top-1/2 transform -translate-y-1/2 pointer-events-none"
             />
           </div>
-          <select name="status" className="w-fit p-[3.56px] border-[#c8c8c8] border-[0.89px] rounded-[7.11px]">
+          <select
+            name="status"
+            className="w-fit p-[3.56px] border-[#c8c8c8] border-[0.89px] rounded-[7.11px]"
+          >
             <option value="all">All</option>
           </select>
         </div>
       </section>
 
       <article className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-        
         {AppData.map((app) => (
           <AppCard key={app.id} app={app} onClick={setSelectedApp} />
         ))}
