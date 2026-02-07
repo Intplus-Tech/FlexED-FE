@@ -3,15 +3,19 @@
 
 import { useState } from "react";
 import { TableSkeleton } from "../../Loader/table-loader";
+import { ClassItem } from "@/@types/class";
+import { Transaction } from "@/@types/transaction";
 
 interface PaymentTableProps {
-  data?: any;
+  data?: Transaction[];
   isLoading?: boolean;
+  classItems: ClassItem[];
 }
 
 export function PaymentTable({
   data = [],
   isLoading = false,
+  classItems = [],
 }: PaymentTableProps) {
   const [selectedRows, setSelectedRows] = useState<Set<string>>(new Set());
 
@@ -33,6 +37,11 @@ export function PaymentTable({
     setSelectedRows(newSelected);
   };
 
+  const getClassById = (classId: string) => {
+    const classItem = classItems.find((item) => item._id === classId);
+    return classItem ? classItem.name : "";
+  };
+
   return (
     <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
       <div className="overflow-x-auto">
@@ -40,32 +49,30 @@ export function PaymentTable({
           <thead className="bg-gray-50 border-b border-gray-200">
             <tr>
               <th className="px-6 py-4 text-left">
-                <input
-                  type="checkbox"
-                  onChange={handleSelectAll}
-                  checked={selectedRows.size === data.length && data.length > 0}
-                  className="w-5 h-5 cursor-pointer"
-                />
+                <div className="flex items-center gap-3">
+                  <input
+                    type="checkbox"
+                    className="w-4 h-4 border-2 border-gray-300 rounded cursor-pointer"
+                  />
+                  <span className="text-sm font-medium text-gray-600">
+                    Time / Date
+                  </span>
+                </div>
               </th>
-              <th className="px-6 py-4 text-left text-sm font-medium text-gray-700">
-                Time / Date
-              </th>
-              <th className="px-6 py-4 text-left text-sm font-medium text-gray-700">
+              <th className="px-6 py-4 text-left text-sm font-medium text-gray-600">
                 Transaction ID
               </th>
-              <th className="px-6 py-4 text-left text-sm font-medium text-gray-700">
+              <th className="px-6 py-4 text-left text-sm font-medium text-gray-600">
                 Student Name
               </th>
-              <th className="px-6 py-4 text-left text-sm font-medium text-gray-700">
+              <th className="px-6 py-4 text-left text-sm font-medium text-gray-600">
                 Class
               </th>
-              <th className="px-6 py-4 text-left text-sm font-medium text-gray-700">
+              <th className="px-6 py-4 text-left text-sm font-medium text-gray-600">
                 Amount Paid
               </th>
-              <th className="px-6 py-4 text-left text-sm font-medium text-gray-700">
-                % Remaining
-              </th>
-              <th className="px-6 py-4 text-left text-sm font-medium text-gray-700">
+
+              <th className="px-6 py-4 text-left text-sm font-medium text-gray-600">
                 Status
               </th>
             </tr>
@@ -83,46 +90,45 @@ export function PaymentTable({
                 </td>
               </tr>
             ) : (
-              data.map((row: any) => (
+              data.map((payment) => (
                 <tr
-                  key={row.id}
-                  className="border-b border-gray-200 hover:bg-gray-50 transition-colors"
+                  key={payment._id}
+                  className="hover:bg-gray-50 transition-colors"
                 >
                   <td className="px-6 py-4">
-                    <input
-                      type="checkbox"
-                      checked={selectedRows.has(row.id)}
-                      onChange={() => handleSelectRow(row.id)}
-                      className="w-5 h-5 cursor-pointer"
-                    />
+                    <div className="flex items-center gap-3">
+                      <input
+                        type="checkbox"
+                        className="w-4 h-4 border-2 border-gray-300 rounded cursor-pointer"
+                      />
+                      <span className="text-sm text-gray-900">
+                        {new Date(payment?.createdAt).toLocaleDateString()}
+                      </span>
+                    </div>
+                  </td>
+                  <td className="px-6 py-4 text-sm text-gray-600">
+                    {payment?.groupReference}
                   </td>
                   <td className="px-6 py-4 text-sm text-gray-900">
-                    {row.timeDate}
+                    {payment?.student?.firstName + " " + payment?.student?.lastName}
                   </td>
-                  <td className="px-6 py-4 text-sm text-gray-900">
-                    {row.transactionId}
-                  </td>
-                  <td className="px-6 py-4 text-sm text-gray-900">
-                    {row.studentName}
-                  </td>
-                  <td className="px-6 py-4 text-sm text-gray-900">
-                    {row.class}
+                  <td className="px-6 py-4 text-sm text-gray-600">
+                    {getClassById(payment?.student?.class)}
                   </td>
                   <td className="px-6 py-4 text-sm font-medium text-gray-900">
-                    {row.amountPaid}
+                    {payment.amount.toLocaleString("en-NG", {
+                      style: "currency",
+                      currency: "NGN",
+                    })}
                   </td>
-                  <td className="px-6 py-4 text-sm text-gray-900">
-                    {row.percentRemaining}%
-                  </td>
-                  <td className="px-6 py-4 text-sm">
+                  <td className="px-6 py-4">
                     <span
-                      className={`px-3 py-1 rounded-full text-xs font-medium ${
-                        row.status === "Successful"
-                          ? "bg-green-100 text-green-800"
-                          : "bg-red-100 text-red-800"
-                      }`}
+                      className={`inline-flex px-3 py-1 text-sm font-medium rounded-full ${payment.status === "PAID"
+                        ? "text-green-700 bg-green-50"
+                        : "text-red-700 bg-red-50"
+                        }`}
                     >
-                      {row.status}
+                      {payment.status}
                     </span>
                   </td>
                 </tr>

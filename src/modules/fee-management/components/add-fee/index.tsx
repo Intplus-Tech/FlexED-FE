@@ -98,6 +98,8 @@ export function CreateFeeModal({ open, onOpenChange }: CreateFeeModalProps) {
       category: "",
     },
   });
+
+  console.log(errors, "errors");
   const [isOpen, setIsOpen] = useState(false);
   const selectedClasses = watch("classes") || [];
   const { currentUser } = useSelector((state: RootState) => state.authState);
@@ -132,7 +134,7 @@ export function CreateFeeModal({ open, onOpenChange }: CreateFeeModalProps) {
         category: data.category,
         classes: data.classes,
         description: data.description,
-        dueDate: data.dueDate,
+        dueDate: new Date(data.dueDate).toISOString(),
         name: data.name,
         period: data.period,
         ...(hasDiscount && { discount: data.discount }),
@@ -409,7 +411,7 @@ export function CreateFeeModal({ open, onOpenChange }: CreateFeeModalProps) {
           {/* Tuition Payment Terms Section */}
           <div className="pt-4 border-t">
             <h3 className="text-base font-semibold mb-4">
-              Tuition Payment Terms (Optional)
+              Tuition Payment Discount (Optional)
             </h3>
 
             <div className="my-2">
@@ -429,10 +431,10 @@ export function CreateFeeModal({ open, onOpenChange }: CreateFeeModalProps) {
                 Early Payment Discount
               </label>
               <input
-                {...register("discount.value")}
-                type="text"
+                {...register("discount.value", { valueAsNumber: true })}
+                type="number"
                 placeholder="0%"
-                className="w-full h-10 px-3 rounded-md border border-gray-200 bg-background text-sm "
+                className="w-full h-10 px-3 rounded-md border border-gray-200 bg-background text-sm"
               />
             </div>
 
