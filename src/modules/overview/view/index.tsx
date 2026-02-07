@@ -15,8 +15,11 @@ import {
   useGetTransactionsQuery,
 } from "@/redux/api/transaction";
 import { formatNaira } from "@/utils/functions";
+import { useGetAllClassesQuery } from "@/redux/api/class";
+import { useRouter } from "next/navigation";
 
 export default function DashboardView() {
+  const router = useRouter()
   const authState = useSelector((state: RootState) => state.authState);
   const { data, isFetching, isLoading } = useGetSmsMetricsQuery(
     {
@@ -24,6 +27,13 @@ export default function DashboardView() {
     },
     { skip: !authState.currentUser }
   );
+
+  const {
+    data: classItems,
+    isFetching: isFetchingClassItems,
+    isLoading: isLoadingClassItems,
+  } = useGetAllClassesQuery(
+    );
 
   const {
     data: transactions,
@@ -83,15 +93,15 @@ export default function DashboardView() {
             feesCollected={formatNaira(paymentMetrics?.data?.totalPaidAll ?? 0)}
             totalOutstanding={formatNaira(
               (paymentMetrics?.data?.totalExpectedAll ?? 0) -
-                (paymentMetrics?.data?.totalPaidAll ?? 0)
+              (paymentMetrics?.data?.totalPaidAll ?? 0)
             )}
             percentageOutstanding={
               paymentMetrics?.data?.totalExpectedAll
                 ? (
-                    (paymentMetrics.data.totalPaidAll /
-                      paymentMetrics.data.totalExpectedAll) *
-                    100
-                  ).toFixed(2)
+                  (paymentMetrics.data.totalPaidAll /
+                    paymentMetrics.data.totalExpectedAll) *
+                  100
+                ).toFixed(2)
                 : "0.00"
             }
           />
@@ -116,10 +126,16 @@ export default function DashboardView() {
       </div>
 
       <div>
-     <RecentTransactions
-      transactions={transactions?.data ?? []} 
-      isLoading={isTransactionLoading || isTrasactionFetching} 
-      />
+        <RecentTransactions
+          transactions={transactions?.data ?? []}
+          isLoading={isFetching || isLoading}
+          classItems={classItems?.data ?? []}
+        />
+        <div className="flex justify-center items-center mt-2">
+          <button onClick={() => router.push("/dashboard/payments")} className="bg-purple-500 text-white px-4 py-2 rounded active:scale-95 duration-150">
+            see full list
+          </button>
+        </div>
       </div>
     </div>
   );

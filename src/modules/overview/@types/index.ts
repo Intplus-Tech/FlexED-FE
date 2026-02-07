@@ -1,3 +1,4 @@
+import { ClassItem } from "@/@types/class";
 import { ClassCollectionItem, Transaction } from "@/@types/transaction";
 
 export interface ClassCollectionData {
@@ -22,9 +23,8 @@ export interface FeeMetricsProps {
 
 export interface RecentTransactionsProps {
   transactions: Transaction[];
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  // transactions: any;
   isLoading?: boolean;
+  classItems: ClassItem[];
 }
 
 export interface SmsBalanceProps {

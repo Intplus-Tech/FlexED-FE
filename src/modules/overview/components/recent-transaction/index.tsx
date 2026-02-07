@@ -5,13 +5,19 @@ import TableLoader from "../../loader/table-loader";
 export function RecentTransactions({
   transactions,
   isLoading = false,
+  classItems,
 }: RecentTransactionsProps) {
+
+
+
   if (isLoading) {
     <TableLoader />;
   }
 
-  console.log("DEBUG: Transactions value is:", transactions, "Type is:", typeof transactions);
-  console.log(transactions);
+  const getClassById = (classId: string) => {
+    const classItem = classItems.find((item) => item._id === classId);
+    return classItem ? classItem.name : "";
+  };
 
   return (
     <div className="bg-white border border-gray-200 rounded-xl overflow-hidden">
@@ -42,9 +48,7 @@ export function RecentTransactions({
               <th className="px-6 py-4 text-left text-sm font-medium text-gray-600">
                 Amount Paid
               </th>
-              <th className="px-6 py-4 text-left text-sm font-medium text-gray-600">
-                % Remaining
-              </th>
+
               <th className="px-6 py-4 text-left text-sm font-medium text-gray-600">
                 Status
               </th>
@@ -59,9 +63,9 @@ export function RecentTransactions({
                 </td>
               </tr>
             ) : (
-              transactions?.items?.map((transaction) => (
+              transactions?.items?.slice(0, 5).map((transaction) => (
                 <tr
-                  key={transaction.id}
+                  key={transaction._id}
                   className="hover:bg-gray-50 transition-colors"
                 >
                   <td className="px-6 py-4">
@@ -71,32 +75,31 @@ export function RecentTransactions({
                         className="w-4 h-4 border-2 border-gray-300 rounded cursor-pointer"
                       />
                       <span className="text-sm text-gray-900">
-                        {transaction.time}
+                        {new Date(transaction?.createdAt).toLocaleDateString()}
                       </span>
                     </div>
                   </td>
                   <td className="px-6 py-4 text-sm text-gray-600">
-                    {transaction._id}
+                    {transaction?.groupReference}
                   </td>
                   <td className="px-6 py-4 text-sm text-gray-900">
-                    {transaction.studentName}
+                    {transaction?.student?.firstName + " " + transaction?.student?.lastName}
                   </td>
                   <td className="px-6 py-4 text-sm text-gray-600">
-                    {transaction.class}
+                    {getClassById(transaction?.student?.class)}
                   </td>
                   <td className="px-6 py-4 text-sm font-medium text-gray-900">
-                    {transaction.amount}
-                  </td>
-                  <td className="px-6 py-4 text-sm text-gray-600">
-                    {transaction.percentage}
+                    {transaction.amount.toLocaleString("en-NG", {
+                      style: "currency",
+                      currency: "NGN",
+                    })}
                   </td>
                   <td className="px-6 py-4">
                     <span
-                      className={`inline-flex px-3 py-1 text-sm font-medium rounded-full ${
-                        transaction.status === "Successful"
-                          ? "text-green-700 bg-green-50"
-                          : "text-red-700 bg-red-50"
-                      }`}
+                      className={`inline-flex px-3 py-1 text-sm font-medium rounded-full ${transaction.status === "PAID"
+                        ? "text-green-700 bg-green-50"
+                        : "text-red-700 bg-red-50"
+                        }`}
                     >
                       {transaction.status}
                     </span>
@@ -108,5 +111,5 @@ export function RecentTransactions({
         </table>
       </div>
     </div>
-  );
+  )
 }
