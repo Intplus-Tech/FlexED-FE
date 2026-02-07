@@ -17,7 +17,7 @@ export function PaymentTable({
 
   const handleSelectAll = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.checked) {
-      setSelectedRows(new Set(data.map((row: any) => row.id)));
+      setSelectedRows(new Set(data?.items?.map((row: any) => row.id)));
     } else {
       setSelectedRows(new Set());
     }
@@ -43,7 +43,7 @@ export function PaymentTable({
                 <input
                   type="checkbox"
                   onChange={handleSelectAll}
-                  checked={selectedRows.size === data.length && data.length > 0}
+                  checked={selectedRows.size === data?.items?.length && data?.items?.length > 0}
                   className="w-5 h-5 cursor-pointer"
                 />
               </th>
@@ -73,7 +73,7 @@ export function PaymentTable({
           <tbody>
             {isLoading ? (
               <TableSkeleton />
-            ) : data.length === 0 ? (
+            ) : data?.items?.length === 0 ? (
               <tr>
                 <td
                   colSpan={8}
@@ -83,7 +83,7 @@ export function PaymentTable({
                 </td>
               </tr>
             ) : (
-              data.map((row: any) => (
+              data?.items?.map((row: any) => (
                 <tr
                   key={row.id}
                   className="border-b border-gray-200 hover:bg-gray-50 transition-colors"

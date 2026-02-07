@@ -21,9 +21,9 @@ export interface FeeMetricsProps {
 }
 
 export interface RecentTransactionsProps {
-  // transactions: Transaction[];
+  transactions: Transaction[];
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  transactions: any;
+  // transactions: any;
   isLoading?: boolean;
 }
 

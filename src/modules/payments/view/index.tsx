@@ -179,7 +179,7 @@ export default function PaymentView() {
     },
     { skip: !authstate.currentUser }
   );
-
+console.log(data);
   const colors = ["green", "red", "gray"] as const;
 
   const schoolMetric =

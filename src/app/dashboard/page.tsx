@@ -5,7 +5,7 @@ import React from "react";
 const DashboardPage = () => {
   return (
     <DashboardLayout>
-      <DashboardView />;
+      <DashboardView />
     </DashboardLayout>
   );
 };

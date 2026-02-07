@@ -21,6 +21,8 @@ export function StudentTable({
   const [selectedStudent, setSelectedStudent] = useState<Student | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
 
+  console.log(students);
+
   const handleViewStudent = (student: Student) => {
     setSelectedStudent(student);
     setIsModalOpen(true);
@@ -86,7 +88,7 @@ export function StudentTable({
                 </td>
               </tr>
             ) : (
-              students.map((student) => {
+              students?.map((student) => {
                 return (
                   <tr
                     key={student._id}

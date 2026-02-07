@@ -10,6 +10,9 @@ export function RecentTransactions({
     <TableLoader />;
   }
 
+  console.log("DEBUG: Transactions value is:", transactions, "Type is:", typeof transactions);
+  console.log(transactions);
+
   return (
     <div className="bg-white border border-gray-200 rounded-xl overflow-hidden">
       <div className="overflow-x-auto">
@@ -47,6 +50,7 @@ export function RecentTransactions({
               </th>
             </tr>
           </thead>
+
           <tbody className="divide-y divide-gray-200">
             {transactions.length === 0 ? (
               <tr>
@@ -55,7 +59,7 @@ export function RecentTransactions({
                 </td>
               </tr>
             ) : (
-              transactions.map((transaction: any) => (
+              transactions?.items?.map((transaction) => (
                 <tr
                   key={transaction.id}
                   className="hover:bg-gray-50 transition-colors"

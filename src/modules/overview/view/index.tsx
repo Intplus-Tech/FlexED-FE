@@ -116,10 +116,10 @@ export default function DashboardView() {
       </div>
 
       <div>
-        <RecentTransactions
-          transactions={transactions?.data ?? []}
-          isLoading={isFetching || isLoading}
-        />
+     <RecentTransactions
+      transactions={transactions?.data ?? []} 
+      isLoading={isTransactionLoading || isTrasactionFetching} 
+      />
       </div>
     </div>
   );
