@@ -1,5 +1,5 @@
 import { ClassItem } from "@/@types/class";
-import { ClassCollectionItem, Transaction } from "@/@types/transaction";
+import { ClassCollectionItem, Transaction, TransactionsItems } from "@/@types/transaction";
 
 export interface ClassCollectionData {
   className: string;
@@ -22,7 +22,7 @@ export interface FeeMetricsProps {
 }
 
 export interface RecentTransactionsProps {
-  transactions: Transaction[];
+  transactions: TransactionsItems;
   isLoading?: boolean;
   classItems: ClassItem[];
 }

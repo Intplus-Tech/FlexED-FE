@@ -265,7 +265,7 @@ export default function PaymentView() {
         </div>
 
         <PaymentTable
-          data={data?.data ?? []}
+          data={data?.data}
           isLoading={isFetching || isLoading}
           classItems={classItems?.data ?? []}
         />

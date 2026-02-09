@@ -127,10 +127,10 @@ export default function StudentView() {
       </div>
 
       <StudentTable
-        students={students?.data ?? []}
+        students={students ?? { success:true, message:"", statusCode: 200, data: { items: [], meta: { page: 1, limit: 10, total: 0, totalPages: 0, hasNextPage: false, hasPrevPage: false } } }}
         isLoading={isFetchingStudents || isLoadingStudents}
         classItems={classes?.data ?? []}
-      />
+      />``
 
       <AddStudentModal
         classItems={classes?.data ?? []}

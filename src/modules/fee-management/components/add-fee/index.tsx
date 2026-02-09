@@ -121,6 +121,8 @@ export function CreateFeeModal({ open, onOpenChange }: CreateFeeModalProps) {
     isFetching: isAcademicSessionsFetching,
   } = useGetAllAcademicSessionQuery();
 
+  console.log(academicSessions, "academicSessions");
+
   const [createPayment, { isLoading }] = useCreatePaymentItemsMutation();
 
   const onFormSubmit = async (data: FeeFormValues) => {
@@ -195,7 +197,7 @@ export function CreateFeeModal({ open, onOpenChange }: CreateFeeModalProps) {
                     )}
                   >
                     <option value=""></option>
-                    {academicSessions?.data?.map((session) => (
+                    {academicSessions?.data?.items?.map((session) => (
                       <option key={session?.createdAt} value={session?._id}>
                         {session?.name}
                       </option>

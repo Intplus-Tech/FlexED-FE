@@ -56,7 +56,7 @@ export function RecentTransactions({
           </thead>
 
           <tbody className="divide-y divide-gray-200">
-            {transactions.length === 0 ? (
+            {transactions?.items?.length === 0 ? (
               <tr>
                 <td colSpan={7} className="text-center py-4">
                   No recent transactions

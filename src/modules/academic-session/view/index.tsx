@@ -3,12 +3,13 @@
 import { useState, useMemo } from "react";
 import AcademicTable from "../components/academic-session-table";
 import AddPeriodModal from "../components/add-academic-session";
-import { CreateAcademicSessionRequest } from "@/@types/academic-session";
+import { CreateAcademicSessionRequest, SessionData } from "@/@types/academic-session";
 import {
   useCreateAcademicSessionMutation,
   useGetAllAcademicSessionQuery,
 } from "@/redux/api/academicSession";
 import { showerror, showsuccess } from "@/utils/toast";
+import page from "@/app/dashboard/students/page";
 
 interface AcademicPeriod {
   id: string;
@@ -62,6 +63,9 @@ export default function AcademicSessionView() {
     isLoading: isLoadingAcademicPeriod,
     isFetching: isFetchingAcademicPeriod,
   } = useGetAllAcademicSessionQuery();
+
+
+  console.log("academic periods", academicPeriods);
 
   return (
     <main className="min-h-screen ">
@@ -155,7 +159,7 @@ export default function AcademicSessionView() {
         {/* Table Section */}
         <div className="bg-card border border-border rounded-lg overflow-hidden">
           <AcademicTable
-            periods={academicPeriods?.data ?? []}
+            periods={academicPeriods ?? { success: true, message: "", statusCode: 200, data: { items: [] as SessionData[], meta: { page: 1, limit: 10, total: 0, totalPages: 0, hasNextPage: false, hasPrevPage: false }}}}
             isLoading={isLoadingAcademicPeriod || isFetchingAcademicPeriod}
           />
         </div>

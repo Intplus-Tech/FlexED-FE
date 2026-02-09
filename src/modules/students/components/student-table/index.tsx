@@ -1,14 +1,13 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
-"use client";
+ "use client";
 
 import { useState } from "react";
 import StudentTableLoader from "../../Loader/table-loader";
 import { StudentProfileModal } from "../student-profile";
-import { Student } from "@/@types/student";
+import { GetStudentsResponse, Student } from "@/@types/student";
 import { ClassItem } from "@/@types/class";
 
 interface StudentTableProps {
-  students: Student[];
+  students: GetStudentsResponse;
   isLoading?: boolean;
   classItems: ClassItem[];
 }
@@ -81,14 +80,14 @@ export function StudentTable({
             </tr>
           </thead>
           <tbody className="divide-y divide-gray-200">
-            {students.length === 0 ? (
+            {students?.data?.items?.length === 0 ? (
               <tr>
                 <td colSpan={7} className="px-6 py-4 text-center">
                   No data available
                 </td>
               </tr>
             ) : (
-              students?.map((student) => {
+              students?.data?.items?.map((student) => {
                 return (
                   <tr
                     key={student._id}
