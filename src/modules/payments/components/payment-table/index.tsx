@@ -4,24 +4,25 @@
 import { useState } from "react";
 import { TableSkeleton } from "../../Loader/table-loader";
 import { ClassItem } from "@/@types/class";
-import { Transaction } from "@/@types/transaction";
+import { TransactionsItems } from "@/@types/transaction";
 
 interface PaymentTableProps {
-  data?: Transaction[];
+  data?: TransactionsItems;
   isLoading?: boolean;
   classItems: ClassItem[];
 }
 
 export function PaymentTable({
-  data = [],
+  data = { items: [], meta: { page: 1, limit: 10, total: 0, totalPages: 0, hasNextPage: false, hasPrevPage: false } },
   isLoading = false,
   classItems = [],
 }: PaymentTableProps) {
   const [selectedRows, setSelectedRows] = useState<Set<string>>(new Set());
 
+  console.log("Payment data:", data);
   const handleSelectAll = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.checked) {
-      setSelectedRows(new Set(data.map((row: any) => row.id)));
+      setSelectedRows(new Set(data?.items?.map((row: any) => row.id)));
     } else {
       setSelectedRows(new Set());
     }
@@ -80,7 +81,7 @@ export function PaymentTable({
           <tbody>
             {isLoading ? (
               <TableSkeleton />
-            ) : data.length === 0 ? (
+            ) : data?.items?.length === 0 ? (
               <tr>
                 <td
                   colSpan={8}
@@ -90,7 +91,7 @@ export function PaymentTable({
                 </td>
               </tr>
             ) : (
-              data.map((payment) => (
+              data?.items?.map((payment) => (
                 <tr
                   key={payment._id}
                   className="hover:bg-gray-50 transition-colors"

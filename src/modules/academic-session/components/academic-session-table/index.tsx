@@ -1,9 +1,9 @@
-import { SessionData } from "@/@types/academic-session";
+import { GetAcademicSessionResponse, SessionData } from "@/@types/academic-session";
 import TableSkeleton from "../../loaders/table-loader";
 import { formatDate } from "@/utils/functions";
 
 interface AcademicTableProps {
-  periods: SessionData[] | null;
+  periods: GetAcademicSessionResponse;
   isLoading: boolean;
 }
 
@@ -41,7 +41,7 @@ export default function AcademicTable({
           </tr>
         </thead>
         <tbody>
-          {periods?.length === 0 ? (
+          {periods?.data?.items?.length === 0 ? (
             <tr>
               <td
                 colSpan={7}
@@ -51,7 +51,7 @@ export default function AcademicTable({
               </td>
             </tr>
           ) : (
-            periods?.map((period) => (
+            periods?.data?.items?.map((period) => (
               <tr
                 key={period?.createdAt}
                 className="border-b border-border hover:bg-muted/50 transition-colors"

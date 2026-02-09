@@ -127,7 +127,7 @@ export default function DashboardView() {
 
       <div>
         <RecentTransactions
-          transactions={transactions?.data ?? []}
+          transactions={transactions?.data ?? null}
           isLoading={isFetching || isLoading}
           classItems={classItems?.data ?? []}
         />

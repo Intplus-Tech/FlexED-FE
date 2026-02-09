@@ -45,7 +45,7 @@ export interface PaymentItems {
   period: "PER_SESSION" | "PER_TERM";
   classes: string[];
   applicableTo: "ALL_STUDENTS" | "RETURNING_STUDENTS_ONLY";
-  reminderSchedules: any[];
+  reminderSchedules: string[];
   description: string;
   dueDate: string;
   status: "PENDING" | "PAID";
@@ -77,10 +77,21 @@ export interface SquadMetaData {
 export interface GetTransactionsResponse {
   success: boolean;
   message: string;
-  data: Transaction[];
+  data: TransactionsItems;
   statusCode: number;
 }
-
+export interface TransactionsItems {
+    items: Transaction[],
+    meta: Meta
+}
+export interface Meta {
+    "page": number,
+    "limit": number,
+    "total": number,
+    "totalPages": number,
+    "hasNextPage": boolean,
+    "hasPrevPage": boolean
+}
 export interface MakePaymentRequest {
   studentId: string;
   paymentItemId: string;

@@ -22,11 +22,24 @@ export interface ParentDetail {
   title?: string;
 }
 
+
+
 export interface GetStudentsResponse {
   success: boolean;
   message: string;
-  data: Student[];
   statusCode: number;
+  data: {            
+    items: Student[];
+    meta: Meta;
+  };
+}
+export interface Meta {
+  page: number;
+  limit: number;
+  total: number;
+  totalPages: number;
+  hasNextPage: boolean;
+  hasPrevPage: boolean;
 }
 
 export interface Student {
