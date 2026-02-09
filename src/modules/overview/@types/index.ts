@@ -22,7 +22,7 @@ export interface FeeMetricsProps {
 }
 
 export interface RecentTransactionsProps {
-  transactions: TransactionsItems;
+  transactions: TransactionsItems | null;
   isLoading?: boolean;
   classItems: ClassItem[];
 }
