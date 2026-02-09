@@ -1,3 +1,4 @@
+
 export interface CreateAcademicSessionRequest {
   id?: string;
   name: string;
@@ -8,7 +9,23 @@ export interface CreateAcademicSessionRequest {
 
 export interface GetAcademicSessionResponse {
   message: string;
-  data: SessionData[];
+  success: boolean;
+  statusCode: number;
+  data: {
+    items: SessionData[]; 
+    meta: Meta;
+  };
+}
+
+
+
+export interface Meta {
+  page: number;
+  limit: number;
+  total: number;
+  totalPages: number;
+  hasNextPage: boolean;
+  hasPrevPage: boolean;
 }
 
 export interface SessionData {

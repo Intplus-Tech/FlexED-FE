@@ -54,15 +54,16 @@ export function RecentTransactions({
               </th>
             </tr>
           </thead>
+
           <tbody className="divide-y divide-gray-200">
-            {transactions.length === 0 ? (
+            {transactions?.items?.length === 0 ? (
               <tr>
                 <td colSpan={7} className="text-center py-4">
                   No recent transactions
                 </td>
               </tr>
             ) : (
-              transactions.slice(0, 5).map((transaction) => (
+              transactions?.items?.slice(0, 5).map((transaction) => (
                 <tr
                   key={transaction._id}
                   className="hover:bg-gray-50 transition-colors"

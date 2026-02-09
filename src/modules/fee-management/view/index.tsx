@@ -22,11 +22,15 @@ export default function FeeManagementView() {
     isFetching: isFetchingCategories,
   } = useGetPaymentCategoriesQuery();
 
+  console.log("fee categories", feeCategories);
+
   const {
     data: fees,
     isFetching,
     isLoading: isLoadingFees,
   } = useGetPaymentListQuery();
+
+  console.log("fees", fees);
 
   return (
     <div className="space-y-6">
