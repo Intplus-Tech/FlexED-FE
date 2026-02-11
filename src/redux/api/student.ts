@@ -4,13 +4,14 @@ import apiSlice from "..";
 import { methods } from "@/utils/methods";
 import { CreateStudentRequest, GetStudentsResponse } from "@/@types/student";
 import { request } from "http";
+import { QueryHelper } from "@/utils/functions";
 
 export const studentApi = apiSlice.injectEndpoints({
   overrideExisting: true,
 
   endpoints: (builder) => ({
-    getAllStudent: builder.query<GetStudentsResponse, { schoolId: string }>({
-      query: ({ schoolId }) => ApiEndpoints.student.getAllStudent,
+    getAllStudent: builder.query<GetStudentsResponse, { schoolId: string,limit:number,page?:number }>({
+      query: ({ schoolId,limit,page }) => QueryHelper(ApiEndpoints.student.getAllStudent,{limit,page}),
       providesTags: ["students"],
     }),
 

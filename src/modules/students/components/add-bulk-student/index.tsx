@@ -6,6 +6,7 @@ import {
   useDowloadStudentCSVFormatMutation,
   useUploadBulkStudentMutation,
 } from "@/redux/api/student";
+import { showsuccess } from "@/utils/toast";
 import type React from "react";
 import { useState, useRef, useEffect } from "react";
 
@@ -120,28 +121,12 @@ export default function AddBulkStudentModal({
 
     try {
       const res = await uploadBulkStudent({ classId, file: formData }).unwrap();
-      console.log(res);
+      showsuccess(res.message)
+      setIsBulkModalOpen(false)
     } catch (error) {
       console.log(error);
     }
-    // try {
-    //   const text = await file.text();
-    //   const parsedData = parseCSV(text);
 
-    //   console.log("=== Student Data Upload ===");
-    //   console.log("File name:", file.name);
-    //   console.log("Total records:", parsedData.length);
-    //   console.log("Data:", parsedData);
-    //   console.log("===========================");
-
-    //   // Optional: Show success feedback
-    //   alert(
-    //     `Successfully uploaded ${parsedData.length} student records. Check console for details.`
-    //   );
-    // } catch (error) {
-    //   console.error("Error reading file:", error);
-    //   alert("Error reading file. Please try again.");
-    // }
   };
 
   const handleClear = () => {
@@ -249,11 +234,10 @@ export default function AddBulkStudentModal({
               onDragOver={handleDragOver}
               onDragLeave={handleDragLeave}
               onDrop={handleDrop}
-              className={`border-2 border-dashed rounded-lg p-12 text-center transition-colors cursor-pointer ${
-                isDragging
-                  ? "border-primary bg-primary/5"
-                  : "border-purple-300 dark:border-purple-700/50 bg-purple-50 dark:bg-purple-950/10"
-              }`}
+              className={`border-2 border-dashed rounded-lg p-12 text-center transition-colors cursor-pointer ${isDragging
+                ? "border-primary bg-primary/5"
+                : "border-purple-300 dark:border-purple-700/50 bg-purple-50 dark:bg-purple-950/10"
+                }`}
               onClick={() => fileInputRef.current?.click()}
             >
               <input

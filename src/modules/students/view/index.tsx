@@ -29,6 +29,7 @@ export default function StudentView() {
     isFetching: isFetchingStudents,
     isLoading: isLoadingStudents,
   } = useGetAllStudentQuery({
+    limit: 50,
     schoolId: currentUser?.schoolId as string,
   });
 
@@ -127,7 +128,7 @@ export default function StudentView() {
       </div>
 
       <StudentTable
-        students={students ?? { success:true, message:"", statusCode: 200, data: { items: [], meta: { page: 1, limit: 10, total: 0, totalPages: 0, hasNextPage: false, hasPrevPage: false } } }}
+        students={students ?? { success: true, message: "", statusCode: 200, data: { items: [], meta: { page: 1, limit: 10, total: 0, totalPages: 0, hasNextPage: false, hasPrevPage: false } } }}
         isLoading={isFetchingStudents || isLoadingStudents}
         classItems={classes?.data ?? []}
       />``
