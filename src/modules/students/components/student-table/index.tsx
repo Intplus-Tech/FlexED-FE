@@ -1,4 +1,4 @@
- "use client";
+"use client";
 
 import { useState } from "react";
 import StudentTableLoader from "../../Loader/table-loader";
@@ -20,7 +20,6 @@ export function StudentTable({
   const [selectedStudent, setSelectedStudent] = useState<Student | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
 
-  console.log(students);
 
   const handleViewStudent = (student: Student) => {
     setSelectedStudent(student);
