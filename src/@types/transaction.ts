@@ -153,7 +153,10 @@ export interface CreatePaymentCategory {
 export interface CreatePaymentCategoryResponse {
   success: boolean;
   message: string;
-  data: PaymentCategory[];
+  data: {
+    items: PaymentCategory[];
+    meta: Meta;
+  };
   statusCode: number;
 }
 
@@ -191,7 +194,10 @@ export type DiscountType = "PERCENTAGE" | "FLAT";
 export interface GetPaymentItemsResponse {
   success: boolean;
   message: string;
-  data: PaymentItem[];
+  data: {
+    items: PaymentItem[];
+    meta: Meta;
+  };
   statusCode: number;
 }
 

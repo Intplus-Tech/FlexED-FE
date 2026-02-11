@@ -368,7 +368,7 @@ export function CreateFeeModal({ open, onOpenChange }: CreateFeeModalProps) {
                     )}
                   >
                     <option value=""></option>
-                    {paymentCategories?.data?.map((categories) => (
+                    {paymentCategories?.data?.items?.map((categories) => (
                       <option key={categories?._id} value={categories?._id}>
                         {categories?.name}
                       </option>
