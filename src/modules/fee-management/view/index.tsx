@@ -63,7 +63,7 @@ export default function FeeManagementView() {
       </div>
 
       <FeeCategoryTable
-        categories={feeCategories?.data ?? []}
+        categories={feeCategories?.data.items ?? []}
         isLoading={isLoadingCategories || isFetchingCategories}
         searchQuery={searchQuery}
       />
@@ -83,7 +83,7 @@ export default function FeeManagementView() {
           </div>
         </div>
         <FeeTable
-          fees={fees?.data ?? []}
+          fees={fees?.data.items ?? []}
           isLoading={isFetching || isLoadingFees}
           searchQuery={searchQuery}
         />
