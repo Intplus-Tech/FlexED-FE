@@ -6,6 +6,7 @@ import {
   useDowloadStudentCSVFormatMutation,
   useUploadBulkStudentMutation,
 } from "@/redux/api/student";
+import { TrashIcon } from "@/icon/dashbaord";
 import { showsuccess } from "@/utils/toast";
 import type React from "react";
 import { useState, useRef, useEffect } from "react";
@@ -114,7 +115,6 @@ export default function AddBulkStudentModal({
       alert("Please select a file");
       return;
     }
-    console.log(file, "file");
 
     const formData = new FormData();
     formData.append("file", file);
@@ -145,6 +145,7 @@ export default function AddBulkStudentModal({
       console.log(error);
     }
   };
+
 
   return (
     <Dialog open={isbulkModalOpen} onOpenChange={setIsBulkModalOpen}>
@@ -240,36 +241,55 @@ export default function AddBulkStudentModal({
                 }`}
               onClick={() => fileInputRef.current?.click()}
             >
-              <input
-                ref={fileInputRef}
-                type="file"
-                accept=".csv"
-                onChange={handleFileSelect}
-                className="hidden"
-              />
-
-              <div className="space-y-2">
-                <div className="text-3xl text-purple-400">+</div>
-                <button
-                  type="button"
-                  className="text-primary hover:underline font-medium"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    fileInputRef.current?.click();
-                  }}
-                >
-                  Click to browse or drag your .CSV file here
-                </button>
-                <p className="text-sm text-muted-foreground italic">
-                  (File format restricted to .CSV)
-                </p>
-                {file && (
-                  <p className="text-sm text-foreground font-medium mt-3">
+              {file ? (
+                <div className="flex items-center justify-center gap-3 mt-3">
+                  <p className="text-sm text-foreground font-medium">
                     Selected: {file.name}
                   </p>
-                )}
-              </div>
+                  <button
+                    type="button"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleClear();
+                    }}
+                    className="text-red-500 hover:text-red-700 hover:bg-red-50 p-1 rounded transition-colors"
+                    title="Remove file"
+                  >
+                    <TrashIcon className="w-4 h-4" />
+                  </button>
+                </div>
+              ) : (
+                <>
+                  <input
+                    ref={fileInputRef}
+                    type="file"
+                    accept=".csv"
+                    onChange={handleFileSelect}
+                    className="hidden"
+                  />
+
+                  <div className="space-y-2">
+                    <div className="text-3xl text-purple-400">+</div>
+
+                    <button
+                      type="button"
+                      className="text-primary hover:underline font-medium"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        fileInputRef.current?.click();
+                      }}
+                    >
+                      Click to browse or drag your .CSV file here
+                    </button>
+
+                    <p className="text-sm text-muted-foreground italic">
+                      (File format restricted to .CSV)
+                    </p>
+                  </div>
+                </>
+              )}
             </div>
+
           </div>
 
           {/* Divider */}
@@ -281,7 +301,7 @@ export default function AddBulkStudentModal({
               onClick={handleUpload}
               className="px-6 py-2.5 bg-purple-600 hover:bg-purple-700 text-white rounded-lg transition-colors font-medium flex-1 sm:flex-none"
             >
-              Upload & Save
+              {isUploading ? "Uploading..." : "Upload & Save"}
             </button>
             <button
               onClick={handleClear}

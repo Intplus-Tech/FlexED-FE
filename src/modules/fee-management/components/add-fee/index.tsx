@@ -35,11 +35,24 @@ const feeFormSchema = z.object({
 
   discount: z
     .object({
-      value: z.number().optional(),
+      value: z.any().optional(),
       expiresAt: z.string().optional(),
       type: z.string().optional(),
     })
-    .optional(),
+    .optional()
+    .superRefine((data, ctx) => {
+      // If type is selected (not empty), validate value
+      if (data?.type && data.type !== "") {
+        const value = Number(data.value);
+        if (isNaN(value) || value <= 0) {
+          ctx.addIssue({
+            code: z.ZodIssueCode.custom,
+            message: "Value must be a positive number",
+            path: ["value"],
+          });
+        }
+      }
+    }),
 });
 
 type FeeFormValues = z.infer<typeof feeFormSchema>;
@@ -102,6 +115,7 @@ export function CreateFeeModal({ open, onOpenChange }: CreateFeeModalProps) {
   console.log(errors, "errors");
   const [isOpen, setIsOpen] = useState(false);
   const selectedClasses = watch("classes") || [];
+  const discountType = watch("discount.type");
   const { currentUser } = useSelector((state: RootState) => state.authState);
   const {
     data: classes,
@@ -139,7 +153,12 @@ export function CreateFeeModal({ open, onOpenChange }: CreateFeeModalProps) {
         dueDate: new Date(data.dueDate).toISOString(),
         name: data.name,
         period: data.period,
-        ...(hasDiscount && { discount: data.discount }),
+        ...(hasDiscount && {
+          discount: {
+            ...data.discount,
+            value: Number(data.discount?.value),
+          },
+        }),
       }).unwrap();
       showsuccess(res?.message);
       reset();
@@ -428,26 +447,35 @@ export function CreateFeeModal({ open, onOpenChange }: CreateFeeModalProps) {
             </div>
 
             {/* Early Payment Discount */}
-            <div className="space-y-2 mb-4">
-              <label className="text-sm font-medium">
-                Early Payment Discount
-              </label>
-              <input
-                {...register("discount.value", { valueAsNumber: true })}
-                type="number"
-                placeholder="0%"
-                className="w-full h-10 px-3 rounded-md border border-gray-200 bg-background text-sm"
-              />
-            </div>
+            {discountType && (
+              <>
+                <div className="space-y-2 mb-4">
+                  <label className="text-sm font-medium">
+                    Early Payment Discount
+                  </label>
+                  <input
+                    {...register("discount.value", { valueAsNumber: true })}
+                    type="number"
+                    placeholder="0%"
+                    className="w-full h-10 px-3 rounded-md border border-gray-200 bg-background text-sm"
+                  />
+                  {errors.discount?.value && (
+                    <p className="text-sm text-destructive">
+                      {String(errors.discount.value.message)}
+                    </p>
+                  )}
+                </div>
 
-            <div className="flex flex-col space-y-2">
-              <label htmlFor="">Expires At</label>
-              <input
-                type="date"
-                {...register("discount.expiresAt")}
-                className="w-fit h-10 px-4 appearance-none  rounded-md border border-gray-200 bg-background text-sm "
-              />
-            </div>
+                <div className="flex flex-col space-y-2">
+                  <label htmlFor="">Expires At</label>
+                  <input
+                    type="date"
+                    {...register("discount.expiresAt")}
+                    className="w-fit h-10 px-4 appearance-none  rounded-md border border-gray-200 bg-background text-sm "
+                  />
+                </div>
+              </>
+            )}
           </div>
 
           {/* Buttons */}
