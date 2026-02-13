@@ -69,3 +69,30 @@ export interface Student {
   updatedAt: string;
   __v: number;
 }
+
+
+export interface BulkUploadResponse {
+    success: boolean;
+    message: string;
+    data: BulkUploadData;
+    statusCode: number;
+}
+
+export interface BulkUploadData {
+    successful: SuccessfulStudent[];
+    failed: FailedStudent[];
+}
+
+export interface SuccessfulStudent {
+    // Add properties based on what successful uploads return
+    // Currently empty array in your example
+    row?: number;
+    admissionNumber?: string;
+    // Add other student properties as needed
+}
+
+export interface FailedStudent {
+    row: number;
+    admissionNumber: string;
+    error: string;
+}

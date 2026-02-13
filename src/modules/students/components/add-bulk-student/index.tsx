@@ -7,7 +7,7 @@ import {
   useUploadBulkStudentMutation,
 } from "@/redux/api/student";
 import { TrashIcon } from "@/icon/dashbaord";
-import { showsuccess } from "@/utils/toast";
+import { showerror, showsuccess } from "@/utils/toast";
 import type React from "react";
 import { useState, useRef, useEffect } from "react";
 
@@ -112,7 +112,11 @@ export default function AddBulkStudentModal({
 
   const handleUpload = async () => {
     if (!file) {
-      alert("Please select a file");
+      showerror("Please select a file")
+      return;
+    }
+    if (!classId) {
+      showerror("Please select a class")
       return;
     }
 
@@ -121,8 +125,15 @@ export default function AddBulkStudentModal({
 
     try {
       const res = await uploadBulkStudent({ classId, file: formData }).unwrap();
-      showsuccess(res.message)
-      setIsBulkModalOpen(false)
+      if (res?.data?.failed?.length > 0) {
+        showerror(res?.data?.failed?.[0]?.admissionNumber + " " + res?.data?.failed[0]?.error)
+        console.log(res?.data?.failed[0]?.error, "error");
+      }
+      if (res?.data?.successful?.length > 0) {
+        showsuccess(res.message)
+        setIsBulkModalOpen(false)
+        handleClear()
+      }
     } catch (error) {
       console.log(error);
     }
@@ -221,8 +232,10 @@ export default function AddBulkStudentModal({
               ) : (
                 <select
                   onChange={(e) => setClassId(e.target.value)}
+                  value={classId}
                   className="w-full p-2 border border-purple-200 rounded outline-none focus:border-purple-400"
                 >
+                  <option value="">Select Class</option>
                   {classItems?.map((classItem) => (
                     <option key={classItem._id} value={classItem._id}>
                       {classItem.name}
