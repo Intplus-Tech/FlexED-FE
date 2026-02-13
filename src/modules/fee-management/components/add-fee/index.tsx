@@ -41,7 +41,6 @@ const feeFormSchema = z.object({
     })
     .optional()
     .superRefine((data, ctx) => {
-      // If type is selected (not empty), validate value
       if (data?.type && data.type !== "") {
         const value = Number(data.value);
         if (isNaN(value) || value <= 0) {

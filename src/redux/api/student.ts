@@ -2,7 +2,7 @@
 import { ApiEndpoints } from "@/utils/endpoints";
 import apiSlice from "..";
 import { methods } from "@/utils/methods";
-import { CreateStudentRequest, GetStudentsResponse } from "@/@types/student";
+import { BulkUploadResponse, CreateStudentRequest, GetStudentsResponse } from "@/@types/student";
 import { request } from "http";
 import { QueryHelper } from "@/utils/functions";
 
@@ -54,7 +54,7 @@ export const studentApi = apiSlice.injectEndpoints({
     }),
 
     uploadBulkStudent: builder.mutation<
-      GetStudentsResponse,
+      BulkUploadResponse,
       { classId: string; file: FormData }
     >({
       query: ({ classId, file }) => ({
