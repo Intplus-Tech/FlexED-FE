@@ -132,6 +132,7 @@ export default function AddBulkStudentModal({
       if (res?.data?.successful?.length > 0) {
         showsuccess(res.message)
         setIsBulkModalOpen(false)
+
         handleClear()
       }
     } catch (error) {
@@ -141,6 +142,7 @@ export default function AddBulkStudentModal({
   };
 
   const handleClear = () => {
+    setClassId("")
     setFile(null);
     if (fileInputRef.current) {
       fileInputRef.current.value = "";
