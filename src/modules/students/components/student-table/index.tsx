@@ -5,6 +5,9 @@ import StudentTableLoader from "../../Loader/table-loader";
 import { StudentProfileModal } from "../student-profile";
 import { GetStudentsResponse, Student } from "@/@types/student";
 import { ClassItem } from "@/@types/class";
+import { useDeleteStudentMutation } from "@/redux/api/student";
+import { DeleteModal } from "@/components/delete-modal";
+import { showerror, showsuccess } from "@/utils/toast";
 
 interface StudentTableProps {
   students: GetStudentsResponse;
@@ -19,7 +22,10 @@ export function StudentTable({
 }: StudentTableProps) {
   const [selectedStudent, setSelectedStudent] = useState<Student | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+  const [studentToDelete, setStudentToDelete] = useState<Student | null>(null);
 
+  const [deleteStudent, { isLoading: isDeleteLoading }] = useDeleteStudentMutation();
 
   const handleViewStudent = (student: Student) => {
     setSelectedStudent(student);
@@ -33,6 +39,22 @@ export function StudentTable({
   const getClassById = (classId: string) => {
     const classItem = classItems.find((item) => item._id === classId);
     return classItem ? classItem.name : "";
+  };
+
+  const handleDeleteStudent = (student: Student) => {
+    setStudentToDelete(student);
+    setIsDeleteModalOpen(true);
+  };
+
+  const handleDeleteConfirm = async () => {
+    if (!studentToDelete) return;
+    try {
+      const res = await deleteStudent(studentToDelete._id).unwrap();
+      showsuccess(res.message || "Student deleted successfully");
+      setIsDeleteModalOpen(false);
+    } catch (error: any) {
+      showerror(error?.data?.message || "Failed to delete student");
+    }
   };
 
   return (
@@ -135,9 +157,9 @@ export function StudentTable({
                           View
                         </button>
                         <span className="text-gray-300">|</span>
-                        {/* <button className="text-sm text-gray-700 hover:text-gray-900 underline">
-                        Edit
-                      </button> */}
+                        <button onClick={() => handleDeleteStudent(student)} className="text-sm text-gray-700 hover:text-gray-900 underline">
+                          Delete
+                        </button>
                       </div>
                     </td>
                   </tr>
@@ -152,6 +174,15 @@ export function StudentTable({
         onClose={() => setIsModalOpen(false)}
         student={selectedStudent}
         classItems={classItems ?? []}
+      />
+      <DeleteModal
+        isOpen={isDeleteModalOpen}
+        onClose={() => setIsDeleteModalOpen(false)}
+        onConfirm={handleDeleteConfirm}
+        isLoading={isDeleteLoading}
+        title="Delete Student"
+        description="Are you sure you want to delete "
+        itemName={`${studentToDelete?.firstName} ${studentToDelete?.lastName}?`}
       />
     </div>
   );
