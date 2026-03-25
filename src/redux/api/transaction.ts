@@ -10,6 +10,7 @@ import {
   GetTransactionChartDataResponse,
   GetTransactionsResponse,
   MakePaymentRequest,
+  CollectManualPaymentRequest,
 } from "@/@types/transaction";
 import { methods } from "@/utils/methods";
 import { GetCollectionsTotalsResponse } from "@/@types/dashboard";
@@ -20,7 +21,7 @@ export const transactionApi = apiSlice.injectEndpoints({
   endpoints: (builder) => ({
     getTransactions: builder.query<
       GetTransactionsResponse,
-      { schoolId: string }
+      { schoolId: string; page?: number; limit?: number; search?: string }
     >({
       query: (request) =>
         QueryHelper(ApiEndpoints.payment.getPaymentTransactions, request),
@@ -63,7 +64,17 @@ export const transactionApi = apiSlice.injectEndpoints({
     makePayment: builder.mutation<GetTransactionsResponse, MakePaymentRequest>({
       query: (request) => ({
         url: ApiEndpoints.payment.makePayment,
-        methods: methods.POST,
+        method: methods.POST,
+        body: request,
+      }),
+
+      invalidatesTags: ["Transaction"],
+    }),
+
+    collectManualPayment: builder.mutation<GetTransactionsResponse, CollectManualPaymentRequest>({
+      query: (request) => ({
+        url: ApiEndpoints.payment.collectManualPayment,
+        method: methods.POST,
         body: request,
       }),
 
@@ -101,6 +112,7 @@ export const {
   useCreatePaymentCategoryMutation,
   useGetPaymentCategoriesQuery,
   useMakePaymentMutation,
+  useCollectManualPaymentMutation,
   useCreatePaymentItemsMutation,
   useGetClassCollectionsQuery,
   useGetTransactionChartDataQuery,

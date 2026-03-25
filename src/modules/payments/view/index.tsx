@@ -19,141 +19,7 @@ import { formatNaira } from "@/utils/functions";
 import { useGetSchoolMetricsQuery } from "@/redux/api/school";
 import { CardSim, Currency } from "lucide-react";
 import { useGetAllClassesQuery } from "@/redux/api/class";
-
-interface PaymentRecord {
-  id: string;
-  timeDate: string;
-  transactionId: string;
-  studentName: string;
-  class: string;
-  amountPaid: string;
-  percentRemaining: number;
-  status: "Successful" | "Failed";
-}
-
-// Sample data
-const SAMPLE_PAYMENTS: PaymentRecord[] = [
-  {
-    id: "1",
-    timeDate: "2:34pm",
-    transactionId: "32353213",
-    studentName: "Chiamaka Adebayo",
-    class: "SSS 3",
-    amountPaid: "₦150,000",
-    percentRemaining: 75,
-    status: "Successful",
-  },
-  {
-    id: "2",
-    timeDate: "2:34pm",
-    transactionId: "32353213",
-    studentName: "Chiamaka Adebayo",
-    class: "SSS 3",
-    amountPaid: "₦150,000",
-    percentRemaining: 75,
-    status: "Failed",
-  },
-  {
-    id: "3",
-    timeDate: "Yesterday",
-    transactionId: "32353213",
-    studentName: "Chiamaka Adebayo",
-    class: "SSS 3",
-    amountPaid: "₦150,000",
-    percentRemaining: 75,
-    status: "Successful",
-  },
-  {
-    id: "4",
-    timeDate: "1:15pm",
-    transactionId: "32353214",
-    studentName: "John Okafor",
-    class: "JSS 2",
-    amountPaid: "₦75,000",
-    percentRemaining: 50,
-    status: "Successful",
-  },
-  {
-    id: "5",
-    timeDate: "12:45pm",
-    transactionId: "32353215",
-    studentName: "Zainab Hassan",
-    class: "SSS 1",
-    amountPaid: "₦200,000",
-    percentRemaining: 90,
-    status: "Successful",
-  },
-  {
-    id: "6",
-    timeDate: "11:20am",
-    transactionId: "32353216",
-    studentName: "Emeka Obi",
-    class: "JSS 3",
-    amountPaid: "₦120,000",
-    percentRemaining: 60,
-    status: "Failed",
-  },
-  {
-    id: "7",
-    timeDate: "10:30am",
-    transactionId: "32353217",
-    studentName: "Fatima Ahmed",
-    class: "SSS 2",
-    amountPaid: "₦180,000",
-    percentRemaining: 80,
-    status: "Successful",
-  },
-  {
-    id: "8",
-    timeDate: "9:15am",
-    transactionId: "32353218",
-    studentName: "David Ekpo",
-    class: "JSS 1",
-    amountPaid: "₦90,000",
-    percentRemaining: 45,
-    status: "Successful",
-  },
-  {
-    id: "9",
-    timeDate: "9:15am",
-    transactionId: "32353218",
-    studentName: "David Ekpo",
-    class: "JSS 1",
-    amountPaid: "₦90,000",
-    percentRemaining: 45,
-    status: "Successful",
-  },
-  {
-    id: "10",
-    timeDate: "9:15am",
-    transactionId: "32353218",
-    studentName: "David Ekpo",
-    class: "JSS 1",
-    amountPaid: "₦90,000",
-    percentRemaining: 45,
-    status: "Successful",
-  },
-  {
-    id: "11",
-    timeDate: "9:15am",
-    transactionId: "32353218",
-    studentName: "David Ekpo",
-    class: "JSS 1",
-    amountPaid: "₦90,000",
-    percentRemaining: 45,
-    status: "Successful",
-  },
-  {
-    id: "12",
-    timeDate: "9:15am",
-    transactionId: "32353218",
-    studentName: "David Ekpo",
-    class: "JSS 1",
-    amountPaid: "₦90,000",
-    percentRemaining: 45,
-    status: "Successful",
-  },
-];
+import { ManualPaymentModal } from "../components/ManualPaymentModal";
 
 const ITEMS_PER_PAGE = 10;
 
@@ -163,10 +29,14 @@ export default function PaymentView() {
   const [selectedStatus, setSelectedStatus] =
     useState<PaymentStatus>("FULLY_PAID");
   const [modalOpen, setModalOpen] = useState(false);
+  const [isManualModalOpen, setIsManualModalOpen] = useState(false);
   const authstate = useSelector((state: RootState) => state.authState);
   const { data, isFetching, isLoading } = useGetTransactionsQuery(
     {
       schoolId: String(authstate.currentUser?.schoolId),
+      page: currentPage,
+      limit: ITEMS_PER_PAGE,
+      search: searchQuery,
     },
     { skip: !authstate.currentUser },
   );
@@ -182,7 +52,7 @@ export default function PaymentView() {
     { skip: !authstate.currentUser },
   );
 
-  const { data: classItems, isLoading: isLoadingClassItems, isFetching: isFetchingClassItems } = useGetAllClassesQuery()
+  const { data: classItems } = useGetAllClassesQuery();
 
   const colors = ["green", "red", "gray"] as const;
 
@@ -192,21 +62,7 @@ export default function PaymentView() {
       color: colors[index],
     })) ?? [];
 
-  const filteredPayments = useMemo(() => {
-    if (!searchQuery.trim()) {
-      return SAMPLE_PAYMENTS;
-    }
-
-    const query = searchQuery.toLowerCase();
-    return SAMPLE_PAYMENTS.filter(
-      (payment) =>
-        payment.studentName.toLowerCase().includes(query) ||
-        payment.transactionId.toLowerCase().includes(query) ||
-        payment.class.toLowerCase().includes(query),
-    );
-  }, [searchQuery]);
-
-  const totalPages = Math.ceil(filteredPayments.length / ITEMS_PER_PAGE);
+  const totalPages = data?.data?.meta?.totalPages ?? 1;
 
 
   const handleSearch = (query: string) => {
@@ -241,7 +97,10 @@ export default function PaymentView() {
 
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
           <div className="flex items-center gap-6">
-            <button className="px-4 py-3 whitespace-nowrap bg-gray-900 text-white rounded-lg hover:bg-gray-800 transition-colors flex items-center gap-2 font-medium">
+            <button
+              onClick={() => setIsManualModalOpen(true)}
+              className="px-4 py-3 whitespace-nowrap bg-gray-900 text-white rounded-lg hover:bg-gray-800 transition-colors flex items-center gap-2 font-medium"
+            >
               <CardSim />
               Add Payment
             </button>
@@ -283,6 +142,10 @@ export default function PaymentView() {
         schoolData={schoolMetrics?.data?.categories}
         onClose={() => setModalOpen(false)}
         status={selectedStatus}
+      />
+      <ManualPaymentModal
+        isOpen={isManualModalOpen}
+        onClose={() => setIsManualModalOpen(false)}
       />
     </div>
   );
