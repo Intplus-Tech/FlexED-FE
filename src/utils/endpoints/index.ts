@@ -31,6 +31,7 @@ export const payment = {
   getPaymentTransactions: "/payments/transactions",
   getPaymentMetrics: "/payments/collections-totals",
   makePayment: `/payments/initiate-student-payment`,
+  collectManualPayment: "/payments/manual",
   getClassCollection: `/payments/class-collections`,
   getTransactionChartData: (schoolId: string) =>
     `/payments/school/${schoolId}/weekly-summary`,

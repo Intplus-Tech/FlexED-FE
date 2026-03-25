@@ -99,6 +99,19 @@ export interface MakePaymentRequest {
   callbackUrl: string;
 }
 
+export interface ManualPaymentItem {
+  paymentItemId: string;
+  receiptNumber: string;
+  dateOfPayment: string;
+}
+
+export interface CollectManualPaymentRequest {
+  studentId: string;
+  paidAllTogether: boolean;
+  groupRef: string;
+  payments: ManualPaymentItem[];
+}
+
 export interface GetPaymentMetricsResponse {
   success: boolean;
   message: string;
