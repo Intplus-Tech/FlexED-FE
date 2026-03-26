@@ -5,11 +5,13 @@ import { formatDate } from "@/utils/functions";
 interface AcademicTableProps {
   periods: GetAcademicSessionResponse;
   isLoading: boolean;
+  onEdit?: (period: SessionData) => void;
 }
 
 export default function AcademicTable({
   periods,
   isLoading,
+  onEdit,
 }: AcademicTableProps) {
   if (isLoading) {
     return <TableSkeleton />;
@@ -34,6 +36,9 @@ export default function AcademicTable({
             </th>
             <th className="px-6 py-4 text-left text-sm font-semibold text-foreground">
               End Date
+            </th>
+            <th className="px-6 py-4 text-left text-sm font-semibold text-foreground">
+              Status
             </th>
             <th className="px-6 py-4 text-left text-sm font-semibold text-foreground">
               Action
@@ -71,22 +76,27 @@ export default function AcademicTable({
                 <td className="px-6 py-4 text-foreground whitespace-nowrap">
                   {formatDate(period.endDate)}
                 </td>
+                <td className="px-6 py-4">
+                  <span
+                    className={`px-3 py-1 rounded-full text-xs font-medium ${
+                      period.isActive
+                        ? "bg-green-100 text-green-700"
+                        : "bg-gray-100 text-gray-700"
+                    }`}
+                  >
+                    {period.isActive ? "Active" : "Completed"}
+                  </span>
+                </td>
 
                 <td className="px-6 py-4">
-                  {/* <div className="flex gap-4">
-                    <a
-                      href="#"
-                      className="text-primary hover:underline text-sm font-medium"
-                    >
-                      View
-                    </a>
-                    <a
-                      href="#"
+                  <div className="flex gap-4">
+                    <button
+                      onClick={() => onEdit?.(period)}
                       className="text-primary hover:underline text-sm font-medium"
                     >
                       Edit
-                    </a>
-                  </div> */}
+                    </button>
+                  </div>
                 </td>
               </tr>
             ))

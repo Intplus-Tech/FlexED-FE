@@ -17,6 +17,11 @@ export const school = {
     `/schools/${schoolId}/payments/summary`,
 
   getSchoolStaff: `/school-staff`,
+  updateSchool: "/schools",
+};
+
+export const file = {
+  uploadFile: "/files",
 };
 
 export const payment = {
@@ -86,4 +91,5 @@ export const ApiEndpoints = {
   sms,
   academicSession,
   classes,
+  file,
 };

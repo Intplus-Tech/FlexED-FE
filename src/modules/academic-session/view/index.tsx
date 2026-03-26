@@ -3,60 +3,20 @@
 import { useState, useMemo } from "react";
 import AcademicTable from "../components/academic-session-table";
 import AddPeriodModal from "../components/add-academic-session";
-import { CreateAcademicSessionRequest, SessionData } from "@/@types/academic-session";
+import {
+  CreateAcademicSessionRequest,
+  SessionData,
+} from "@/@types/academic-session";
 import {
   useCreateAcademicSessionMutation,
   useGetAllAcademicSessionQuery,
 } from "@/redux/api/academicSession";
 import { showerror, showsuccess } from "@/utils/toast";
-import page from "@/app/dashboard/students/page";
-
-interface AcademicPeriod {
-  id: string;
-  name: string;
-  startDate: string;
-  endDate: string;
-  status: "Active" | "Upcoming" | "Completed";
-  students: number;
-}
-
-const mockData: AcademicPeriod[] = [
-  {
-    id: "1",
-    name: "2025 First Term",
-    startDate: "Sep 1, 2024",
-    endDate: "Sep 1, 2024",
-    status: "Active",
-    students: 324,
-  },
-  {
-    id: "2",
-    name: "2025 First Term",
-    startDate: "Jan 15, 2025",
-    endDate: "Jan 15, 2025",
-    status: "Active",
-    students: 324,
-  },
-  {
-    id: "3",
-    name: "2025 First Term",
-    startDate: "Jan 15, 2025",
-    endDate: "Jan 15, 2025",
-    status: "Upcoming",
-    students: 324,
-  },
-  {
-    id: "4",
-    name: "2024 First Term",
-    startDate: "Jan 15, 2025",
-    endDate: "Jan 15, 2025",
-    status: "Completed",
-    students: 312,
-  },
-];
+import { ExportButton } from "@/components/export-button";
 
 export default function AcademicSessionView() {
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [selectedPeriod, setSelectedPeriod] = useState<SessionData | null>(null);
   const [searchTerm, setSearchTerm] = useState("");
   const {
     data: academicPeriods,
@@ -64,8 +24,28 @@ export default function AcademicSessionView() {
     isFetching: isFetchingAcademicPeriod,
   } = useGetAllAcademicSessionQuery();
 
-
   console.log("academic periods", academicPeriods);
+
+  const exportData = useMemo(() => {
+    return (
+      academicPeriods?.data?.items?.map((period: any) => ({
+        "Period Name": period.name,
+        "Start Date": new Date(period.startDate).toLocaleDateString(),
+        "End Date": new Date(period.endDate).toLocaleDateString(),
+        Status: period.isActive ? "Active" : "Completed",
+      })) || []
+    );
+  }, [academicPeriods]);
+
+  const handleEdit = (period: SessionData) => {
+    setSelectedPeriod(period);
+    setIsModalOpen(true);
+  };
+
+  const handleCloseModal = () => {
+    setIsModalOpen(false);
+    setSelectedPeriod(null);
+  };
 
   return (
     <main className="min-h-screen ">
@@ -129,26 +109,18 @@ export default function AcademicSessionView() {
 
           <div className="flex gap-3 w-full sm:w-auto">
             {/* Export */}
-            <button className="px-4 py-2 bg-primary text-primary-foreground rounded-md hover:bg-primary/90 flex items-center gap-2 whitespace-nowrap">
-              <svg
-                className="w-5 h-5"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"
-                />
-              </svg>
-              Export
-            </button>
+            <ExportButton
+              data={exportData}
+              filename="Academic_Periods"
+              sheetName="Periods"
+            />
 
             {/* Add Button */}
             <button
-              onClick={() => setIsModalOpen(true)}
+              onClick={() => {
+                setSelectedPeriod(null);
+                setIsModalOpen(true);
+              }}
               className="px-4 py-2 bg-black text-white  rounded-md  font-medium whitespace-nowrap"
             >
               + Add Academic Period
@@ -159,8 +131,26 @@ export default function AcademicSessionView() {
         {/* Table Section */}
         <div className="bg-card border border-border rounded-lg overflow-hidden">
           <AcademicTable
-            periods={academicPeriods ?? { success: true, message: "", statusCode: 200, data: { items: [] as SessionData[], meta: { page: 1, limit: 10, total: 0, totalPages: 0, hasNextPage: false, hasPrevPage: false }}}}
+            periods={
+              academicPeriods ?? {
+                success: true,
+                message: "",
+                statusCode: 200,
+                data: {
+                  items: [] as SessionData[],
+                  meta: {
+                    page: 1,
+                    limit: 10,
+                    total: 0,
+                    totalPages: 0,
+                    hasNextPage: false,
+                    hasPrevPage: false,
+                  },
+                },
+              }
+            }
             isLoading={isLoadingAcademicPeriod || isFetchingAcademicPeriod}
+            onEdit={handleEdit}
           />
         </div>
       </div>
@@ -168,7 +158,8 @@ export default function AcademicSessionView() {
       {/* Add Period Modal */}
       <AddPeriodModal
         isOpen={isModalOpen}
-        onClose={() => setIsModalOpen(false)}
+        onClose={handleCloseModal}
+        initialData={selectedPeriod}
       />
     </main>
   );

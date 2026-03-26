@@ -21,14 +21,27 @@ export const transactionApi = apiSlice.injectEndpoints({
   endpoints: (builder) => ({
     getTransactions: builder.query<
       GetTransactionsResponse,
-      { schoolId: string; page?: number; limit?: number; search?: string }
+      {
+        schoolId: string;
+        page?: number;
+        limit?: number;
+        search?: string;
+        academicPeriod?: string;
+        classId?: string;
+        status?: string;
+        category?: string;
+      }
     >({
       query: (request) =>
         QueryHelper(ApiEndpoints.payment.getPaymentTransactions, request),
     }),
 
-    getPaymentCategories: builder.query<CreatePaymentCategoryResponse, void>({
-      query: () => ApiEndpoints.payment.getPaymentCategories,
+    getPaymentCategories: builder.query<
+      CreatePaymentCategoryResponse,
+      { search?: string } | void
+    >({
+      query: (request) =>
+        QueryHelper(ApiEndpoints.payment.getPaymentCategories, request || {}),
       providesTags: ["Transaction"],
     }),
 
@@ -81,8 +94,12 @@ export const transactionApi = apiSlice.injectEndpoints({
       invalidatesTags: ["Transaction"],
     }),
 
-    getPaymentList: builder.query<GetPaymentItemsResponse, void>({
-      query: () => ApiEndpoints.payment.getPaymentItems,
+    getPaymentList: builder.query<
+      GetPaymentItemsResponse,
+      { search?: string } | void
+    >({
+      query: (request) =>
+        QueryHelper(ApiEndpoints.payment.getPaymentItems, request || {}),
       providesTags: ["Transaction"],
     }),
 

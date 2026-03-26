@@ -5,9 +5,15 @@ import { Controller, useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { Switch } from "@/components/ui/switch";
-import { useCreateAcademicSessionMutation } from "@/redux/api/academicSession";
+import {
+  useCreateAcademicSessionMutation,
+  useUpdateAcademicSessionMutation,
+  useUpdateAcademicSessionStatusMutation,
+} from "@/redux/api/academicSession";
 import { showerror, showsuccess } from "@/utils/toast";
 import { Loader } from "lucide-react";
+import { SessionData } from "@/@types/academic-session";
+import { useEffect } from "react";
 
 const periodFormSchema = z.object({
   name: z
@@ -16,12 +22,7 @@ const periodFormSchema = z.object({
     .min(3, "Period name must be at least 3 characters"),
   startDate: z.string().min(1, "Start date is required"),
   endDate: z.string().min(1, "End date is required"),
-  isActive: z
-    .boolean()
-    .default(true)
-    .refine((value) => value !== undefined, {
-      message: "isActive is required",
-    }),
+  isActive: z.boolean().default(false),
 });
 
 type PeriodFormData = z.infer<typeof periodFormSchema>;
@@ -29,11 +30,13 @@ type PeriodFormData = z.infer<typeof periodFormSchema>;
 interface AddPeriodModalProps {
   isOpen: boolean;
   onClose: () => void;
+  initialData?: SessionData | null;
 }
 
 export default function AddPeriodModal({
   isOpen,
   onClose,
+  initialData,
 }: AddPeriodModalProps) {
   const {
     register,
@@ -44,32 +47,64 @@ export default function AddPeriodModal({
   } = useForm({
     resolver: zodResolver(periodFormSchema),
     defaultValues: {
-      isActive: true,
+      isActive: false,
     },
   });
 
   const [createAcademicSession, { isLoading: createAcademicSessionLoading }] =
     useCreateAcademicSessionMutation();
+  const [updateAcademicSession, { isLoading: updateAcademicSessionLoading }] =
+    useUpdateAcademicSessionMutation();
+  const [updateStatus, { isLoading: statusLoading }] =
+    useUpdateAcademicSessionStatusMutation();
+
+  useEffect(() => {
+    if (initialData && isOpen) {
+      reset({
+        name: initialData.name,
+        startDate: initialData.startDate?.split("T")[0],
+        endDate: initialData.endDate?.split("T")[0],
+        isActive: initialData.isActive,
+      });
+    } else if (!initialData && isOpen) {
+      reset({
+        name: "",
+        startDate: "",
+        endDate: "",
+        isActive: false,
+      });
+    }
+  }, [initialData, isOpen, reset]);
+
   const handleFormSubmit = async (newPeriod: PeriodFormData) => {
     try {
-      const period = {
+      const payload = {
         name: newPeriod.name,
         startDate: newPeriod.startDate,
         endDate: newPeriod.endDate,
         isActive: newPeriod.isActive,
       };
 
-      console.log(period, "period");
-      const res = await createAcademicSession(period).unwrap();
-      showsuccess(res?.message || "Academic period created successfully");
+      if (initialData) {
+        const res = await updateAcademicSession({
+          id: initialData._id,
+          ...payload,
+        }).unwrap();
+        showsuccess(res?.message || "Academic period updated successfully");
+      } else {
+        const res = await createAcademicSession(payload).unwrap();
+        showsuccess(res?.message || "Academic period created successfully");
+      }
       handleClose();
     } catch (error: any) {
-      showerror(error.data?.message || "Failed to create academic period");
+      showerror(
+        error.data?.message ||
+          `Failed to ${initialData ? "update" : "create"} academic period`,
+      );
     }
   };
   const handleClose = () => {
     onClose();
-    reset();
   };
 
   if (!isOpen) return null;
@@ -85,7 +120,7 @@ export default function AddPeriodModal({
         <div className="bg-card border border-border rounded-lg w-full max-w-2xl max-h-[90vh] overflow-y-auto shadow-lg">
           <div className="flex items-center justify-between p-6 border-b border-border sticky top-0 bg-card">
             <h2 className="text-2xl font-bold text-foreground">
-              Period Information
+              {initialData ? "Edit Period" : "Period Information"}
             </h2>
             <button
               onClick={handleClose}
@@ -190,19 +225,42 @@ export default function AddPeriodModal({
                 htmlFor="isActive"
                 className="text-sm font-medium text-foreground"
               >
-                Active Status
+                Mark as Active
               </label>
               <Controller
                 name="isActive"
                 control={control}
                 render={({ field }) => (
-                  <Switch
-                    id="isActive"
-                    checked={field.value}
-                    onCheckedChange={(checked) => {
-                      field.onChange(checked); // RHF update
-                    }}
-                  />
+                  <div className="flex items-center gap-2">
+                    <Switch
+                      id="isActive"
+                      checked={field.value}
+                      onCheckedChange={async (checked) => {
+                        field.onChange(checked);
+                        if (initialData) {
+                          try {
+                            await updateStatus({
+                              id: initialData._id,
+                              isActive: checked,
+                            }).unwrap();
+                            showsuccess(
+                              `Academic session set to ${
+                                checked ? "active" : "inactive"
+                              }`,
+                            );
+                          } catch (error: any) {
+                            showerror(
+                              error.data?.message || "Failed to update status",
+                            );
+                            field.onChange(!checked);
+                          }
+                        }
+                      }}
+                    />
+                    {statusLoading && (
+                      <Loader className="w-4 h-4 animate-spin text-muted-foreground" />
+                    )}
+                  </div>
                 )}
               />
             </div>
@@ -210,10 +268,16 @@ export default function AddPeriodModal({
             <div className="flex gap-3 pt-4">
               <button
                 type="submit"
-                className="flex-1 px-6 py-2 bg-purple-500 text-white rounded-md hover:bg-purple-600 font-medium transition-colors"
+                disabled={
+                  createAcademicSessionLoading || updateAcademicSessionLoading
+                }
+                className="flex-1 px-6 py-2 bg-purple-500 text-white rounded-md hover:bg-purple-600 font-medium transition-colors disabled:opacity-50"
               >
-                {createAcademicSessionLoading ? (
+                {createAcademicSessionLoading ||
+                updateAcademicSessionLoading ? (
                   <Loader className="mx-auto animate-spin" />
+                ) : initialData ? (
+                  "Save Changes"
                 ) : (
                   "Create Period"
                 )}

@@ -10,8 +10,11 @@ import { DeleteModal } from "@/components/delete-modal";
 import { showerror, showsuccess } from "@/utils/toast";
 import { ClassItem } from "@/@types/class";
 
+import { AddClassModal } from "../add-class";
+
 const ClassTable = () => {
   const [isDeleteOpen, setIsDeleteOpen] = useState(false);
+  const [isEditOpen, setIsEditOpen] = useState(false);
   const [selectedClass, setSelectedClass] = useState<ClassItem | null>(null);
   const {
     data: classes,
@@ -53,22 +56,22 @@ const ClassTable = () => {
                 className="w-5 h-5 rounded border-gray-300 cursor-pointer"
               />
             </th>
-            <th className="px-6 py-4 text-left text-sm font-medium text-gray-600">
+            <th className="px-6 py-4 text-left text-sm font-medium text-gray-600 whitespace-nowrap">
               Class Name
             </th>
-            <th className="px-6 py-4 text-left text-sm font-medium text-gray-600">
+            <th className="px-6 py-4 text-left text-sm font-medium text-gray-600 whitespace-nowrap">
               Level
             </th>
-            <th className="px-6 py-4 text-left text-sm font-medium text-gray-600">
+            <th className="px-6 py-4 text-left text-sm font-medium text-gray-600 whitespace-nowrap">
               Class Type
             </th>
-            <th className="px-6 py-4 text-left text-sm font-medium text-gray-600">
+            <th className="px-6 py-4 text-left text-sm font-medium text-gray-600 whitespace-nowrap">
               Sub Class
             </th>
-            <th className="px-6 py-4 text-left text-sm font-medium text-gray-600">
+            <th className="px-6 py-4 text-left text-sm font-medium text-gray-600 whitespace-nowrap">
               Students
             </th>
-            <th className="px-6 py-4 text-left text-sm font-medium text-gray-600">
+            <th className="px-6 py-4 text-left text-sm font-medium text-gray-600 whitespace-nowrap">
               Actions
             </th>
           </tr>
@@ -96,13 +99,27 @@ const ClassTable = () => {
                 <td className="px-6 py-4 font-medium text-gray-900">
                   {cls.name}
                 </td>
-                <td className="px-6 py-4 text-gray-600">{cls.level}</td>
-                <td className="px-6 py-4 text-gray-600">{cls.classType}</td>
-                <td className="px-6 py-4 text-gray-600">{cls.subClass}</td>
-                <td className="px-6 py-4 text-gray-600">{cls.classType}</td>
+                <td className="px-6 py-4 text-gray-600 whitespace-nowrap">
+                  {cls.level}
+                </td>
+                <td className="px-6 py-4 text-gray-600 whitespace-nowrap">
+                  {cls.classType}
+                </td>
+                <td className="px-6 py-4 text-gray-600 whitespace-nowrap">
+                  {cls.subClass}
+                </td>
+                <td className="px-6 py-4 text-gray-600 whitespace-nowrap">
+                  {""}
+                </td>
                 <td className="px-6 py-4 text-gray-600">
                   <div className="flex gap-4">
-                    <button className="text-gray-600 hover:text-gray-900 font-medium transition-colors">
+                    <button
+                      onClick={() => {
+                        setSelectedClass(cls);
+                        setIsEditOpen(true);
+                      }}
+                      className="text-gray-600 hover:text-gray-900 font-medium transition-colors"
+                    >
                       Edit
                     </button>
                     <button
@@ -122,6 +139,12 @@ const ClassTable = () => {
         </tbody>
       </table>
 
+      <AddClassModal
+        open={isEditOpen}
+        onOpenChange={setIsEditOpen}
+        initialData={selectedClass}
+      />
+
       <DeleteModal
         isOpen={isDeleteOpen}
         onClose={() => setIsDeleteOpen(false)}
@@ -129,7 +152,7 @@ const ClassTable = () => {
         isLoading={isDeleteLoading}
         title="Delete Account"
         description="Are you sure you want to delete this class"
-        itemName="Sanctum Startup College"
+        itemName={selectedClass?.name}
       />
     </div>
   );

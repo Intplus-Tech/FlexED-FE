@@ -9,6 +9,7 @@ import {
   paymentSettingsSchema,
   type PaymentSettingsFormData,
 } from "@/lib/validations";
+import { Trash2, X, Loader2 } from "lucide-react";
 
 interface VirtualAccountDetails {
   bankName: string;
@@ -22,27 +23,38 @@ export function PaymentSettingsTab() {
     register,
     handleSubmit,
     reset,
-    formState: { errors, isSubmitting },
+    formState: { errors, isSubmitting, isValid },
   } = useForm<PaymentSettingsFormData>({
     resolver: zodResolver(paymentSettingsSchema),
+    mode: "onChange",
   });
 
   const [cacFile, setCacFile] = useState<File | null>(null);
   const [memarrtFile, setMemarrtFile] = useState<File | null>(null);
   const [isSubmittingDocuments, setIsSubmittingDocuments] = useState(false);
+  const [isAccountVerifying, setIsAccountVerifying] = useState(false);
   const [virtualAccountDetails, setVirtualAccountDetails] =
     useState<VirtualAccountDetails | null>(null);
   const cacInputRef = useRef<HTMLInputElement>(null);
   const memarrtInputRef = useRef<HTMLInputElement>(null);
 
   const onSettlementSubmit = async (data: PaymentSettingsFormData) => {
-    console.log("[v0] Payment settings submitted:", data);
     await new Promise((resolve) => setTimeout(resolve, 1000));
+  };
+
+  const handleRemoveFile = (fileType: "cac" | "memarrt") => {
+    if (fileType === "cac") {
+      setCacFile(null);
+      if (cacInputRef.current) cacInputRef.current.value = "";
+    } else {
+      setMemarrtFile(null);
+      if (memarrtInputRef.current) memarrtInputRef.current.value = "";
+    }
   };
 
   const handleFileChange = (
     event: React.ChangeEvent<HTMLInputElement>,
-    fileType: "cac" | "memarrt"
+    fileType: "cac" | "memarrt",
   ) => {
     const file = event.target.files?.[0];
     if (file) {
@@ -55,7 +67,7 @@ export function PaymentSettingsTab() {
   };
 
   const handleVirtualAccountSubmit = async (
-    e: React.FormEvent<HTMLFormElement>
+    e: React.FormEvent<HTMLFormElement>,
   ) => {
     e.preventDefault();
 
@@ -66,35 +78,17 @@ export function PaymentSettingsTab() {
 
     setIsSubmittingDocuments(true);
 
-    // Log uploaded files and values
-    console.log("[v0] Virtual Account Submission:", {
-      cacFile: {
-        name: cacFile.name,
-        size: cacFile.size,
-        type: cacFile.type,
-      },
-      memarrtFile: {
-        name: memarrtFile.name,
-        size: memarrtFile.size,
-        type: memarrtFile.type,
-      },
-      timestamp: new Date().toISOString(),
-    });
+    // Simulate API call
+    await new Promise((resolve) => setTimeout(resolve, 1500));
 
-    // Simulate API call - remove loading state once API is integrated
-    await new Promise((resolve) => setTimeout(resolve, 0));
-
-    // Display virtual account details
-    setVirtualAccountDetails({
-      bankName: "Guaranteed Trust Bank",
-      accountNumber: "0011223344",
-      accountName: "Sanctum Startup College",
-    });
+    setIsAccountVerifying(true);
+    setVirtualAccountDetails(null);
 
     setIsSubmittingDocuments(false);
   };
 
-  const hasSubmittedDocuments = virtualAccountDetails !== null;
+  const hasSubmittedDocuments =
+    isAccountVerifying || virtualAccountDetails !== null;
 
   return (
     <div className="max-w-6xl">
@@ -229,8 +223,8 @@ export function PaymentSettingsTab() {
             <div className="flex items-center gap-4 pt-4">
               <button
                 type="submit"
-                disabled={isSubmitting}
-                className="px-6 py-2.5 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors disabled:opacity-50 text-sm font-medium"
+                disabled={isSubmitting || !isValid}
+                className="px-6 py-2.5 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors disabled:opacity-50 disabled:bg-gray-400 disabled:cursor-not-allowed text-sm font-medium"
               >
                 {isSubmitting ? "Updating..." : "Update Account"}
               </button>
@@ -271,9 +265,19 @@ export function PaymentSettingsTab() {
                           Upload <span className="italic">CAC Certificate</span>
                         </p>
                         {cacFile && (
-                          <p className="text-sm text-purple-600 mt-1">
-                            {cacFile.name}
-                          </p>
+                          <div className="flex items-center gap-2 mt-1">
+                            <p className="text-sm text-purple-600">
+                              {cacFile.name}
+                            </p>
+                            <button
+                              type="button"
+                              onClick={() => handleRemoveFile("cac")}
+                              className="text-red-500 hover:text-red-700 p-1"
+                              title="Remove file"
+                            >
+                              <X size={16} />
+                            </button>
+                          </div>
                         )}
                       </div>
                     </div>
@@ -311,9 +315,19 @@ export function PaymentSettingsTab() {
                           </span>
                         </p>
                         {memarrtFile && (
-                          <p className="text-sm text-purple-600 mt-1">
-                            {memarrtFile.name}
-                          </p>
+                          <div className="flex items-center gap-2 mt-1">
+                            <p className="text-sm text-purple-600">
+                              {memarrtFile.name}
+                            </p>
+                            <button
+                              type="button"
+                              onClick={() => handleRemoveFile("memarrt")}
+                              className="text-red-500 hover:text-red-700 p-1"
+                              title="Remove file"
+                            >
+                              <X size={16} />
+                            </button>
+                          </div>
                         )}
                       </div>
                     </div>
@@ -351,62 +365,80 @@ export function PaymentSettingsTab() {
               <>
                 {/* Submitted Documents Display */}
                 <div className="bg-purple-50 border border-purple-200 rounded-lg p-6 space-y-4">
-                  <div>
-                    <p className="text-sm font-medium text-gray-900 mb-2">
-                      Upload <span className="italic">CAC Certificate</span>
-                    </p>
-                    <a
-                      href="#"
-                      className="text-purple-600 hover:text-purple-700 text-sm underline"
-                    >
-                      {cacFile?.name}
-                    </a>
-                  </div>
-
-                  <div>
-                    <p className="text-sm font-medium text-gray-900 mb-2">
-                      <span className="italic">
-                        Memorandum and Articles of Association (MEMMART)
+                  <div className="flex items-center justify-between group">
+                    <div>
+                      <p className="text-sm font-medium text-gray-900 mb-1">
+                        CAC Certificate
+                      </p>
+                      <span className="text-purple-600 text-sm italic">
+                        {cacFile?.name}
                       </span>
-                    </p>
-                    <a
-                      href="#"
-                      className="text-purple-600 hover:text-purple-700 text-sm underline"
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setIsAccountVerifying(false);
+                        setVirtualAccountDetails(null);
+                        setCacFile(null);
+                        setMemarrtFile(null);
+                      }}
+                      className="text-gray-400 hover:text-red-500 transition-colors"
+                      title="Delete and re-upload"
                     >
+                      <Trash2 size={20} />
+                    </button>
+                  </div>
+
+                  <div>
+                    <p className="text-sm font-medium text-gray-900 mb-1">
+                      Memorandum and Articles of Association (MEMMART)
+                    </p>
+                    <span className="text-purple-600 text-sm italic">
                       {memarrtFile?.name}
-                    </a>
+                    </span>
                   </div>
                 </div>
 
-                {/* Virtual Account Details */}
-                <div className="space-y-4 pt-2">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Bank Name
-                    </label>
-                    <div className="w-full px-4 py-2.5 bg-gray-100 border border-gray-300 rounded-lg text-gray-700 font-medium">
-                      {virtualAccountDetails.bankName}
-                    </div>
+                {/* Account Details or Verification Status */}
+                {isAccountVerifying ? (
+                  <div className="bg-blue-50 border border-blue-200 rounded-lg p-6 flex flex-col items-center text-center space-y-3">
+                    <Loader2 className="w-8 h-8 text-blue-600 animate-spin" />
+                    <p className="text-blue-700 font-semibold italic">
+                      Verifying document. Check back in 24 hours
+                    </p>
                   </div>
+                ) : (
+                  virtualAccountDetails && (
+                    <div className="space-y-4 pt-2">
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                          Bank Name
+                        </label>
+                        <div className="w-full px-4 py-2.5 bg-gray-100 border border-gray-300 rounded-lg text-gray-700 font-medium">
+                          {virtualAccountDetails.bankName}
+                        </div>
+                      </div>
 
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Account Number
-                    </label>
-                    <div className="w-full px-4 py-2.5 bg-gray-100 border border-gray-300 rounded-lg text-gray-700 font-medium">
-                      {virtualAccountDetails.accountNumber}
-                    </div>
-                  </div>
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                          Account Number
+                        </label>
+                        <div className="w-full px-4 py-2.5 bg-gray-100 border border-gray-300 rounded-lg text-gray-700 font-medium">
+                          {virtualAccountDetails.accountNumber}
+                        </div>
+                      </div>
 
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Account name
-                    </label>
-                    <div className="w-full px-4 py-2.5 bg-gray-100 border border-gray-300 rounded-lg text-gray-700 font-medium">
-                      {virtualAccountDetails.accountName}
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                          Account name
+                        </label>
+                        <div className="w-full px-4 py-2.5 bg-gray-100 border border-gray-300 rounded-lg text-gray-700 font-medium">
+                          {virtualAccountDetails.accountName}
+                        </div>
+                      </div>
                     </div>
-                  </div>
-                </div>
+                  )
+                )}
               </>
             )}
           </form>

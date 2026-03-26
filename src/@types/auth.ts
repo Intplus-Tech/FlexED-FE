@@ -47,9 +47,16 @@ export interface ResetPasswordRequest {
   email: string;
   token?: string;
   newPassword: string;
-  confirmNewPassword: string;
+  confirmPassword: string;
 }
 
 export interface ResendOTPRequest {
   email: string;
+  type: string;
+}
+
+export interface ChangePasswordRequest {
+  oldPassword: string;
+  newPassword: string;
+  confirmPassword: string;
 }

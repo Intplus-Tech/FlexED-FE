@@ -23,12 +23,12 @@ export function TableSkeleton() {
           <td className="px-6 py-4">
             <div className="h-4 bg-gray-200 rounded animate-pulse w-20" />
           </td>
-          <td className="px-6 py-4">
+          {/* <td className="px-6 py-4">
             <div className="h-4 bg-gray-200 rounded animate-pulse w-20" />
           </td>
           <td className="px-6 py-4">
             <div className="h-4 bg-gray-200 rounded animate-pulse w-24" />
-          </td>
+          </td> */}
         </tr>
       ))}
     </>

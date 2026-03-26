@@ -9,10 +9,13 @@ import {
 } from "@/lib/validations";
 import { EyeIcon, EyeOffIcon, LockIcon, MailIcon } from "@/icon/dashbaord";
 import { useGetShoolProfileQuery } from "@/redux/api/school";
+import { useChangePasswordMutation } from "@/redux/api/auth";
+import { showerror, showsuccess } from "@/utils/toast";
 
 export function SecuritySettingsTab() {
-  const { data: SchoolProfile, isFetching: isFetchingSchoolProfile } =
-    useGetShoolProfileQuery();
+  const { data: SchoolProfile } = useGetShoolProfileQuery();
+  const [changePassword, { isLoading: isChangingPassword }] =
+    useChangePasswordMutation();
   const [showOldPassword, setShowOldPassword] = useState(false);
   const [showNewPassword, setShowNewPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
@@ -21,7 +24,7 @@ export function SecuritySettingsTab() {
     register,
     handleSubmit,
     reset,
-    formState: { errors, isSubmitting },
+    formState: { errors },
   } = useForm<SecuritySettingsFormData>({
     resolver: zodResolver(securitySettingsSchema),
     defaultValues: {
@@ -38,8 +41,22 @@ export function SecuritySettingsTab() {
   }, [SchoolProfile]);
 
   const onSubmit = async (data: SecuritySettingsFormData) => {
-    console.log("[v0] Security settings submitted:", data);
-    await new Promise((resolve) => setTimeout(resolve, 1000));
+    try {
+      const res = await changePassword({
+        oldPassword: data.oldPassword,
+        newPassword: data.newPassword,
+        confirmPassword: data.confirmPassword,
+      }).unwrap();
+      showsuccess(res.message || "Password changed successfully");
+      reset({
+        oldPassword: "",
+        newPassword: "",
+        confirmPassword: "",
+      });
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    } catch (error: any) {
+      showerror(error?.data?.message || "Failed to change password");
+    }
   };
 
   return (
@@ -182,10 +199,10 @@ export function SecuritySettingsTab() {
 
         <button
           type="submit"
-          disabled={isSubmitting}
+          disabled={isChangingPassword}
           className="w-full py-3 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors disabled:opacity-50"
         >
-          {isSubmitting ? "Changing Password..." : "Change Password"}
+          {isChangingPassword ? "Changing Password..." : "Change Password"}
         </button>
       </form>
     </div>

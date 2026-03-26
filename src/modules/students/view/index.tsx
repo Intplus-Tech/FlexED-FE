@@ -14,6 +14,7 @@ import { useGetSchoolMetricsQuery } from "@/redux/api/school";
 import { useGetAllClassesQuery } from "@/redux/api/class";
 import { Dialog } from "@/components/ui/dialog";
 import AddBulkStudentModal from "../components/add-bulk-student";
+import { ExportButton } from "@/components/export-button";
 
 export default function StudentView() {
   const [searchQuery, setSearchQuery] = useState("");
@@ -47,7 +48,7 @@ export default function StudentView() {
     {
       schoolId: String(currentUser?.schoolId),
     },
-    { skip: !currentUser }
+    { skip: !currentUser },
   );
 
   const colors = ["green", "red", "gray"] as const;
@@ -57,6 +58,22 @@ export default function StudentView() {
       color: colors[index],
     }));
   }, [schoolMetrics]);
+
+  const exportData = useMemo(() => {
+    return (
+      students?.data?.items?.map((student) => ({
+        "Student ID": student._id,
+        "First Name": student.firstName,
+        "Last Name": student.lastName,
+        "Admission Number": student.admissionNumber,
+        Class:
+          classes?.data?.find((c) => c._id === student.class)?.name ||
+          student.class,
+        Gender: student.gender,
+        "Date of Birth": student.dateOfBirth,
+      })) || []
+    );
+  }, [students, classes]);
 
   const handleSearch = (query: string) => {
     setSearchQuery(query);
@@ -70,7 +87,6 @@ export default function StudentView() {
   return (
     <div className=" space-y-6">
       <h1 className="text-3xl font-bold text-gray-900">Students</h1>
-
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         {formattedSchoolMetrics?.map((metric, index) => (
           <StudentMetricCard
@@ -81,7 +97,6 @@ export default function StudentView() {
           />
         ))}
       </div>
-
       <div className="flex flex-col md:flex-row gap-4 items-start md:items-center justify-between">
         <div className="relative">
           <button
@@ -92,16 +107,16 @@ export default function StudentView() {
           </button>
 
           {isModalOpen && (
-            <div className=" absolute top-12 flex flex-col  bg-white shadow-lg rounded-lg">
+            <div className=" absolute top-12 flex flex-col  bg-white shadow-lg rounded-lg leading-none z-50">
               <button
                 onClick={() => setIsAddStudentOpen(true)}
-                className="text-sm whitespace-nowrap py-4 hover:bg-gray-100 px-2 "
+                className="text-sm whitespace-nowrap py-4 hover:bg-gray-100 px-4 rounded-t-lg text-left"
               >
                 Add Single student
               </button>
               <button
                 onClick={() => setIsBulkModalOpen(true)}
-                className="text-sm whitespace-nowrap pt-2 pb-4 hover:bg-gray-100 px-2"
+                className="text-sm whitespace-nowrap py-4 hover:bg-gray-100 px-4 rounded-b-lg text-left"
               >
                 Add Bulk student
               </button>
@@ -118,35 +133,50 @@ export default function StudentView() {
               Filter
             </button>
 
-            <button className="flex items-center gap-2 px-4 py-3 bg-gray-900 text-white font-medium rounded-lg hover:bg-gray-800 transition-colors">
-              <ExportIcon />
-              Export
-              <ChevronDownIcon />
-            </button>
+            <ExportButton
+              data={exportData}
+              filename="Students_List"
+              sheetName="Students"
+            />
           </div>
         </div>
       </div>
-
       <StudentTable
-        students={students ?? { success: true, message: "", statusCode: 200, data: { items: [], meta: { page: 1, limit: 10, total: 0, totalPages: 0, hasNextPage: false, hasPrevPage: false } } }}
+        students={
+          students ?? {
+            success: true,
+            message: "",
+            statusCode: 200,
+            data: {
+              items: [],
+              meta: {
+                page: 1,
+                limit: 10,
+                total: 0,
+                totalPages: 0,
+                hasNextPage: false,
+                hasPrevPage: false,
+              },
+            },
+          }
+        }
         isLoading={isFetchingStudents || isLoadingStudents}
         classItems={classes?.data ?? []}
-      />``
-
+      />
+      ``
       <AddStudentModal
         classItems={classes?.data ?? []}
         isClassesLoading={isFetchingClasses || isLoadingClasses}
         isOpen={isAddStudentOpen}
         onClose={() => setIsAddStudentOpen(false)}
+        onCloseModal={() => setIsModalOpen(false)}
       />
-
       <AddBulkStudentModal
         isbulkModalOpen={isBulkModalOpen}
         setIsBulkModalOpen={setIsBulkModalOpen}
         classItems={classes?.data ?? []}
         isClassLoading={isFetchingClasses || isLoadingClasses}
       />
-
       {/* {!isLoadingStudents && filteredStudents.length > 0 && (
         <Pagination
           currentPage={currentPage}

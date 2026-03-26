@@ -56,9 +56,9 @@ export function FeeTable({
                 <th className="px-6 py-4 text-left text-sm font-medium text-gray-600">
                   Tenure
                 </th>
-                <th className="px-6 py-4 text-left text-sm font-medium text-gray-600">
+                {/* <th className="px-6 py-4 text-left text-sm font-medium text-gray-600">
                   Status
-                </th>
+                </th> */}
                 {/* <th className="px-6 py-4 text-left text-sm font-medium text-gray-600">
                   Action
                 </th> */}
@@ -101,7 +101,7 @@ export function FeeTable({
                     <td className="px-6 py-4 text-sm text-gray-600">
                       {fee?.period}
                     </td>
-                    <td className="px-6 py-4">{fee?.status}</td>
+                    {/* <td className="px-6 py-4">{fee?.status}</td> */}
                     {/* <td className="px-6 py-4">
                       <button className="text-sm text-gray-900 hover:text-purple-600 underline underline-offset-2">
                         Edit

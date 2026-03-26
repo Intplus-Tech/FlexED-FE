@@ -17,9 +17,12 @@ import {
 import { formatNaira } from "@/utils/functions";
 import { useGetAllClassesQuery } from "@/redux/api/class";
 import { useRouter } from "next/navigation";
+import { useState } from "react";
+import { SmsTopUpModal } from "../components/sms-topup-modal";
 
 export default function DashboardView() {
-  const router = useRouter()
+  const router = useRouter();
+  const [isTopUpModalOpen, setIsTopUpModalOpen] = useState(false);
   const authState = useSelector((state: RootState) => state.authState);
   const { data, isFetching, isLoading } = useGetSmsMetricsQuery(
     {
@@ -111,7 +114,7 @@ export default function DashboardView() {
             available={smsMetrics?.data?.avalable ?? "0"}
             smsCount={smsMetrics?.data?.sms ?? "0"}
             lastSent={smsMetrics?.data?.totalSent ?? "0"}
-            onTopUp={() => console.log("Top up clicked")}
+            onTopUp={() => setIsTopUpModalOpen(true)}
           />
         </div>
       </div>
@@ -137,6 +140,7 @@ export default function DashboardView() {
           </button>
         </div>
       </div>
+      <SmsTopUpModal isOpen={isTopUpModalOpen} onClose={() => setIsTopUpModalOpen(false)} />
     </div>
   );
 }

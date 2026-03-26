@@ -11,14 +11,18 @@ import {
 } from "@/components/ui/dialog";
 import { ChevronDownIcon } from "@/icon/dashbaord/class";
 import { cn } from "@/lib/utils";
-import { useCreateClassMutation } from "@/redux/api/class";
+import { useEffect } from "react";
+import { ClassItem } from "@/@types/class";
+import {
+  useCreateClassMutation,
+  useUpdateClassMutation,
+} from "@/redux/api/class";
 import { showerror, showsuccess } from "@/utils/toast";
 
 interface AddClassModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  onSubmit: (data: ClassFormData) => void | Promise<void>;
-  isLoading?: boolean;
+  initialData?: ClassItem | null;
 }
 
 const LEVELS = [
@@ -32,14 +36,39 @@ const LEVELS = [
 ];
 const CLASS_TYPES = ["NATIVE", "VOCATIONAL"];
 const SUB_CLASSES = [
-  "Science",
-  "Arts",
-  "Commercial",
-  "Remedial",
-  "Extra Lesson",
+  "A",
+  "B",
+  "C",
+  "D",
+  "E",
+  "F",
+  "G",
+  "H",
+  "I",
+  "J",
+  "K",
+  "L",
+  "M",
+  "N",
+  "O",
+  "P",
+  "Q",
+  "R",
+  "S",
+  "T",
+  "U",
+  "V",
+  "W",
+  "X",
+  "Y",
+  "Z",
 ];
 
-export function AddClassModal({ open, onOpenChange }: AddClassModalProps) {
+export function AddClassModal({
+  open,
+  onOpenChange,
+  initialData,
+}: AddClassModalProps) {
   const {
     register,
     handleSubmit,
@@ -58,25 +87,59 @@ export function AddClassModal({ open, onOpenChange }: AddClassModalProps) {
 
   const [createClasses, { isLoading: isCreateClassLoading }] =
     useCreateClassMutation();
+  const [updateClass, { isLoading: isUpdateLoading }] =
+    useUpdateClassMutation();
+
+  useEffect(() => {
+    if (initialData && open) {
+      reset({
+        name: initialData.name,
+        level: initialData.level,
+        classType: initialData.classType,
+        description: initialData.description || "",
+        subClass: initialData.subClass || "",
+      });
+    } else if (open) {
+      reset({
+        name: "",
+        level: "",
+        classType: "",
+        description: "",
+        subClass: "",
+      });
+    }
+  }, [initialData, reset, open]);
+
   const onFormSubmit = async (data: ClassFormData) => {
     try {
-      const res = await createClasses(data).unwrap();
-      showsuccess(res?.message);
-      reset();
+      if (initialData) {
+        const res = await updateClass({ id: initialData._id, ...data }).unwrap();
+        showsuccess(res?.message || "Class updated successfully");
+      } else {
+        const res = await createClasses(data).unwrap();
+        showsuccess(res?.message || "Class created successfully");
+      }
       onOpenChange(false);
+      reset();
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (error: any) {
-      showerror(error?.data?.message);
-      console.log(error);
+      console.log(error?.data?.message[0], "class erroro");
+      showerror(
+        Array.isArray(error?.data?.message)
+          ? error?.data?.message[0]
+          : error?.data?.message,
+      );
     }
   };
+
+  const isPending = isCreateClassLoading || isUpdateLoading;
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="w-full max-w-3xl! bg-white p-8">
         <DialogHeader>
           <DialogTitle className="text-2xl font-semibold text-gray-900">
-            Add/Edit Class
+            {initialData ? "Edit Class" : "Add Class"}
           </DialogTitle>
         </DialogHeader>
 
@@ -92,7 +155,7 @@ export function AddClassModal({ open, onOpenChange }: AddClassModalProps) {
               {...register("name")}
               className={cn(
                 "w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 transition-colors",
-                errors.name ? "border-red-500" : "border-gray-300"
+                errors.name ? "border-red-500" : "border-gray-300",
               )}
             />
             {errors.name && (
@@ -110,7 +173,7 @@ export function AddClassModal({ open, onOpenChange }: AddClassModalProps) {
                 {...register("level")}
                 className={cn(
                   "w-full px-4 py-2 border rounded-lg appearance-none focus:outline-none focus:ring-2 focus:ring-purple-500 transition-colors bg-white",
-                  errors.level ? "border-red-500" : "border-gray-300"
+                  errors.level ? "border-red-500" : "border-gray-300",
                 )}
               >
                 <option value="">Select Level</option>
@@ -139,7 +202,7 @@ export function AddClassModal({ open, onOpenChange }: AddClassModalProps) {
                 {...register("classType")}
                 className={cn(
                   "w-full px-4 py-2 border rounded-lg appearance-none focus:outline-none focus:ring-2 focus:ring-purple-500 transition-colors bg-white",
-                  errors.classType ? "border-red-500" : "border-gray-300"
+                  errors.classType ? "border-red-500" : "border-gray-300",
                 )}
               >
                 <option value="">Select Class Type</option>
@@ -169,7 +232,7 @@ export function AddClassModal({ open, onOpenChange }: AddClassModalProps) {
               placeholder="Enter class description..."
               className={cn(
                 "w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 transition-colors resize-none",
-                errors.description ? "border-red-500" : "border-gray-300"
+                errors.description ? "border-red-500" : "border-gray-300",
               )}
             />
           </div>
@@ -199,10 +262,16 @@ export function AddClassModal({ open, onOpenChange }: AddClassModalProps) {
           <div className="flex justify-center pt-4">
             <button
               type="submit"
-              disabled={isCreateClassLoading}
+              disabled={isPending}
               className="px-8 py-2 bg-purple-600 text-white font-medium rounded-lg hover:bg-purple-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              {isCreateClassLoading ? "Creating..." : "Create Class"}
+              {isPending
+                ? initialData
+                  ? "Updating..."
+                  : "Creating..."
+                : initialData
+                  ? "Update Class"
+                  : "Create Class"}
             </button>
           </div>
         </form>

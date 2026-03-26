@@ -1,6 +1,5 @@
 "use client";
 
-import React from "react";
 import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -31,7 +30,7 @@ export default function ForgotPasswordView() {
     try {
       const res = await forgotPassword(data).unwrap();
       router.push(
-        `/auth/reset-password?email=${encodeURIComponent(data.email)}`
+        `/auth/reset-password?email=${encodeURIComponent(data.email)}`,
       );
       showsuccess(res?.message || "OTP sent successfully");
     } catch (error) {

@@ -21,7 +21,7 @@ export const classesApi = apiSlice.injectEndpoints({
       invalidatesTags: ["classes"],
     }),
 
-    updagteClass: builder.mutation<GetAllClassesResponse, CreateClassRequest>({
+    updateClass: builder.mutation<GetAllClassesResponse, CreateClassRequest & { id?: string }>({
       query: ({ id, ...request }) => ({
         url: ApiEndpoints.classes.updateClass(id as string),
         method: methods.PATCH,
@@ -43,6 +43,6 @@ export const classesApi = apiSlice.injectEndpoints({
 export const {
   useGetAllClassesQuery,
   useCreateClassMutation,
-  useUpdagteClassMutation,
+  useUpdateClassMutation,
   useDeleteClassMutation,
 } = classesApi;

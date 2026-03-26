@@ -12,63 +12,42 @@ import { CreateFeeModal } from "../components/add-fee";
 import { CreateFeeCategoryModal } from "../components/fee-category";
 import { FeeCategoryTable } from "../components/fee-category-table";
 
+import { useMemo } from "react";
+import { ExportButton } from "@/components/export-button";
+
 export default function FeeManagementView() {
-  const [searchQuery, setSearchQuery] = useState("");
+  const [feesSearchQuery, setFeesSearchQuery] = useState("");
+  const [categoriesSearchQuery, setCategoriesSearchQuery] = useState("");
   const [open, setOpen] = useState(false);
   const [categoryOpen, setCategoryOpen] = useState(false);
+
   const {
     data: feeCategories,
     isLoading: isLoadingCategories,
     isFetching: isFetchingCategories,
-  } = useGetPaymentCategoriesQuery();
-
-  console.log("fee categories", feeCategories);
+  } = useGetPaymentCategoriesQuery({ search: categoriesSearchQuery });
 
   const {
     data: fees,
     isFetching,
     isLoading: isLoadingFees,
-  } = useGetPaymentListQuery();
+  } = useGetPaymentListQuery({ search: feesSearchQuery });
 
-  console.log("fees", fees);
+  const exportData = useMemo(() => {
+    return (
+      fees?.data?.items?.map((fee: any) => ({
+        "Fee Name": fee.name,
+        Amount: fee.amount,
+        "Applicable To": fee.applicableTo,
+        Description: fee.description,
+        Tenure: fee.period,
+      })) || []
+    );
+  }, [fees]);
 
   return (
     <div className="space-y-6">
-      <h1 className="text-2xl font-semibold text-gray-900">Fee Category</h1>
-
-      <div className="flex items-center justify-between gap-4 flex-wrap">
-        <div className="flex items-center gap-3">
-          <button
-            onClick={() => setCategoryOpen(true)}
-            className="px-6 py-2.5 bg-gray-900 text-white rounded-lg hover:bg-gray-800 transition-colors"
-          >
-            Create Fee Category
-          </button>
-        </div>
-
-        <div className="flex items-center gap-4 flex-1 max-w-xl">
-          <SearchInput onSearch={setSearchQuery} placeholder="Search" />
-        </div>
-
-        <div className="flex items-center gap-3">
-          <button className="flex items-center gap-2 px-4 py-2.5 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors">
-            <FilterIcon className="w-5 h-5" />
-            <span className="text-sm text-gray-700">Filter</span>
-          </button>
-          <button className="flex items-center gap-2 px-4 py-2.5 bg-gray-900 text-white rounded-lg hover:bg-gray-800 transition-colors">
-            <DownloadIcon className="w-5 h-5" />
-            <span className="text-sm">Export</span>
-          </button>
-        </div>
-      </div>
-
-      <FeeCategoryTable
-        categories={feeCategories?.data.items ?? []}
-        isLoading={isLoadingCategories || isFetchingCategories}
-        searchQuery={searchQuery}
-      />
-
-      <div>
+      <div className="mb-6!">
         <div className="flex items-center justify-between mb-4">
           <h1 className="text-2xl font-semibold text-gray-900">
             Fee Management
@@ -80,14 +59,46 @@ export default function FeeManagementView() {
             >
               Create Fee
             </button>
+            <ExportButton
+              data={exportData}
+              filename="Fee_Structure"
+              sheetName="Fees"
+            />
           </div>
         </div>
+
+        <div className="flex items-center gap-4 mb-4 max-w-xl">
+          <SearchInput onSearch={setFeesSearchQuery} placeholder="Search Fees" />
+        </div>
+
         <FeeTable
           fees={fees?.data.items ?? []}
           isLoading={isFetching || isLoadingFees}
-          searchQuery={searchQuery}
+          searchQuery={feesSearchQuery}
         />
       </div>
+
+      <h1 className="text-2xl font-semibold text-gray-900 mt-12">Fee Category</h1>
+
+      <div className="flex items-center justify-between gap-4 flex-wrap mb-4">
+        <div className="flex items-center gap-3">
+          <button
+            onClick={() => setCategoryOpen(true)}
+            className="px-6 py-2.5 bg-gray-900 text-white rounded-lg hover:bg-gray-800 transition-colors"
+          >
+            Create Fee Category
+          </button>
+        </div>
+
+        <div className="flex items-center gap-4 flex-1 max-w-xl">
+          <SearchInput onSearch={setCategoriesSearchQuery} placeholder="Search Categories" />
+        </div>
+      </div>
+      <FeeCategoryTable
+        categories={feeCategories?.data.items ?? []}
+        isLoading={isLoadingCategories || isFetchingCategories}
+        searchQuery={categoriesSearchQuery}
+      />
 
       <CreateFeeModal open={open} onOpenChange={setOpen} />
 

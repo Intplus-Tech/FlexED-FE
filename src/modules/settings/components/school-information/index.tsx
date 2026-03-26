@@ -8,17 +8,29 @@ import { schoolInfoSchema, type SchoolInfoFormData } from "@/lib/validations";
 import { useEffect, useRef, useState } from "react";
 import Image from "next/image";
 import { ImageIcon } from "@/icon/dashbaord";
-
-import { useGetShoolProfileQuery } from "@/redux/api/school";
+import { showerror, showsuccess } from "@/utils/toast";
+import {
+  useGetShoolProfileQuery,
+  useUpdateSchoolMutation,
+} from "@/redux/api/school";
+import { useUploadFileMutation } from "@/redux/api/file";
+import { Loader } from "lucide-react";
+import { UpdateSchoolRequest } from "@/@types/school";
 
 export function SchoolInformationTab() {
   const { data: SchoolProfile, isFetching: isFetchingSchoolProfile } =
     useGetShoolProfileQuery();
+  const [updateSchool, { isLoading: isUpdatingSchool }] =
+    useUpdateSchoolMutation();
+  const [uploadFile, { isLoading: isUploadingFile }] = useUploadFileMutation();
+
+  const [uploadedLogo, setUploadedLogo] = useState<string | null>(null);
+
   const {
     register,
     handleSubmit,
     reset,
-    formState: { errors, isSubmitting },
+    formState: { errors },
   } = useForm<SchoolInfoFormData>({
     resolver: zodResolver(schoolInfoSchema),
     defaultValues: {
@@ -27,7 +39,7 @@ export function SchoolInformationTab() {
       schoolType: SchoolProfile?.data.schoolType || "",
       address: SchoolProfile?.data.address || "",
       contactEmail: SchoolProfile?.data.contactEmail || "",
-      // website: SchoolProfile?.data. || "www.greensprings.edu.ng",
+      website: SchoolProfile?.data.website || "",
     },
   });
 
@@ -39,47 +51,60 @@ export function SchoolInformationTab() {
         schoolType: SchoolProfile.data.schoolType || "",
         address: SchoolProfile.data.address || "",
         contactEmail: SchoolProfile.data.contactEmail || "",
-        // website: SchoolProfile?.data. || "www.greensprings.edu.ng",
+        website: SchoolProfile.data.website || "",
       });
+      if (
+        SchoolProfile.data.logoUrl &&
+        typeof SchoolProfile.data.logoUrl === "object"
+      ) {
+        setUploadedLogo(SchoolProfile.data.logoUrl.url);
+      }
     }
-  }, [SchoolProfile]);
+  }, [SchoolProfile, reset]);
 
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [logoPreview, setLogoPreview] = useState<string | null>(null);
-  const [isUploading, setIsUploading] = useState(false);
 
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
-    if (!file) return;
+    if (!file) {
+      showerror("No file selected");
+      return;
+    }
 
-    // Validate file type
     if (!file.type.startsWith("image/")) {
-      alert("Please select an image file");
+      showerror("Please select an image file");
       return;
     }
 
-    // Validate file size (max 5MB)
     if (file.size > 5 * 1024 * 1024) {
-      alert("File size must be less than 5MB");
+      showerror("File size must be less than 5MB");
       return;
     }
 
-    setIsUploading(true);
-    try {
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        setLogoPreview(reader.result as string);
-      };
-      reader.readAsDataURL(file);
+    const reader = new FileReader();
+    reader.onloadend = async () => {
+      const base64String = reader.result as string;
+      setLogoPreview(base64String);
 
-      await new Promise((resolve) => setTimeout(resolve, 1000));
-      console.log("[v0] Logo uploaded:", file.name);
-    } catch (error) {
-      console.error("[v0] Upload error:", error);
-      alert("Failed to upload logo");
-    } finally {
-      setIsUploading(false);
-    }
+      try {
+        const payload = {
+          fileBase64: base64String,
+          folder: "school-logos",
+          originalName: file.name,
+          mimeType: file.type,
+          description: "School logo upload",
+        };
+
+        const response = await uploadFile(payload).unwrap();
+        setUploadedLogo(response.data.url);
+        showsuccess(response?.message || "Logo uploaded successfully");
+      } catch (error: any) {
+        showerror(error?.data?.message || "Failed to upload logo");
+        setLogoPreview(null);
+      }
+    };
+    reader.readAsDataURL(file);
   };
 
   const handleUploadClick = () => {
@@ -87,9 +112,32 @@ export function SchoolInformationTab() {
   };
 
   const onSubmit = async (data: SchoolInfoFormData) => {
-    console.log(" Form submitted:", data);
-    await new Promise((resolve) => setTimeout(resolve, 1000));
+    try {
+      const payload: UpdateSchoolRequest = {
+        name: data.schoolName,
+        address: data.address,
+        contactEmail: data.contactEmail,
+        contactName: SchoolProfile?.data?.contactName,
+        contactPhone: data.phoneNumber,
+        schoolType: data.schoolType as "Private" | "Public",
+        website: data.website,
+        ...(uploadedLogo && { logoUrl: uploadedLogo }),
+      };
+
+      await updateSchool(payload).unwrap();
+      showsuccess("School profile updated successfully");
+    } catch (error: any) {
+      showerror(error?.data?.message || "Failed to update school profile");
+    }
   };
+
+  if (isFetchingSchoolProfile) {
+    return (
+      <div className="flex items-center justify-center p-12">
+        <Loader className="w-8 h-8 animate-spin text-purple-600" />
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
@@ -101,10 +149,25 @@ export function SchoolInformationTab() {
           onClick={handleUploadClick}
           className="w-28 h-28 border-2 border-dashed border-gray-300 rounded-lg flex flex-col items-center justify-center cursor-pointer hover:border-gray-400 transition-colors overflow-hidden bg-gray-50 hover:bg-gray-100"
         >
-          {logoPreview ? (
+          {isUploadingFile ? (
+            <div className="flex flex-col items-center">
+              <Loader className="w-6 h-6 animate-spin text-purple-600 mb-1" />
+              <span className="text-[10px] text-gray-500">Uploading...</span>
+            </div>
+          ) : logoPreview ||
+            (typeof SchoolProfile?.data?.logoUrl === "object" &&
+              SchoolProfile?.data?.logoUrl?.url) ||
+            (typeof SchoolProfile?.data?.logoUrl === "string" &&
+              SchoolProfile?.data?.logoUrl) ? (
             <Image
-              src={logoPreview || "/placeholder.svg"}
-              alt="Logo preview"
+              src={
+                logoPreview ||
+                (typeof SchoolProfile?.data?.logoUrl === "object"
+                  ? SchoolProfile?.data?.logoUrl?.url
+                  : SchoolProfile?.data?.logoUrl) ||
+                "/placeholder.svg"
+              }
+              alt="Logo"
               width={112}
               height={112}
               className="w-full h-full object-cover"
@@ -113,7 +176,7 @@ export function SchoolInformationTab() {
             <>
               <ImageIcon className="w-8 h-8 text-gray-400 mb-2" />
               <span className="text-xs text-gray-500 text-center px-2">
-                {isUploading ? "Uploading..." : "Upload your photo"}
+                Upload your photo
               </span>
             </>
           )}
@@ -124,7 +187,7 @@ export function SchoolInformationTab() {
           accept="image/*"
           onChange={handleFileChange}
           className="hidden"
-          disabled={isUploading}
+          disabled={isUploadingFile}
         />
       </div>
 
@@ -264,10 +327,11 @@ export function SchoolInformationTab() {
         <div className="flex items-center gap-4">
           <button
             type="submit"
-            disabled={isSubmitting}
-            className="px-6 py-2.5 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            disabled={isUpdatingSchool || isUploadingFile}
+            className="px-6 py-2.5 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
           >
-            {isSubmitting ? "Updating..." : "Update Profile"}
+            {isUpdatingSchool && <Loader className="w-4 h-4 animate-spin" />}
+            {isUpdatingSchool ? "Updating..." : "Update Profile"}
           </button>
           <button
             type="button"
