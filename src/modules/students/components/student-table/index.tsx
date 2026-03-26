@@ -25,7 +25,8 @@ export function StudentTable({
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [studentToDelete, setStudentToDelete] = useState<Student | null>(null);
 
-  const [deleteStudent, { isLoading: isDeleteLoading }] = useDeleteStudentMutation();
+  const [deleteStudent, { isLoading: isDeleteLoading }] =
+    useDeleteStudentMutation();
 
   const handleViewStudent = (student: Student) => {
     setSelectedStudent(student);
@@ -132,7 +133,7 @@ export function StudentTable({
                     <td className="px-6 py-4 text-sm text-gray-600">
                       {student.admissionNumber}
                     </td>
-                    <td className="px-6 py-4 text-sm text-gray-600">
+                    <td className="px-6 py-4 text-sm text-gray-600 whitespace-nowrap">
                       {getClassById(student.class)}
                     </td>
                     <td className="px-6 py-4 text-sm text-gray-600">
@@ -157,7 +158,10 @@ export function StudentTable({
                           View
                         </button>
                         <span className="text-gray-300">|</span>
-                        <button onClick={() => handleDeleteStudent(student)} className="text-sm text-gray-700 hover:text-gray-900 underline">
+                        <button
+                          onClick={() => handleDeleteStudent(student)}
+                          className="text-sm text-gray-700 hover:text-gray-900 underline"
+                        >
                           Delete
                         </button>
                       </div>

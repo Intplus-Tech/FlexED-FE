@@ -43,10 +43,9 @@ export const academicSessionApi = apiSlice.injectEndpoints({
       GetAcademicSessionResponse,
       { id: string; isActive: boolean }
     >({
-      query: ({ id, ...request }) => ({
-        url: ApiEndpoints.academicSession.updateAcademicSession(id as string),
+      query: ({ id }) => ({
+        url: ApiEndpoints.academicSession.setAcademicSessionStatus(id as string),
         method: methods.POST,
-        body: request,
       }),
       invalidatesTags: ["academicSession"],
     }),

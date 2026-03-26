@@ -25,6 +25,7 @@ interface AddStudentModalProps {
   onClose: () => void;
   classItems: ClassItem[];
   isClassesLoading: boolean;
+  onCloseModal: () => void;
 }
 
 export function AddStudentModal({
@@ -32,6 +33,7 @@ export function AddStudentModal({
   onClose,
   classItems,
   isClassesLoading,
+  onCloseModal,
 }: AddStudentModalProps) {
   const [step, setStep] = useState(1);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
@@ -72,7 +74,6 @@ export function AddStudentModal({
     },
   });
 
-  console.log(errors, "errors ");
   const { fields, append, remove } = useFieldArray({
     control,
     name: "parentDetails",
@@ -112,6 +113,8 @@ export function AddStudentModal({
         school: currentUser?.schoolId as string,
       }).unwrap();
       showsuccess(res?.message);
+      onClose();
+      onCloseModal();
     } catch (error: any) {
       showerror(error?.data?.message);
     }

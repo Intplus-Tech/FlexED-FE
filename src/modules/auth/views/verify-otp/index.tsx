@@ -6,7 +6,10 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
-import { useVerifyAccountMutation } from "@/redux/api/auth";
+import {
+  useResendOtpMutation,
+  useVerifyAccountMutation,
+} from "@/redux/api/auth";
 import { showerror, showsuccess } from "@/utils/toast";
 import { Loader } from "lucide-react";
 
@@ -23,6 +26,7 @@ function VerifyOtp() {
   const searchParams = useSearchParams();
   const email = searchParams.get("email") || "";
   const [verifyAccount, { isLoading }] = useVerifyAccountMutation();
+  const [resendOtp, { isLoading: isResendingOtp }] = useResendOtpMutation();
 
   useEffect(() => {
     if (!email) {
@@ -53,7 +57,7 @@ function VerifyOtp() {
 
   const handleKeyDown = (
     index: number,
-    e: React.KeyboardEvent<HTMLInputElement>
+    e: React.KeyboardEvent<HTMLInputElement>,
   ) => {
     if (e.key === "Backspace" && !otp[index] && index > 0) {
       inputRefs.current[index - 1]?.focus();
@@ -84,16 +88,22 @@ function VerifyOtp() {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (error: any) {
       showerror(
-        error.data?.message || "OTP verification failed. Please try again."
+        error.data?.message || "OTP verification failed. Please try again.",
       );
     }
   };
 
-  const handleResendOTP = () => {
-    console.log("[v0] Resending OTP...");
-    setOtp(["", "", "", "", "", ""]);
-    setValue("otp", "");
-    inputRefs.current[0]?.focus();
+  const handleResendOTP = async () => {
+    try {
+      await resendOtp({ email, type: "verification" }).unwrap();
+      showsuccess("OTP resent successfully");
+      setOtp(["", "", "", "", "", ""]);
+      setValue("otp", "");
+      inputRefs.current[0]?.focus();
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    } catch (error: any) {
+      showerror(error?.data?.message || "Failed to resend OTP");
+    }
   };
 
   return (
@@ -103,9 +113,9 @@ function VerifyOtp() {
           We Have Sent You An OTP On Registered E-mail Address
         </h2>
         <p className="text-gray-500">
-          NarayanMurthy@gmail.com,{" "}
+          {email},{" "}
           <Link
-            href="/sign-up"
+            href="/auth/sign-up"
             className="text-violet-600 hover:text-violet-700 font-medium"
           >
             Change E-mail address
@@ -147,9 +157,10 @@ function VerifyOtp() {
           <button
             type="button"
             onClick={handleResendOTP}
-            className="text-violet-600 hover:text-violet-700 font-medium"
+            disabled={isResendingOtp}
+            className="text-violet-600 hover:text-violet-700 font-medium disabled:opacity-50"
           >
-            Resend OTP
+            {isResendingOtp ? "Resending..." : "Resend OTP"}
           </button>
         </div>
 

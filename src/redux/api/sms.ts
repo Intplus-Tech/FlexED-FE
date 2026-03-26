@@ -1,12 +1,11 @@
 import { ApiEndpoints } from "@/utils/endpoints";
 import apiSlice from "..";
-import { QueryHelper } from "@/utils/functions";
-import {
-  GetTransactionsResponse,
-  MakePaymentRequest,
-} from "@/@types/transaction";
 import { methods } from "@/utils/methods";
-import { SmsWalletResponse } from "@/@types/sms";
+import {
+  SmsWalletResponse,
+  InitiateSmsTopupRequest,
+  InitiateSmsTopupResponse,
+} from "@/@types/sms";
 
 export const smsApi = apiSlice.injectEndpoints({
   overrideExisting: true,
@@ -17,16 +16,18 @@ export const smsApi = apiSlice.injectEndpoints({
       providesTags: ["sms"],
     }),
 
-    topUpSms: builder.mutation<GetTransactionsResponse, MakePaymentRequest>({
+    initiateSmsTopup: builder.mutation<
+      InitiateSmsTopupResponse,
+      InitiateSmsTopupRequest
+    >({
       query: (request) => ({
-        url: ApiEndpoints.sms.smsWalletTopUp,
-        methods: methods.POST,
+        url: ApiEndpoints.sms.smsTopupInitiate,
+        method: methods.POST,
         body: request,
       }),
-
       invalidatesTags: ["sms"],
     }),
   }),
 });
 
-export const { useGetSmsMetricsQuery, useTopUpSmsMutation } = smsApi;
+export const { useGetSmsMetricsQuery, useInitiateSmsTopupMutation } = smsApi;

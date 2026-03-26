@@ -8,6 +8,7 @@ import {
   ResendOTPRequest,
   ResetPasswordRequest,
   VerifyAccountRequest,
+  ChangePasswordRequest,
 } from "@/@types/auth";
 
 export const authApi = apiSlice.injectEndpoints({
@@ -59,6 +60,15 @@ export const authApi = apiSlice.injectEndpoints({
         }),
       }
     ),
+    changePassword: builder.mutation<CreateSchoolResponse, ChangePasswordRequest>(
+      {
+        query: (request) => ({
+          url: ApiEndpoints.auth.changePassword,
+          method: "POST",
+          body: request,
+        }),
+      }
+    ),
   }),
 });
 
@@ -68,4 +78,5 @@ export const {
   useResendOtpMutation,
   useForgotPasswordMutation,
   useResetPasswordMutation,
+  useChangePasswordMutation,
 } = authApi;

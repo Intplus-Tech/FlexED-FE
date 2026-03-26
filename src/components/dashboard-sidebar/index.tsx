@@ -14,7 +14,7 @@ import {
   LogoutIcon,
   ClassIcon,
 } from "@/icon/dashbaord";
-import { Logo } from "@/icon/auth/icon";
+
 import { signOut } from "next-auth/react";
 import { showinfo } from "@/utils/toast";
 import Image from "next/image";
@@ -86,8 +86,11 @@ export default function DashboardSidebar() {
   const handleLogOut = async () => {
     try {
       setShowProfileMenu(false);
-      router.push("/auth/sign-in");
-      await signOut();
+      const data = await signOut({
+        redirect: false,
+        callbackUrl: "/auth/sign-in",
+      });
+      router.push(data?.url || "/auth/sign-in");
       showinfo("Logged out successfully");
     } catch (error) {
       console.log(error);
@@ -113,10 +116,10 @@ export default function DashboardSidebar() {
               className={`flex items-center gap-3 rounded-lg px-4 py-3 transition-all ${
                 isActive(item.href)
                   ? "bg-purple-600 text-white"
-                  : "text-gray-700 hover:bg-gray-100"
+                  : "text-black hover:bg-gray-100"
               }`}
             >
-              <div className="flex h-6 w-6 items-center justify-center hrink-0">
+              <div className="flex h-6 w-6 items-center justify-center shrink-0">
                 {item.icon}
               </div>
               <span className="text-sm font-medium">{item.label}</span>
@@ -136,7 +139,7 @@ export default function DashboardSidebar() {
               className={`flex items-center gap-3 rounded-lg px-4 py-3 transition-all ${
                 isActive(item.href)
                   ? "bg-primary-700 text-white"
-                  : "text-gray-700 hover:bg-gray-100"
+                  : "text-black hover:bg-gray-100"
               }`}
             >
               <div className="flex h-6 w-6 items-center justify-center shrink-0">

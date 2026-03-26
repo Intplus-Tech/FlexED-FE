@@ -1,20 +1,30 @@
 "use client";
 
 import { useState } from "react";
-import { SearchIcon, FilterIcon, ExportIcon } from "@/icon/dashbaord/class";
-import type { ClassFormData } from "@/lib/validations";
 import { AddClassModal } from "../components/add-class";
 import ClassTable from "../components/class-table";
+import { SearchIcon, FilterIcon } from "@/icon/dashbaord/class";
+
+import { useMemo } from "react";
+import { ExportButton } from "@/components/export-button";
+import { useGetAllClassesQuery } from "@/redux/api/class";
 
 export function ClassManagementView() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
 
-  const handleAddClass = async (data: ClassFormData) => {
-    // Simulate API call
-    console.log("Adding class:", data);
-    // You would typically make an API call here
-  };
+  const { data: classes } = useGetAllClassesQuery();
+
+  const exportData = useMemo(() => {
+    return (
+      classes?.data?.map((cls: any) => ({
+        "Class Name": cls.name,
+        Level: cls.level,
+        "Class Type": cls.classType,
+        "Sub Class": cls.subClass,
+      })) || []
+    );
+  }, [classes]);
 
   return (
     <div className="min-h-screen bg-white">
@@ -47,10 +57,11 @@ export function ClassManagementView() {
               <FilterIcon />
               Filter
             </button>
-            <button className="px-4 py-2.5 bg-gray-900 text-white rounded-lg hover:bg-gray-800 transition-colors flex items-center gap-2 font-medium">
-              <ExportIcon />
-              Export
-            </button>
+            <ExportButton
+              data={exportData}
+              filename="Classes_List"
+              sheetName="Classes"
+            />
           </div>
         </div>
       </div>
@@ -60,7 +71,6 @@ export function ClassManagementView() {
       <AddClassModal
         open={isModalOpen}
         onOpenChange={setIsModalOpen}
-        onSubmit={handleAddClass}
       />
     </div>
   );

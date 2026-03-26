@@ -59,7 +59,7 @@ export default function SignupView() {
       console.log("Sign up successful:", res);
       showsuccess("Sign up successful! Please verify your email.");
       router.push(
-        "/auth/verify-otp?email=" + encodeURIComponent(data.contactEmail)
+        "/auth/verify-otp?email=" + encodeURIComponent(data.contactEmail),
       );
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (error: any) {
@@ -80,7 +80,7 @@ export default function SignupView() {
         <p className="text-gray-500">
           Already have an account?{" "}
           <Link
-            href="/login"
+            href="/auth/sign-in"
             className="text-violet-600 hover:text-violet-700 font-medium"
           >
             Log in
@@ -89,7 +89,7 @@ export default function SignupView() {
       </div>
 
       {/* Form */}
-      <form onSubmit={handleSubmit(onSubmit)} className="space-y-5">
+      <form onSubmit={handleSubmit(onSubmit)} className="space-y-3">
         <h3 className="text-xl font-semibold text-gray-900">Sign up</h3>
 
         {/* School Name */}

@@ -17,23 +17,25 @@ import {
 import { formatNaira } from "@/utils/functions";
 import { useGetAllClassesQuery } from "@/redux/api/class";
 import { useRouter } from "next/navigation";
+import { useState } from "react";
+import { SmsTopUpModal } from "../components/sms-topup-modal";
 
 export default function DashboardView() {
-  const router = useRouter()
+  const router = useRouter();
+  const [isTopUpModalOpen, setIsTopUpModalOpen] = useState(false);
   const authState = useSelector((state: RootState) => state.authState);
   const { data, isFetching, isLoading } = useGetSmsMetricsQuery(
     {
       schoolId: authState.currentUser?.schoolId as string,
     },
-    { skip: !authState.currentUser }
+    { skip: !authState.currentUser },
   );
 
   const {
     data: classItems,
     isFetching: isFetchingClassItems,
     isLoading: isLoadingClassItems,
-  } = useGetAllClassesQuery(
-    );
+  } = useGetAllClassesQuery();
 
   const {
     data: transactions,
@@ -43,7 +45,7 @@ export default function DashboardView() {
     {
       schoolId: String(authState.currentUser?.schoolId),
     },
-    { skip: !authState.currentUser }
+    { skip: !authState.currentUser },
   );
 
   const {
@@ -54,7 +56,7 @@ export default function DashboardView() {
     {
       schoolId: String(authState.currentUser?.schoolId),
     },
-    { skip: !authState.currentUser }
+    { skip: !authState.currentUser },
   );
 
   const {
@@ -77,7 +79,7 @@ export default function DashboardView() {
     {
       schoolId: String(authState.currentUser?.schoolId),
     },
-    { skip: !authState.currentUser }
+    { skip: !authState.currentUser },
   );
 
   return (
@@ -88,20 +90,20 @@ export default function DashboardView() {
         <div className="lg:col-span-2">
           <FeeMetrics
             feesThisTerm={formatNaira(
-              paymentMetrics?.data?.totalExpectedAll ?? 0
+              paymentMetrics?.data?.totalExpectedAll ?? 0,
             )}
             feesCollected={formatNaira(paymentMetrics?.data?.totalPaidAll ?? 0)}
             totalOutstanding={formatNaira(
               (paymentMetrics?.data?.totalExpectedAll ?? 0) -
-              (paymentMetrics?.data?.totalPaidAll ?? 0)
+                (paymentMetrics?.data?.totalPaidAll ?? 0),
             )}
             percentageOutstanding={
               paymentMetrics?.data?.totalExpectedAll
                 ? (
-                  (paymentMetrics.data.totalPaidAll /
-                    paymentMetrics.data.totalExpectedAll) *
-                  100
-                ).toFixed(2)
+                    (paymentMetrics.data.totalPaidAll /
+                      paymentMetrics.data.totalExpectedAll) *
+                    100
+                  ).toFixed(2)
                 : "0.00"
             }
           />
@@ -111,7 +113,7 @@ export default function DashboardView() {
             available={smsMetrics?.data?.avalable ?? "0"}
             smsCount={smsMetrics?.data?.sms ?? "0"}
             lastSent={smsMetrics?.data?.totalSent ?? "0"}
-            onTopUp={() => console.log("Top up clicked")}
+            onTopUp={() => setIsTopUpModalOpen(true)}
           />
         </div>
       </div>
@@ -131,12 +133,19 @@ export default function DashboardView() {
           isLoading={isFetching || isLoading}
           classItems={classItems?.data ?? []}
         />
-        <div className="flex justify-center items-center mt-2">
-          <button onClick={() => router.push("/dashboard/payments")} className="bg-purple-500 text-white px-4 py-2 rounded active:scale-95 duration-150">
+        <div className="flex justify-center items-center mt-8">
+          <button
+            onClick={() => router.push("/dashboard/payments")}
+            className="bg-purple-500 text-white px-4 py-2 rounded active:scale-95 duration-150"
+          >
             see full list
           </button>
         </div>
       </div>
+      <SmsTopUpModal
+        isOpen={isTopUpModalOpen}
+        onClose={() => setIsTopUpModalOpen(false)}
+      />
     </div>
   );
 }

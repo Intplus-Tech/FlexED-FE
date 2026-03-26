@@ -16,3 +16,18 @@ export interface SmsWallet {
   totalSent: number;
   school: string;
 }
+
+export interface InitiateSmsTopupRequest {
+  amount: number;
+  callbackUrl: string;
+}
+
+export interface InitiateSmsTopupResponse {
+  success: boolean;
+  message: string;
+  data: {
+    transactionReference: string;
+    paymentUrl: string;
+  };
+  statusCode: number;
+}
