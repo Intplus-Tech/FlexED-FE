@@ -20,6 +20,7 @@ import { showinfo } from "@/utils/toast";
 import Image from "next/image";
 import { useSelector } from "react-redux";
 import { RootState } from "@/redux/store";
+import { useGetShoolProfileQuery } from "@/redux/api/school";
 
 interface NavItem {
   label: string;
@@ -75,9 +76,14 @@ const bottomNavItems: NavItem[] = [
 
 export default function DashboardSidebar() {
   const pathname = usePathname();
+  const [imgError, setImgError] = useState(false);
+  const [imgLoading, setImgLoading] = useState(true);
   const [showProfileMenu, setShowProfileMenu] = useState(false);
   const router = useRouter();
+  const { data: SchoolProfile, isFetching: isFetchingSchoolProfile } =
+    useGetShoolProfileQuery();
   const { currentUser } = useSelector((state: RootState) => state.authState);
+  const fallbackUrl = "/images/logo2.svg";
 
   const isActive = (href: string) => {
     return pathname === href;
@@ -100,9 +106,42 @@ export default function DashboardSidebar() {
   return (
     <aside className="fixed left-0 top-0 h-screen w-[250px] lg:w-[300px] border-r border-gray-200 bg-white  flex flex-col">
       <div className="flex items-center gap-3 border-b border-gray-200 px-6 py-6">
-        <Image src="/images/logo.svg" alt="logo" width={50} height={50} />
+        <div className="relative w-[50px] h-[50px]">
+          {/* Loading skeleton */}
+          {imgLoading && (
+            <div className="absolute inset-0 bg-gray-200 animate-pulse rounded-full" />
+          )}
+
+          {/* Error fallback */}
+          {imgError ? (
+            <Image
+              src={fallbackUrl}
+              alt="logo"
+              width={50}
+              height={50}
+              className="rounded-full"
+            />
+          ) : (
+            <Image
+              src={SchoolProfile?.data?.logoUrl?.url || fallbackUrl}
+              alt="logo"
+              width={70}
+              height={70}
+              className={`rounded-full transition-opacity duration-300 ${
+                imgLoading ? "opacity-0" : "opacity-100"
+              }`}
+              onLoad={() => setImgLoading(false)}
+              onError={() => {
+                setImgLoading(false);
+                setImgError(true);
+              }}
+            />
+          )}
+        </div>
         <div className="flex-1 overflow-hidden">
-          <h1 className="text-lg font-bold text-gray-900">Sanctum</h1>
+          <h1 className=" font-bold text-gray-900">
+            {SchoolProfile?.data.name ?? "Flex-ed"}
+          </h1>
           <p className="truncate text-xs text-gray-600">Powered By Int+</p>
         </div>
       </div>

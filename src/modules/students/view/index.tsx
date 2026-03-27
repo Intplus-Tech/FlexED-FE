@@ -30,8 +30,10 @@ export default function StudentView() {
     isFetching: isFetchingStudents,
     isLoading: isLoadingStudents,
   } = useGetAllStudentQuery({
-    limit: 50,
+    page: currentPage,
+    limit: itemsPerPage,
     schoolId: currentUser?.schoolId as string,
+    search: searchQuery,
   });
 
   const {
@@ -84,6 +86,8 @@ export default function StudentView() {
     setCurrentPage(page);
   };
 
+  const totalPages = students?.data?.meta?.totalPages || 1;
+
   return (
     <div className=" space-y-6">
       <h1 className="text-3xl font-bold text-gray-900">Students</h1>
@@ -128,10 +132,10 @@ export default function StudentView() {
           <SearchInput onSearch={handleSearch} placeholder="Search" />
 
           <div className="flex gap-3">
-            <button className="flex items-center gap-2 px-4 py-3 border border-gray-300 bg-white text-gray-700 font-medium rounded-lg hover:bg-gray-50 transition-colors">
+            {/* <button className="flex items-center gap-2 px-4 py-3 border border-gray-300 bg-white text-gray-700 font-medium rounded-lg hover:bg-gray-50 transition-colors">
               <FilterIcon />
               Filter
-            </button>
+            </button> */}
 
             <ExportButton
               data={exportData}
@@ -141,29 +145,39 @@ export default function StudentView() {
           </div>
         </div>
       </div>
-      <StudentTable
-        students={
-          students ?? {
-            success: true,
-            message: "",
-            statusCode: 200,
-            data: {
-              items: [],
-              meta: {
-                page: 1,
-                limit: 10,
-                total: 0,
-                totalPages: 0,
-                hasNextPage: false,
-                hasPrevPage: false,
+      <div className="space-y-6">
+        <StudentTable
+          students={
+            students ?? {
+              success: true,
+              message: "",
+              statusCode: 200,
+              data: {
+                items: [],
+                meta: {
+                  page: 1,
+                  limit: 10,
+                  total: 0,
+                  totalPages: 0,
+                  hasNextPage: false,
+                  hasPrevPage: false,
+                },
               },
-            },
+            }
           }
-        }
-        isLoading={isFetchingStudents || isLoadingStudents}
-        classItems={classes?.data ?? []}
-      />
-      ``
+          isLoading={isFetchingStudents || isLoadingStudents}
+          classItems={classes?.data ?? []}
+        />
+
+        {totalPages > 1 && (
+          <Pagination
+            currentPage={currentPage}
+            totalPages={totalPages}
+            onPageChange={handlePageChange}
+          />
+        )}
+      </div>
+
       <AddStudentModal
         classItems={classes?.data ?? []}
         isClassesLoading={isFetchingClasses || isLoadingClasses}
@@ -177,21 +191,6 @@ export default function StudentView() {
         classItems={classes?.data ?? []}
         isClassLoading={isFetchingClasses || isLoadingClasses}
       />
-      {/* {!isLoadingStudents && filteredStudents.length > 0 && (
-        <Pagination
-          currentPage={currentPage}
-          totalPages={totalPages}
-          onPageChange={handlePageChange}
-        />
-      )}
-
-      {!isLoadingStudents &&  (
-        <div className="text-center py-12">
-          <p className="text-gray-500 text-lg">
-            No students found matching your search.
-          </p>
-        </div>
-      )} */}
     </div>
   );
 }

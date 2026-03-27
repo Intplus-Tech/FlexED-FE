@@ -54,7 +54,7 @@ export const student = {
   createStudent: "/students",
   downloadStudents: "/students/bulk/template",
   bulkStudentUpload: "/students/bulk/upload",
-  getStudentsBySchool: (schoolId: string) => `/students/school/${schoolId}`,
+  getStudentsBySchool: `/students/school/`,
   getStudentByParent: (parentId: string) => `/students/parent/${parentId}`,
   getAllPendingPaymentForStudent: (studentId: string) =>
     `/students/${studentId}/payments/pending`,

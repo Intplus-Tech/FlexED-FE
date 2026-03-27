@@ -53,10 +53,10 @@ export function ClassManagementView() {
           </div>
 
           <div className="flex gap-3">
-            <button className="px-4 py-2.5 border border-gray-300 rounded-lg hover:bg-gray-100 transition-colors flex items-center gap-2 text-gray-700 font-medium">
+            {/* <button className="px-4 py-2.5 border border-gray-300 rounded-lg hover:bg-gray-100 transition-colors flex items-center gap-2 text-gray-700 font-medium">
               <FilterIcon />
               Filter
-            </button>
+            </button> */}
             <ExportButton
               data={exportData}
               filename="Classes_List"
@@ -68,10 +68,7 @@ export function ClassManagementView() {
 
       <ClassTable />
 
-      <AddClassModal
-        open={isModalOpen}
-        onOpenChange={setIsModalOpen}
-      />
+      <AddClassModal open={isModalOpen} onOpenChange={setIsModalOpen} />
     </div>
   );
 }

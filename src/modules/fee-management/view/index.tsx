@@ -2,7 +2,6 @@
 
 import { useState } from "react";
 import { SearchInput } from "@/components/search-input";
-import { DownloadIcon, FilterIcon } from "@/icon/dashbaord";
 import { FeeTable } from "../components/fee-table";
 import {
   useGetPaymentCategoriesQuery,
@@ -68,7 +67,10 @@ export default function FeeManagementView() {
         </div>
 
         <div className="flex items-center gap-4 mb-4 max-w-xl">
-          <SearchInput onSearch={setFeesSearchQuery} placeholder="Search Fees" />
+          <SearchInput
+            onSearch={setFeesSearchQuery}
+            placeholder="Search Fees"
+          />
         </div>
 
         <FeeTable
@@ -78,7 +80,9 @@ export default function FeeManagementView() {
         />
       </div>
 
-      <h1 className="text-2xl font-semibold text-gray-900 mt-12">Fee Category</h1>
+      <h1 className="text-2xl font-semibold text-gray-900 mt-12">
+        Fee Category
+      </h1>
 
       <div className="flex items-center justify-between gap-4 flex-wrap mb-4">
         <div className="flex items-center gap-3">
@@ -91,7 +95,10 @@ export default function FeeManagementView() {
         </div>
 
         <div className="flex items-center gap-4 flex-1 max-w-xl">
-          <SearchInput onSearch={setCategoriesSearchQuery} placeholder="Search Categories" />
+          <SearchInput
+            onSearch={setCategoriesSearchQuery}
+            placeholder="Search Categories"
+          />
         </div>
       </div>
       <FeeCategoryTable

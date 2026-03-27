@@ -36,7 +36,7 @@ const StudentTableLoader = () => {
             </tr>
           </thead>
           <tbody className="divide-y divide-gray-200">
-            {[...Array(5)].map((_, index) => (
+            {[...Array(10)].map((_, index) => (
               <tr key={index} className="animate-pulse">
                 <td className="px-6 py-4">
                   <div className="flex items-center gap-3">

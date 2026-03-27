@@ -8,6 +8,7 @@ import { ClassItem } from "@/@types/class";
 import { useDeleteStudentMutation } from "@/redux/api/student";
 import { DeleteModal } from "@/components/delete-modal";
 import { showerror, showsuccess } from "@/utils/toast";
+import { Eye, Trash2 } from "lucide-react";
 
 interface StudentTableProps {
   students: GetStudentsResponse;
@@ -104,7 +105,7 @@ export function StudentTable({
           <tbody className="divide-y divide-gray-200">
             {students?.data?.items?.length === 0 ? (
               <tr>
-                <td colSpan={7} className="px-6 py-4 text-center">
+                <td colSpan={7} className="px-6 py-4 text-center h-80">
                   No data available
                 </td>
               </tr>
@@ -155,14 +156,14 @@ export function StudentTable({
                           onClick={() => handleViewStudent(student)}
                           className="text-sm text-gray-700 hover:text-gray-900 underline"
                         >
-                          View
+                          <Eye />
                         </button>
                         <span className="text-gray-300">|</span>
                         <button
                           onClick={() => handleDeleteStudent(student)}
                           className="text-sm text-gray-700 hover:text-gray-900 underline"
                         >
-                          Delete
+                          <Trash2 />
                         </button>
                       </div>
                     </td>

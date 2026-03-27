@@ -1,6 +1,10 @@
-import { GetAcademicSessionResponse, SessionData } from "@/@types/academic-session";
+import {
+  GetAcademicSessionResponse,
+  SessionData,
+} from "@/@types/academic-session";
 import TableSkeleton from "../../loaders/table-loader";
 import { formatDate } from "@/utils/functions";
+import { Pencil } from "lucide-react";
 
 interface AcademicTableProps {
   periods: GetAcademicSessionResponse;
@@ -94,7 +98,7 @@ export default function AcademicTable({
                       onClick={() => onEdit?.(period)}
                       className="text-primary hover:underline text-sm font-medium"
                     >
-                      Edit
+                      <Pencil />
                     </button>
                   </div>
                 </td>
@@ -104,33 +108,6 @@ export default function AcademicTable({
         </tbody>
       </table>
 
-      {/* Pagination */}
-      {/* <div className="flex items-center justify-between px-6 py-4 border-t border-border bg-muted/30">
-        <button className="text-sm font-medium text-muted-foreground hover:text-foreground">
-          Previous
-        </button>
-        <div className="flex items-center gap-2">
-          <button className="px-3 py-1 rounded-md bg-primary text-primary-foreground">
-            1
-          </button>
-          <button className="px-3 py-1 text-foreground hover:bg-muted rounded-md">
-            2
-          </button>
-          <button className="px-3 py-1 text-foreground hover:bg-muted rounded-md">
-            3
-          </button>
-          <span className="text-muted-foreground">...</span>
-          <button className="px-3 py-1 text-foreground hover:bg-muted rounded-md">
-            67
-          </button>
-          <button className="px-3 py-1 text-foreground hover:bg-muted rounded-md">
-            68
-          </button>
-        </div>
-        <button className="text-sm font-medium text-foreground hover:text-primary">
-          Next →
-        </button>
-      </div> */}
     </div>
   );
 }
