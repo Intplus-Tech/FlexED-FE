@@ -57,7 +57,7 @@ export function SchoolInformationTab() {
         SchoolProfile.data.logoUrl &&
         typeof SchoolProfile.data.logoUrl === "object"
       ) {
-        setUploadedLogo(SchoolProfile.data.logoUrl.url);
+        setUploadedLogo(SchoolProfile.data._id);
       }
     }
   }, [SchoolProfile, reset]);
@@ -97,7 +97,7 @@ export function SchoolInformationTab() {
         };
 
         const response = await uploadFile(payload).unwrap();
-        setUploadedLogo(response.data.url);
+        setUploadedLogo(response.data._id);
         showsuccess(response?.message || "Logo uploaded successfully");
       } catch (error: any) {
         showerror(error?.data?.message || "Failed to upload logo");

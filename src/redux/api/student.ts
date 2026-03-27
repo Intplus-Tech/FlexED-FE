@@ -2,7 +2,11 @@
 import { ApiEndpoints } from "@/utils/endpoints";
 import apiSlice from "..";
 import { methods } from "@/utils/methods";
-import { BulkUploadResponse, CreateStudentRequest, GetStudentsResponse } from "@/@types/student";
+import {
+  BulkUploadResponse,
+  CreateStudentRequest,
+  GetStudentsResponse,
+} from "@/@types/student";
 import { request } from "http";
 import { QueryHelper } from "@/utils/functions";
 
@@ -10,8 +14,16 @@ export const studentApi = apiSlice.injectEndpoints({
   overrideExisting: true,
 
   endpoints: (builder) => ({
-    getAllStudent: builder.query<GetStudentsResponse, { schoolId: string,limit:number,page?:number }>({
-      query: ({ schoolId,limit,page }) => QueryHelper(ApiEndpoints.student.getAllStudent,{limit,page}),
+    getAllStudent: builder.query<
+      GetStudentsResponse,
+      { schoolId: string; limit: number; page?: number; search?: string }
+    >({
+      query: ({ schoolId, limit, page, search }) =>
+        QueryHelper(ApiEndpoints.student.getStudentsBySchool, {
+          limit,
+          page,
+          search,
+        }),
       providesTags: ["students"],
     }),
 

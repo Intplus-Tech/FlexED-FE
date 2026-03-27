@@ -5,13 +5,21 @@ import {
   CreateAcademicSessionRequest,
   GetAcademicSessionResponse,
 } from "@/@types/academic-session";
+import { QueryHelper } from "@/utils/functions";
 
 export const academicSessionApi = apiSlice.injectEndpoints({
   overrideExisting: true,
 
   endpoints: (builder) => ({
-    getAllAcademicSession: builder.query<GetAcademicSessionResponse, void>({
-      query: () => ApiEndpoints.academicSession.getAllAcademicSessions,
+    getAllAcademicSession: builder.query<
+      GetAcademicSessionResponse,
+      { search?: string; page?: number; limit?: number } | void
+    >({
+      query: (params) =>
+        QueryHelper(
+          ApiEndpoints.academicSession.getAllAcademicSessions,
+          params || {},
+        ),
       providesTags: ["academicSession"],
     }),
 

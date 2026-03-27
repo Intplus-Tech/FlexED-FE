@@ -14,7 +14,7 @@ export interface SchoolProfile {
   contactPhone: string;
   schoolType: "Private" | "Public";
   owner: string;
-  logoUrl: string | { url: string; publicId: string } | null;
+  logoUrl: { url: string; publicId: string };
   website?: string;
   createdAt: string; // ISO date string
   updatedAt: string; // ISO date string

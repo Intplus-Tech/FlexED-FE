@@ -13,18 +13,28 @@ import {
 } from "@/redux/api/academicSession";
 import { showerror, showsuccess } from "@/utils/toast";
 import { ExportButton } from "@/components/export-button";
+import { Pagination } from "@/components/pagination";
+import { SearchInput } from "@/components/search-input";
+
+const ITEMS_PER_PAGE = 10;
 
 export default function AcademicSessionView() {
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [selectedPeriod, setSelectedPeriod] = useState<SessionData | null>(null);
+  const [selectedPeriod, setSelectedPeriod] = useState<SessionData | null>(
+    null,
+  );
   const [searchTerm, setSearchTerm] = useState("");
+  const [currentPage, setCurrentPage] = useState(1);
+
   const {
     data: academicPeriods,
     isLoading: isLoadingAcademicPeriod,
     isFetching: isFetchingAcademicPeriod,
-  } = useGetAllAcademicSessionQuery();
-
-  console.log("academic periods", academicPeriods);
+  } = useGetAllAcademicSessionQuery({
+    search: searchTerm,
+    page: currentPage,
+    limit: ITEMS_PER_PAGE,
+  });
 
   const exportData = useMemo(() => {
     return (
@@ -47,6 +57,13 @@ export default function AcademicSessionView() {
     setSelectedPeriod(null);
   };
 
+  const handleSearch = (query: string) => {
+    setSearchTerm(query);
+    setCurrentPage(1);
+  };
+
+  const totalPages = academicPeriods?.data?.meta?.totalPages || 1;
+
   return (
     <main className="min-h-screen ">
       <div className="">
@@ -65,31 +82,10 @@ export default function AcademicSessionView() {
 
         <div className="flex flex-col sm:flex-row gap-4 mb-6 items-start sm:items-center justify-between">
           <div className="flex gap-4 flex-1 w-full sm:w-auto">
-            <div className="flex-1 sm:flex-none relative">
-              <input
-                type="text"
-                placeholder="Search"
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="w-full px-4 py-2 bg-muted text-foreground placeholder:text-muted-foreground rounded-md border border-input focus:outline-none focus:ring-2 focus:ring-ring"
-              />
-              <svg
-                className="absolute right-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
-                />
-              </svg>
-            </div>
+            <SearchInput onSearch={handleSearch} placeholder="Search" />
 
             {/* Filter */}
-            <button className="px-4 py-2 bg-card text-foreground border border-input rounded-md hover:bg-muted flex items-center gap-2 whitespace-nowrap">
+            {/* <button className="px-4 py-2 bg-card text-foreground border border-input rounded-md hover:bg-muted flex items-center gap-2 whitespace-nowrap">
               <svg
                 className="w-5 h-5"
                 fill="none"
@@ -104,7 +100,7 @@ export default function AcademicSessionView() {
                 />
               </svg>
               Filter
-            </button>
+            </button> */}
           </div>
 
           <div className="flex gap-3 w-full sm:w-auto">
@@ -129,29 +125,39 @@ export default function AcademicSessionView() {
         </div>
 
         {/* Table Section */}
-        <div className="bg-card border border-border rounded-lg overflow-hidden">
-          <AcademicTable
-            periods={
-              academicPeriods ?? {
-                success: true,
-                message: "",
-                statusCode: 200,
-                data: {
-                  items: [] as SessionData[],
-                  meta: {
-                    page: 1,
-                    limit: 10,
-                    total: 0,
-                    totalPages: 0,
-                    hasNextPage: false,
-                    hasPrevPage: false,
+        <div className="space-y-6">
+          <div className="bg-card border border-border rounded-lg overflow-hidden">
+            <AcademicTable
+              periods={
+                academicPeriods ?? {
+                  success: true,
+                  message: "",
+                  statusCode: 200,
+                  data: {
+                    items: [] as SessionData[],
+                    meta: {
+                      page: 1,
+                      limit: 10,
+                      total: 0,
+                      totalPages: 0,
+                      hasNextPage: false,
+                      hasPrevPage: false,
+                    },
                   },
-                },
+                }
               }
-            }
-            isLoading={isLoadingAcademicPeriod || isFetchingAcademicPeriod}
-            onEdit={handleEdit}
-          />
+              isLoading={isLoadingAcademicPeriod || isFetchingAcademicPeriod}
+              onEdit={handleEdit}
+            />
+          </div>
+
+          {totalPages > 1 && (
+            <Pagination
+              currentPage={currentPage}
+              totalPages={totalPages}
+              onPageChange={setCurrentPage}
+            />
+          )}
         </div>
       </div>
 

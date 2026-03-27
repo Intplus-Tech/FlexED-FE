@@ -38,7 +38,7 @@ export const transactionApi = apiSlice.injectEndpoints({
 
     getPaymentCategories: builder.query<
       CreatePaymentCategoryResponse,
-      { search?: string } | void
+      { search?: string; limit?: number } | void
     >({
       query: (request) =>
         QueryHelper(ApiEndpoints.payment.getPaymentCategories, request || {}),
@@ -84,7 +84,10 @@ export const transactionApi = apiSlice.injectEndpoints({
       invalidatesTags: ["Transaction"],
     }),
 
-    collectManualPayment: builder.mutation<GetTransactionsResponse, CollectManualPaymentRequest>({
+    collectManualPayment: builder.mutation<
+      GetTransactionsResponse,
+      CollectManualPaymentRequest
+    >({
       query: (request) => ({
         url: ApiEndpoints.payment.collectManualPayment,
         method: methods.POST,
@@ -96,7 +99,7 @@ export const transactionApi = apiSlice.injectEndpoints({
 
     getPaymentList: builder.query<
       GetPaymentItemsResponse,
-      { search?: string } | void
+      { search?: string; limit?: number } | void
     >({
       query: (request) =>
         QueryHelper(ApiEndpoints.payment.getPaymentItems, request || {}),

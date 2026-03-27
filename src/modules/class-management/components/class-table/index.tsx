@@ -11,6 +11,7 @@ import { showerror, showsuccess } from "@/utils/toast";
 import { ClassItem } from "@/@types/class";
 
 import { AddClassModal } from "../add-class";
+import { Pencil, Trash2 } from "lucide-react";
 
 const ClassTable = () => {
   const [isDeleteOpen, setIsDeleteOpen] = useState(false);
@@ -120,7 +121,7 @@ const ClassTable = () => {
                       }}
                       className="text-gray-600 hover:text-gray-900 font-medium transition-colors"
                     >
-                      Edit
+                      <Pencil />
                     </button>
                     <button
                       onClick={() => {
@@ -129,7 +130,7 @@ const ClassTable = () => {
                       }}
                       className="text-gray-600 hover:text-gray-900 font-medium transition-colors"
                     >
-                      Delete
+                      <Trash2 />
                     </button>
                   </div>
                 </td>
