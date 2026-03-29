@@ -11,6 +11,8 @@ import {
   GetTransactionsResponse,
   MakePaymentRequest,
   CollectManualPaymentRequest,
+  UpdatePaymentItemRequest,
+  PaymentItem,
 } from "@/@types/transaction";
 import { methods } from "@/utils/methods";
 import { GetCollectionsTotalsResponse } from "@/@types/dashboard";
@@ -122,6 +124,35 @@ export const transactionApi = apiSlice.injectEndpoints({
         ApiEndpoints.payment.getTransactionChartData(schoolId),
       providesTags: ["Transaction"],
     }),
+    updatePaymentItem: builder.mutation<
+      { success: boolean; message: string; data: PaymentItem },
+      { paymentItemId: string; body: UpdatePaymentItemRequest }
+    >({
+      query: ({ paymentItemId, body }) => ({
+        url: ApiEndpoints.payment.updatePaymentItem(paymentItemId),
+        method: methods.PUT,
+        body,
+      }),
+      invalidatesTags: ["Transaction"],
+    }),
+    deletePaymentItem: builder.mutation<
+      { success: boolean; message: string },
+      string
+    >({
+      query: (paymentItemId) => ({
+        url: ApiEndpoints.payment.deletePaymentItem(paymentItemId),
+        method: methods.DELETE,
+      }),
+      invalidatesTags: ["Transaction"],
+    }),
+    getPaymentItem: builder.query<
+      { success: boolean; message: string; data: PaymentItem },
+      string
+    >({
+      query: (paymentItemId) =>
+        ApiEndpoints.payment.getPaymentItem(paymentItemId),
+      providesTags: ["Transaction"],
+    }),
   }),
 });
 
@@ -136,4 +167,7 @@ export const {
   useCreatePaymentItemsMutation,
   useGetClassCollectionsQuery,
   useGetTransactionChartDataQuery,
+  useUpdatePaymentItemMutation,
+  useDeletePaymentItemMutation,
+  useGetPaymentItemQuery,
 } = transactionApi;

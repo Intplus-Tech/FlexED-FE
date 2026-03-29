@@ -196,6 +196,13 @@ export interface CreatePaymentItemRequest {
   discount?: Discount;
 }
 
+export interface UpdatePaymentItemRequest {
+  name: string;
+  amount: number;
+  period: string;
+  description: string;
+}
+
 export interface Discount {
   type?: string;
   expiresAt?: string;

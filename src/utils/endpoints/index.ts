@@ -20,6 +20,14 @@ export const school = {
   updateSchool: "/schools",
 };
 
+export const schoolStaff = {
+  inviteStaff: "/schools/invite-staff",
+  acceptInvite: "/school-staff/invite/accept",
+  updateStaff: (staffId: string) => `/school-staff/${staffId}`,
+  deleteStaff: (staffId: string) => `/school-staff/${staffId}`,
+  getInviteDetails: "/school-staff/invite/details",
+};
+
 export const file = {
   uploadFile: "/files",
 };
@@ -40,6 +48,9 @@ export const payment = {
   getClassCollection: `/payments/class-collections`,
   getTransactionChartData: (schoolId: string) =>
     `/payments/school/${schoolId}/weekly-summary`,
+  updatePaymentItem: (paymentItemId: string) => `/payments/items/${paymentItemId}`,
+  deletePaymentItem: (paymentItemId: string) => `/payments/items/${paymentItemId}`,
+  getPaymentItem: (paymentItemId: string) => `/payments/items/${paymentItemId}`,
 };
 
 export const academicSession = {
@@ -86,6 +97,7 @@ export const ApiEndpoints = {
   baseUrl: process.env.NEXT_PUBLIC_API_BASE_URL!,
   auth,
   school,
+  schoolStaff,
   payment,
   student,
   sms,

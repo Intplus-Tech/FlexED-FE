@@ -27,15 +27,15 @@ const baseQueryWithAuthRedirect: BaseQueryFn<
 > = async (args, api, extraOptions) => {
   const result = await baseQuery(args, api, extraOptions);
 
-  if (
-    result.error &&
-    (result.error.status === 401 || result.error.status === 403)
-  ) {
-    if (typeof window !== "undefined") {
-      signOut();
-      window.location.href = "/auth/sign-in";
-    }
-  }
+  // if (
+  //   result.error &&
+  //   (result.error.status === 401 || result.error.status === 403)
+  // ) {
+  //   if (typeof window !== "undefined") {
+  //     signOut();
+  //     window.location.href = "/auth/sign-in";
+  //   }
+  // }
 
   return result;
 };

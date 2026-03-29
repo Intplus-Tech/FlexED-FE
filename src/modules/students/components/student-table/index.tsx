@@ -111,6 +111,7 @@ export function StudentTable({
               </tr>
             ) : (
               students?.data?.items?.map((student) => {
+                if (student.isDeleted) return;
                 return (
                   <tr
                     key={student._id}

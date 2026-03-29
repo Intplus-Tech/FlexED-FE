@@ -15,6 +15,7 @@ import { useGetAllClassesQuery } from "@/redux/api/class";
 import {
   useCreatePaymentItemsMutation,
   useGetPaymentCategoriesQuery,
+  useUpdatePaymentItemMutation,
 } from "@/redux/api/transaction";
 import { useGetAllAcademicSessionQuery } from "@/redux/api/academicSession";
 import { useState } from "react";
@@ -90,9 +91,12 @@ interface CreateFeeModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onSubmit?: (data: FeeFormValues) => void;
+  isEdit?: boolean;
+  initialData?: any;
+  paymentItemId?: string;
 }
 
-export function CreateFeeModal({ open, onOpenChange }: CreateFeeModalProps) {
+export function CreateFeeModal({ open, onOpenChange, isEdit, initialData, paymentItemId }: CreateFeeModalProps) {
   const {
     register,
     handleSubmit,
@@ -102,7 +106,7 @@ export function CreateFeeModal({ open, onOpenChange }: CreateFeeModalProps) {
     watch,
   } = useForm<FeeFormValues>({
     resolver: zodResolver(feeFormSchema),
-    defaultValues: {
+    defaultValues: initialData || {
       name: "",
       classes: [],
       amount: 0,
@@ -137,8 +141,29 @@ export function CreateFeeModal({ open, onOpenChange }: CreateFeeModalProps) {
   console.log(academicSessions, "academicSessions");
 
   const [createPayment, { isLoading }] = useCreatePaymentItemsMutation();
+  const [updatePayment, { isLoading: isUpdating }] = useUpdatePaymentItemMutation();
 
   const onFormSubmit = async (data: FeeFormValues) => {
+    if (isEdit && paymentItemId) {
+      try {
+        const res = await updatePayment({
+          paymentItemId,
+          body: {
+            name: data.name,
+            amount: data.amount,
+            period: data.period,
+            description: data.description,
+          },
+        }).unwrap();
+        showsuccess(res?.message || "Fee updated successfully!");
+        reset();
+        onOpenChange(false);
+      } catch (error: any) {
+        showerror(error?.data?.message || "Failed to update fee");
+      }
+      return;
+    }
+
     try {
       const hasDiscount = !!data.discount?.type;
       const res = await createPayment({
@@ -177,7 +202,7 @@ export function CreateFeeModal({ open, onOpenChange }: CreateFeeModalProps) {
       <DialogContent className="max-w-2xl! max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="text-xl font-semibold">
-            Create New Fee Item
+            {isEdit ? "Edit Fee Item" : "Create New Fee Item"}
           </DialogTitle>
         </DialogHeader>
 
@@ -483,7 +508,7 @@ export function CreateFeeModal({ open, onOpenChange }: CreateFeeModalProps) {
               type="submit"
               className="px-6 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-md text-sm font-medium transition-colors"
             >
-              {isLoading ? "Creating Fee" : "Create Fee"}
+              {isLoading || isUpdating ? (isEdit ? "Updating Fee" : "Creating Fee") : (isEdit ? "Update Fee" : "Create Fee")}
             </button>
             <button
               type="button"

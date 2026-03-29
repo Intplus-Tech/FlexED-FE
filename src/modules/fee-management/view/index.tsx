@@ -24,13 +24,13 @@ export default function FeeManagementView() {
     data: feeCategories,
     isLoading: isLoadingCategories,
     isFetching: isFetchingCategories,
-  } = useGetPaymentCategoriesQuery({ search: categoriesSearchQuery });
+  } = useGetPaymentCategoriesQuery({ search: categoriesSearchQuery,limit:100 });
 
   const {
     data: fees,
     isFetching,
     isLoading: isLoadingFees,
-  } = useGetPaymentListQuery({ search: feesSearchQuery });
+  } = useGetPaymentListQuery({ search: feesSearchQuery,limit:100 });
 
   const exportData = useMemo(() => {
     return (
