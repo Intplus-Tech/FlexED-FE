@@ -59,7 +59,109 @@ export interface FileUploadResponse {
     updatedAt: string;
   };
   statusCode: number;
-  meta: {
-    additionalProp1: unknown;
-  };
-}
+    meta: {
+      additionalProp1: unknown;
+    };
+  }
+
+  export interface InviteStaffRequest {
+    email: string;
+    firstName: string;
+    lastName: string;
+    phone: string;
+    address: string;
+    gender: string;
+    staffNumber: string;
+    position: string;
+  }
+  
+  export interface UpdateStaffRequest {
+    firstName?: string;
+    lastName?: string;
+    phone?: string;
+    address?: string;
+    gender?: string;
+    staffNumber?: string;
+    position?: string;
+  }
+  
+  export interface StaffResponse {
+    success: boolean;
+    message: string;
+    data: {
+      _id: string;
+      firstName: string;
+      lastName: string;
+      email: string;
+      phone: string;
+      address: string;
+      gender: string;
+      staffNumber: string;
+      position: string;
+      school: string;
+      isRegistered: boolean;
+      isDeleted: boolean;
+      deletedAt: string | null;
+      authUserId: string;
+      createdAt: string;
+      updatedAt: string;
+    };
+    statusCode: number;
+    meta: any;
+  }
+  
+  export interface AcceptInviteRequest {
+    token: string;
+    password?: string;
+  }
+  
+  export interface InviteDetailsResponse {
+    success: boolean;
+    message: string;
+    data: {
+      staff: {
+        id: string;
+        firstName: string;
+        lastName: string;
+        email: string;
+      };
+      school: SchoolProfile;
+    };
+    statusCode: number;
+    meta: {
+      page: number;
+      limit: number;
+      total: number;
+      totalPages: number;
+    };
+  }
+
+  export interface GetAllStaffResponse {
+    success: boolean;
+    message: string;
+    data: {
+      _id: string;
+      school: string;
+      isRegistered: boolean;
+      email: string;
+      address: string;
+      authUserId: string | null;
+      createdAt: string;
+      deletedAt: string | null;
+      firstName: string;
+      gender: string;
+      isDeleted: boolean;
+      lastName: string;
+      phone: string;
+      position: string;
+      staffNumber: string;
+      updatedAt: string;
+    }[];
+    meta: {
+      page: number;
+      limit: number;
+      total: number;
+      totalPages: number;
+    };
+    statusCode: number;
+  }

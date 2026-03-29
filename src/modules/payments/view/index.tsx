@@ -23,6 +23,7 @@ import { ManualPaymentModal } from "../components/ManualPaymentModal";
 import { ExportButton } from "@/components/export-button";
 import { useGetAllAcademicSessionQuery } from "@/redux/api/academicSession";
 import { useGetPaymentCategoriesQuery } from "@/redux/api/transaction";
+import { usePermission } from "@/utils/permissions";
 
 const ITEMS_PER_PAGE = 10;
 
@@ -57,11 +58,13 @@ export default function PaymentView() {
     { skip: !authstate.currentUser },
   );
 
+  const { isStaff } = usePermission();
+
   const { data: schoolMetrics } = useGetSchoolMetricsQuery(
     {
       schoolId: String(authstate.currentUser?.schoolId),
     },
-    { skip: !authstate.currentUser },
+    { skip: !authstate.currentUser || isStaff },
   );
 
   const colors = ["green", "red", "gray"] as const;
@@ -110,20 +113,22 @@ export default function PaymentView() {
       <div className="space-y-6 ">
         <h1 className="text-3xl font-bold text-gray-900">Payments</h1>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          {schoolMetric?.map((category) => {
-            return (
-              <MetricCard
-                key={category?.label}
-                title={category.label}
-                amount={formatNaira(category.totalAmount)}
-                amountColor={category.color}
-                studentCount={category.studentCount}
-                onClick={() => handleViewList(category.category)}
-              />
-            );
-          })}
-        </div>
+        {!isStaff && (
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            {schoolMetric?.map((category) => {
+              return (
+                <MetricCard
+                  key={category?.label}
+                  title={category.label}
+                  amount={formatNaira(category.totalAmount)}
+                  amountColor={category.color}
+                  studentCount={category.studentCount}
+                  onClick={() => handleViewList(category.category)}
+                />
+              );
+            })}
+          </div>
+        )}
 
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
           <div className="flex items-center gap-6">

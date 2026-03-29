@@ -15,6 +15,7 @@ import { useGetAllClassesQuery } from "@/redux/api/class";
 import { Dialog } from "@/components/ui/dialog";
 import AddBulkStudentModal from "../components/add-bulk-student";
 import { ExportButton } from "@/components/export-button";
+import { usePermission } from "@/utils/permissions";
 
 export default function StudentView() {
   const [searchQuery, setSearchQuery] = useState("");
@@ -42,6 +43,8 @@ export default function StudentView() {
     isLoading: isLoadingClasses,
   } = useGetAllClassesQuery();
 
+  const { isStaff } = usePermission();
+
   const {
     data: schoolMetrics,
     isFetching: isFetchingMetrics,
@@ -50,7 +53,7 @@ export default function StudentView() {
     {
       schoolId: String(currentUser?.schoolId),
     },
-    { skip: !currentUser },
+    { skip: !currentUser || isStaff },
   );
 
   const colors = ["green", "red", "gray"] as const;
@@ -91,16 +94,18 @@ export default function StudentView() {
   return (
     <div className=" space-y-6">
       <h1 className="text-3xl font-bold text-gray-900">Students</h1>
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        {formattedSchoolMetrics?.map((metric, index) => (
-          <StudentMetricCard
-            key={index}
-            title={metric.label}
-            value={String(metric.studentCount)}
-            valueColor={metric.color}
-          />
-        ))}
-      </div>
+      {!isStaff && (
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          {formattedSchoolMetrics?.map((metric, index) => (
+            <StudentMetricCard
+              key={index}
+              title={metric.label}
+              value={String(metric.studentCount)}
+              valueColor={metric.color}
+            />
+          ))}
+        </div>
+      )}
       <div className="flex flex-col md:flex-row gap-4 items-start md:items-center justify-between">
         <div className="relative">
           <button

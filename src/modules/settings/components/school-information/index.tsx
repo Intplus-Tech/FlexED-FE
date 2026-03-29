@@ -14,10 +14,13 @@ import {
   useUpdateSchoolMutation,
 } from "@/redux/api/school";
 import { useUploadFileMutation } from "@/redux/api/file";
-import { Loader } from "lucide-react";
 import { UpdateSchoolRequest } from "@/@types/school";
+import { usePermission } from "@/utils/permissions";
+import { cn } from "@/lib/utils";
+import { Loader } from "lucide-react";
 
 export function SchoolInformationTab() {
+  const { isStaff } = usePermission();
   const { data: SchoolProfile, isFetching: isFetchingSchoolProfile } =
     useGetShoolProfileQuery();
   const [updateSchool, { isLoading: isUpdatingSchool }] =
@@ -108,6 +111,7 @@ export function SchoolInformationTab() {
   };
 
   const handleUploadClick = () => {
+    if (isStaff) return;
     fileInputRef.current?.click();
   };
 
@@ -147,7 +151,10 @@ export function SchoolInformationTab() {
         </label>
         <div
           onClick={handleUploadClick}
-          className="w-28 h-28 border-2 border-dashed border-gray-300 rounded-lg flex flex-col items-center justify-center cursor-pointer hover:border-gray-400 transition-colors overflow-hidden bg-gray-50 hover:bg-gray-100"
+          className={cn(
+            "w-28 h-28 border-2 border-dashed border-gray-300 rounded-lg flex flex-col items-center justify-center overflow-hidden bg-gray-50 transition-colors",
+            !isStaff && "cursor-pointer hover:border-gray-400 hover:bg-gray-100"
+          )}
         >
           {isUploadingFile ? (
             <div className="flex flex-col items-center">
@@ -324,23 +331,25 @@ export function SchoolInformationTab() {
           </div>
         </div>
 
-        <div className="flex items-center gap-4">
-          <button
-            type="submit"
-            disabled={isUpdatingSchool || isUploadingFile}
-            className="px-6 py-2.5 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
-          >
-            {isUpdatingSchool && <Loader className="w-4 h-4 animate-spin" />}
-            {isUpdatingSchool ? "Updating..." : "Update Profile"}
-          </button>
-          <button
-            type="button"
-            onClick={() => reset()}
-            className="px-6 py-2.5 text-gray-700 hover:text-gray-900 transition-colors"
-          >
-            Reset
-          </button>
-        </div>
+        {!isStaff && (
+          <div className="flex items-center gap-4">
+            <button
+              type="submit"
+              disabled={isUpdatingSchool || isUploadingFile}
+              className="px-6 py-2.5 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+            >
+              {isUpdatingSchool && <Loader className="w-4 h-4 animate-spin" />}
+              {isUpdatingSchool ? "Updating..." : "Update Profile"}
+            </button>
+            <button
+              type="button"
+              onClick={() => reset()}
+              className="px-6 py-2.5 text-gray-700 hover:text-gray-900 transition-colors"
+            >
+              Reset
+            </button>
+          </div>
+        )}
       </form>
     </div>
   );

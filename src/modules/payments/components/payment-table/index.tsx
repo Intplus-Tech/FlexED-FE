@@ -13,7 +13,17 @@ interface PaymentTableProps {
 }
 
 export function PaymentTable({
-  data = { items: [], meta: { page: 1, limit: 10, total: 0, totalPages: 0, hasNextPage: false, hasPrevPage: false } },
+  data = {
+    items: [],
+    meta: {
+      page: 1,
+      limit: 10,
+      total: 0,
+      totalPages: 0,
+      hasNextPage: false,
+      hasPrevPage: false,
+    },
+  },
   isLoading = false,
   classItems = [],
 }: PaymentTableProps) {
@@ -111,7 +121,9 @@ export function PaymentTable({
                     {payment?.groupReference}
                   </td>
                   <td className="px-6 py-4 text-sm text-gray-900">
-                    {payment?.student?.firstName + " " + payment?.student?.lastName}
+                    {payment?.student?.firstName +
+                      " " +
+                      payment?.student?.lastName}
                   </td>
                   <td className="px-6 py-4 text-sm text-gray-600">
                     {getClassById(payment?.student?.class)}
@@ -124,10 +136,13 @@ export function PaymentTable({
                   </td>
                   <td className="px-6 py-4">
                     <span
-                      className={`inline-flex px-3 py-1 text-sm font-medium rounded-full ${payment.status === "PAID"
-                        ? "text-green-700 bg-green-50"
-                        : "text-red-700 bg-red-50"
-                        }`}
+                      className={`inline-flex px-3 py-1 text-sm font-medium rounded-full ${
+                        payment.status === "PAID"
+                          ? "text-green-700 bg-green-50"
+                          : payment.status === "PENDING"
+                            ? "text-yellow-700 bg-yellow-50"
+                            : "text-red-700 bg-red-50"
+                      }`}
                     >
                       {payment.status}
                     </span>

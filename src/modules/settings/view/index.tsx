@@ -7,6 +7,7 @@ import { TeamSettingsTab } from "../components/team-settings";
 import { SecuritySettingsTab } from "../components/security-settings";
 import { useSelector } from "react-redux";
 import { RootState } from "@/redux/store";
+import { usePermission } from "@/utils/permissions";
 
 type TabType = "school" | "payment" | "team" | "security";
 
@@ -32,9 +33,17 @@ const tabs: Tab[] = [
 ];
 
 export default function SeettingsView() {
+  const { isStaff } = usePermission();
   const [activeTab, setActiveTab] = useState<TabType>("school");
-  const authState = useSelector((state: RootState) => state.authState);
-  const ActiveComponent = tabs.find((tab) => tab.id === activeTab)?.component;
+  
+  const filteredTabs = tabs.filter((tab) => {
+    if (isStaff) {
+      return tab.id === "school" || tab.id === "security";
+    }
+    return true;
+  });
+
+  const ActiveComponent = filteredTabs.find((tab) => tab.id === activeTab)?.component;
 
   return (
     <div className="space-y-8">
@@ -42,7 +51,7 @@ export default function SeettingsView() {
 
       <div className="border-b border-gray-200">
         <nav className="flex gap-8">
-          {tabs.map((tab) => (
+          {filteredTabs.map((tab) => (
             <button
               key={tab.id}
               onClick={() => setActiveTab(tab.id)}
