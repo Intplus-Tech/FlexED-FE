@@ -14,9 +14,11 @@ export type SchoolInfoFormData = z.infer<typeof schoolInfoSchema>;
 
 export const paymentSettingsSchema = z.object({
   bankName: z.string().min(2, "Bank name is required"),
+  bankCode: z.string().min(1, "Please select a bank"),
   accountNumber: z
     .string()
-    .min(10, "Account number must be at least 10 digits"),
+    .min(10, "Account number must be at least 10 digits")
+    .max(10, "Account number must 10 digits"),
   accountName: z.string().min(2, "Account name is required"),
 });
 

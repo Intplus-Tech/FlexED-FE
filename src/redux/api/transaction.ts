@@ -13,6 +13,11 @@ import {
   CollectManualPaymentRequest,
   UpdatePaymentItemRequest,
   PaymentItem,
+  GetBanksResponse,
+  ValidateAccountRequest,
+  ValidateAccountResponse,
+  CreateSettlementAccountRequest,
+  CreateSettlementAccountResponse,
 } from "@/@types/transaction";
 import { methods } from "@/utils/methods";
 import { GetCollectionsTotalsResponse } from "@/@types/dashboard";
@@ -153,6 +158,30 @@ export const transactionApi = apiSlice.injectEndpoints({
         ApiEndpoints.payment.getPaymentItem(paymentItemId),
       providesTags: ["Transaction"],
     }),
+    getBanks: builder.query<GetBanksResponse, void>({
+      query: () => ApiEndpoints.payment.getBanks,
+    }),
+    validateAccount: builder.mutation<
+      ValidateAccountResponse,
+      ValidateAccountRequest
+    >({
+      query: (request) => ({
+        url: ApiEndpoints.payment.validateAccount,
+        method: methods.POST,
+        body: request,
+      }),
+    }),
+    createSettlementAccount: builder.mutation<
+      CreateSettlementAccountResponse,
+      CreateSettlementAccountRequest
+    >({
+      query: (request) => ({
+        url: ApiEndpoints.payment.createSettlementAccount,
+        method: methods.POST,
+        body: request,
+      }),
+      invalidatesTags: ["Transaction"],
+    }),
   }),
 });
 
@@ -170,4 +199,7 @@ export const {
   useUpdatePaymentItemMutation,
   useDeletePaymentItemMutation,
   useGetPaymentItemQuery,
+  useGetBanksQuery,
+  useValidateAccountMutation,
+  useCreateSettlementAccountMutation,
 } = transactionApi;

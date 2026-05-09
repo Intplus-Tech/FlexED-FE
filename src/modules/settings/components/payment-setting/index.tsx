@@ -9,7 +9,16 @@ import {
   paymentSettingsSchema,
   type PaymentSettingsFormData,
 } from "@/lib/validations";
-import { Trash2, X, Loader2 } from "lucide-react";
+import { Trash2, X, Loader2, CheckCircle2 } from "lucide-react";
+import {
+  useGetBanksQuery,
+  useValidateAccountMutation,
+  useCreateSettlementAccountMutation,
+} from "@/redux/api/transaction";
+import { useGetShoolProfileQuery } from "@/redux/api/school";
+import { useEffect } from "react";
+import { toast } from "sonner";
+import { useDebounce } from "@/hooks/use-debounce";
 
 interface VirtualAccountDetails {
   bankName: string;
@@ -23,11 +32,54 @@ export function PaymentSettingsTab() {
     register,
     handleSubmit,
     reset,
+    setValue,
+    watch,
     formState: { errors, isSubmitting, isValid },
+    control,
   } = useForm<PaymentSettingsFormData>({
     resolver: zodResolver(paymentSettingsSchema),
-    mode: "onChange",
   });
+
+  const { data: schoolProfile } = useGetShoolProfileQuery();
+  const { data: banksData, isLoading: isLoadingBanks } = useGetBanksQuery();
+  const [validateAccount, { isLoading: isValidating }] =
+    useValidateAccountMutation();
+  const [createSettlementAccount] = useCreateSettlementAccountMutation();
+
+  const watchBankCode = watch("bankCode");
+  const watchAccountNumber = watch("accountNumber");
+  const debouncedAccountNumber = useDebounce(watchAccountNumber, 3000);
+
+  useEffect(() => {
+    const validate = async () => {
+      if (watchBankCode && debouncedAccountNumber?.length === 10) {
+        try {
+          const res = await validateAccount({
+            bankCode: watchBankCode,
+            accountNumber: debouncedAccountNumber,
+          }).unwrap();
+          if (res.success) {
+            setValue("accountName", res.data.account_name);
+            const selectedBank = banksData?.data.find(
+              (b) => b.code === watchBankCode,
+            );
+            if (selectedBank) {
+              setValue("bankName", selectedBank.name);
+            }
+          }
+        } catch (error) {
+          console.error("Account validation failed", error);
+        }
+      }
+    };
+    validate();
+  }, [
+    watchBankCode,
+    debouncedAccountNumber,
+    validateAccount,
+    setValue,
+    banksData,
+  ]);
 
   const [cacFile, setCacFile] = useState<File | null>(null);
   const [memarrtFile, setMemarrtFile] = useState<File | null>(null);
@@ -39,7 +91,25 @@ export function PaymentSettingsTab() {
   const memarrtInputRef = useRef<HTMLInputElement>(null);
 
   const onSettlementSubmit = async (data: PaymentSettingsFormData) => {
-    await new Promise((resolve) => setTimeout(resolve, 1000));
+    if (!schoolProfile?.data?._id) {
+      toast.error("School information not found");
+      return;
+    }
+
+    try {
+      const res = await createSettlementAccount({
+        school: schoolProfile.data._id,
+        bankName: data.bankName,
+        accountName: data.accountName,
+        accountNumber: data.accountNumber,
+        isPrimary: true,
+      }).unwrap();
+      toast.success(res.message);
+      reset();
+    } catch (error: any) {
+      toast.error(error.message);
+      console.error(error);
+    }
   };
 
   const handleRemoveFile = (fileType: "cac" | "memarrt") => {
@@ -107,37 +177,51 @@ export function PaymentSettingsTab() {
               <div className="space-y-4">
                 <div>
                   <label
-                    htmlFor="bankName"
+                    htmlFor="bankCode"
                     className="block text-sm font-medium text-gray-700 mb-2"
                   >
-                    BVN
+                    Bank Name
                   </label>
-                  <input
-                    {...register("bankName")}
-                    type="text"
-                    id="bankName"
-                    className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
-                  />
-                  {errors.bankName && (
+                  <select
+                    {...register("bankCode")}
+                    id="bankCode"
+                    className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent bg-white"
+                  >
+                    <option value="">Select a bank</option>
+                    {banksData?.data.map((bank) => (
+                      <option key={bank.code} value={bank.code}>
+                        {bank.name}
+                      </option>
+                    ))}
+                  </select>
+                  {errors.bankCode && (
                     <p className="mt-1 text-sm text-red-600">
-                      {errors.bankName.message}
+                      {errors.bankCode.message}
                     </p>
                   )}
                 </div>
 
-                <div>
+                <div className="relative">
                   <label
                     htmlFor="accountNumber"
                     className="block text-sm font-medium text-gray-700 mb-2"
                   >
-                    Bank Name
+                    Account Number
                   </label>
                   <input
                     {...register("accountNumber")}
                     type="text"
                     id="accountNumber"
+                    inputMode="numeric"
+                    pattern="[0-9]*"
+                    maxLength={10}
                     className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
                   />
+                  {isValidating && (
+                    <div className="absolute right-3 top-10">
+                      <Loader2 className="w-5 h-5 text-purple-600 animate-spin" />
+                    </div>
+                  )}
                   {errors.accountNumber && (
                     <p className="mt-1 text-sm text-red-600">
                       {errors.accountNumber.message}
@@ -150,14 +234,24 @@ export function PaymentSettingsTab() {
                     htmlFor="accountName"
                     className="block text-sm font-medium text-gray-700 mb-2"
                   >
-                    Account Number
+                    Account Name
                   </label>
-                  <input
-                    {...register("accountName")}
-                    type="text"
-                    id="accountName"
-                    className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
-                  />
+                  <div className="relative">
+                    <input
+                      {...register("accountName")}
+                      type="text"
+                      id="accountName"
+                      readOnly
+                      className="w-full px-4 py-2.5 border border-gray-300 rounded-lg bg-gray-50 focus:outline-none cursor-not-allowed"
+                    />
+                    {watch("accountName") &&
+                      !errors.accountName &&
+                      !isValidating && (
+                        <div className="absolute right-3 top-3">
+                          <CheckCircle2 className="w-5 h-5 text-green-500" />
+                        </div>
+                      )}
+                  </div>
                   {errors.accountName && (
                     <p className="mt-1 text-sm text-red-600">
                       {errors.accountName.message}
@@ -196,7 +290,7 @@ export function PaymentSettingsTab() {
                     Account Number
                   </label>
                   <input
-                    {...register("accountNumber")}
+                    // {...register("accountNumber")}
                     type="text"
                     id="ptaAccountNumber"
                     className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
