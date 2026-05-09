@@ -153,6 +153,15 @@ export function CreateFeeModal({ open, onOpenChange, isEdit, initialData, paymen
             amount: data.amount,
             period: data.period,
             description: data.description,
+            classes: data.classes,
+            applicableTo: data.applicableTo,
+            dueDate: new Date(data.dueDate).toISOString(),
+            ...(data.discount?.type && {
+              discount: {
+                ...data.discount,
+                value: Number(data.discount?.value),
+              },
+            }),
           },
         }).unwrap();
         showsuccess(res?.message || "Fee updated successfully!");

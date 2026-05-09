@@ -26,9 +26,12 @@ const signUpSchema = z.object({
   contactPhone: z.string().regex(/^\d{11}$/, "Phone number must be 11 digits"),
   contactEmail: z.string().email("Invalid email address"),
   password: z.string().min(8, "Password must be at least 8 characters"),
-  // agreeToTerms: z.boolean().refine((val) => val === true, {
-  //   message: "You must agree to the terms and conditions",
-  // }),
+  agreeToTerms: z.boolean().refine((val) => val === true, {
+    message: "You must agree to the terms and conditions",
+  }),
+  agreeToPrivacy: z.boolean().refine((val) => val === true, {
+    message: "You must agree to the privacy policy",
+  }),
 });
 
 type SignUpFormData = z.infer<typeof signUpSchema>;
@@ -40,10 +43,18 @@ export default function SignupView() {
   const {
     register,
     handleSubmit,
+    watch,
     formState: { errors },
   } = useForm<SignUpFormData>({
     resolver: zodResolver(signUpSchema),
+    defaultValues: {
+      agreeToTerms: false,
+      agreeToPrivacy: false,
+    },
   });
+
+  const agreeToTerms = watch("agreeToTerms");
+  const agreeToPrivacy = watch("agreeToPrivacy");
 
   const onSubmit = async (data: SignUpFormData) => {
     try {
@@ -288,31 +299,48 @@ export default function SignupView() {
           )}
         </div>
 
-        {/* <div className="flex items-start gap-2">
-          <input
-            {...register("agreeToTerms")}
-            id="agreeToTerms"
-            type="checkbox"
-            className="mt-1 w-4 h-4 border-gray-300 rounded accent-violet-500 text-violet-600 focus:ring-violet-500"
-          />
-          <label htmlFor="agreeToTerms" className="text-sm text-gray-600">
-            I agree to platforms{" "}
-            <Link href="#" className="text-violet-600 hover:text-violet-700">
-              Terms of service
-            </Link>{" "}
-            and{" "}
-            <Link href="#" className="text-violet-600 hover:text-violet-700">
-              Privacy Policy
-            </Link>
-          </label>
+        <div className="space-y-3">
+          <div className="flex items-start gap-2">
+            <input
+              {...register("agreeToTerms")}
+              id="agreeToTerms"
+              type="checkbox"
+              className="mt-1 w-4 h-4 border-gray-300 rounded accent-violet-500 text-violet-600 focus:ring-violet-500 cursor-pointer"
+            />
+            <label htmlFor="agreeToTerms" className="text-sm text-gray-600 cursor-pointer">
+              I agree to platforms{" "}
+              <Link href="#" className="text-violet-600 hover:text-violet-700">
+                Terms of service
+              </Link>
+            </label>
+          </div>
+          {errors.agreeToTerms && (
+            <p className="text-sm text-red-600">{errors.agreeToTerms.message}</p>
+          )}
+
+          <div className="flex items-start gap-2">
+            <input
+              {...register("agreeToPrivacy")}
+              id="agreeToPrivacy"
+              type="checkbox"
+              className="mt-1 w-4 h-4 border-gray-300 rounded accent-violet-500 text-violet-600 focus:ring-violet-500 cursor-pointer"
+            />
+            <label htmlFor="agreeToPrivacy" className="text-sm text-gray-600 cursor-pointer">
+              I agree to platforms{" "}
+              <Link href="#" className="text-violet-600 hover:text-violet-700">
+                Privacy Policy
+              </Link>
+            </label>
+          </div>
+          {errors.agreeToPrivacy && (
+            <p className="text-sm text-red-600">{errors.agreeToPrivacy.message}</p>
+          )}
         </div>
-        {errors.agreeToTerms && (
-          <p className="text-sm text-red-600">{errors.agreeToTerms.message}</p>
-        )} */}
 
         {/* Submit Button */}
         <button
           type="submit"
+          disabled={isLoading || !agreeToTerms || !agreeToPrivacy}
           className="w-full bg-violet-600 hover:bg-violet-700 text-white font-medium py-3 rounded-lg active:scale-95  transition-all disabled:opacity-70 disabled:cursor-not-allowed"
         >
           {isLoading ? <Loader className="mx-auto animate-spin" /> : "Register"}

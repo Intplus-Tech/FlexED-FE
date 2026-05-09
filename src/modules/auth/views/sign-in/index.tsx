@@ -55,7 +55,7 @@ export default function LoginView() {
           setAuth({
             accessToken: Data.accessToken,
             currentUser: Data.user,
-          })
+          }),
         );
         router.push("/dashboard");
       } else showerror(res?.error ?? "Something went wrong");

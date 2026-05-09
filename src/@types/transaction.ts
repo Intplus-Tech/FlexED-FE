@@ -201,6 +201,10 @@ export interface UpdatePaymentItemRequest {
   amount: number;
   period: string;
   description: string;
+  classes: string[];
+  applicableTo: string;
+  dueDate: string;
+  discount?: Discount | null;
 }
 
 export interface Discount {
@@ -310,4 +314,55 @@ export interface ChartData {
   day: string;
   fullPayment: number;
   partPayment: number;
+}
+
+export interface Bank {
+  code: string;
+  name: string;
+}
+
+export interface GetBanksResponse {
+  success: boolean;
+  message: string;
+  data: Bank[];
+  statusCode: number;
+}
+
+export interface ValidateAccountRequest {
+  bankCode: string;
+  accountNumber: string;
+}
+
+export interface ValidateAccountResponse {
+  success: boolean;
+  message: string;
+  data: {
+    account_number: string;
+    account_name: string;
+  };
+  statusCode: number;
+}
+
+export interface CreateSettlementAccountRequest {
+  school: string;
+  bankName: string;
+  accountName: string;
+  accountNumber: string;
+  isPrimary: boolean;
+}
+
+export interface CreateSettlementAccountResponse {
+  success: boolean;
+  message: string;
+  data: {
+    _id: string;
+    school: string;
+    bankName: string;
+    accountName: string;
+    accountNumber: string;
+    isPrimary: boolean;
+    createdAt: string;
+    updatedAt: string;
+  };
+  statusCode: number;
 }

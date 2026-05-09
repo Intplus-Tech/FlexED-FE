@@ -51,6 +51,9 @@ export const payment = {
   updatePaymentItem: (paymentItemId: string) => `/payments/items/${paymentItemId}`,
   deletePaymentItem: (paymentItemId: string) => `/payments/items/${paymentItemId}`,
   getPaymentItem: (paymentItemId: string) => `/payments/items/${paymentItemId}`,
+  getBanks: "/payments/banks",
+  validateAccount: "/payments/validate-account",
+  createSettlementAccount: "/settlement-accounts",
 };
 
 export const academicSession = {
