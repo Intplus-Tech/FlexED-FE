@@ -15,15 +15,32 @@ import { Loader } from "lucide-react";
 import { SessionData } from "@/@types/academic-session";
 import { useEffect } from "react";
 
-const periodFormSchema = z.object({
-  name: z
-    .string()
-    .min(1, "Period name is required")
-    .min(3, "Period name must be at least 3 characters"),
-  startDate: z.string().min(1, "Start date is required"),
-  endDate: z.string().min(1, "End date is required"),
-  isActive: z.boolean().default(false),
-});
+const periodFormSchema = z
+  .object({
+    name: z
+      .string()
+      .min(1, "Period name is required")
+      .min(3, "Period name must be at least 3 characters"),
+    startDate: z
+      .string()
+      .min(1, "Start date is required")
+      .refine((date) => {
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+        return new Date(date) >= today;
+      }, "Start date cannot be in the past"),
+    endDate: z.string().min(1, "End date is required"),
+    isActive: z.boolean().default(false),
+  })
+  .refine(
+    (data) => {
+      return new Date(data.endDate) > new Date(data.startDate);
+    },
+    {
+      message: "End date must be after start date",
+      path: ["endDate"],
+    },
+  );
 
 type PeriodFormData = z.infer<typeof periodFormSchema>;
 

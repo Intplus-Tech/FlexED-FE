@@ -32,7 +32,14 @@ const feeFormSchema = z.object({
   academicPeriod: z.string().min(1, "Academic period is required"),
   period: z.string().min(1, "Period is required"),
   description: z.string().min(1, "Description is required"),
-  dueDate: z.string().min(1, "Due date is required"),
+  dueDate: z
+    .string()
+    .min(1, "Due date is required")
+    .refine((date) => {
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      return new Date(date) >= today;
+    }, "Due date cannot be in the past"),
 
   discount: z
     .object({
@@ -41,6 +48,20 @@ const feeFormSchema = z.object({
       type: z.string().optional(),
     })
     .optional()
+    .refine(
+      (data) => {
+        if (data?.expiresAt) {
+          const today = new Date();
+          today.setHours(0, 0, 0, 0);
+          return new Date(data.expiresAt) >= today;
+        }
+        return true;
+      },
+      {
+        message: "Expiry date cannot be in the past",
+        path: ["expiresAt"],
+      },
+    )
     .superRefine((data, ctx) => {
       if (data?.type && data.type !== "") {
         const value = Number(data.value);
@@ -96,7 +117,13 @@ interface CreateFeeModalProps {
   paymentItemId?: string;
 }
 
-export function CreateFeeModal({ open, onOpenChange, isEdit, initialData, paymentItemId }: CreateFeeModalProps) {
+export function CreateFeeModal({
+  open,
+  onOpenChange,
+  isEdit,
+  initialData,
+  paymentItemId,
+}: CreateFeeModalProps) {
   const {
     register,
     handleSubmit,
@@ -115,7 +142,6 @@ export function CreateFeeModal({ open, onOpenChange, isEdit, initialData, paymen
     },
   });
 
-  console.log(errors, "errors");
   const [isOpen, setIsOpen] = useState(false);
   const selectedClasses = watch("classes") || [];
   const discountType = watch("discount.type");
@@ -141,7 +167,8 @@ export function CreateFeeModal({ open, onOpenChange, isEdit, initialData, paymen
   console.log(academicSessions, "academicSessions");
 
   const [createPayment, { isLoading }] = useCreatePaymentItemsMutation();
-  const [updatePayment, { isLoading: isUpdating }] = useUpdatePaymentItemMutation();
+  const [updatePayment, { isLoading: isUpdating }] =
+    useUpdatePaymentItemMutation();
 
   const onFormSubmit = async (data: FeeFormValues) => {
     if (isEdit && paymentItemId) {
@@ -224,7 +251,7 @@ export function CreateFeeModal({ open, onOpenChange, isEdit, initialData, paymen
               type="text"
               className={cn(
                 "w-full h-10 px-3 rounded-md text-sm border border-gray-200 focus:outline-none",
-                errors.name && "border-destructive"
+                errors.name && "border-destructive",
               )}
             />
             {errors.name && (
@@ -245,15 +272,17 @@ export function CreateFeeModal({ open, onOpenChange, isEdit, initialData, paymen
                     {...register("academicPeriod")}
                     className={cn(
                       "w-full h-10 px-3 pr-10 appearance-none rounded-md text-sm border border-gray-200 focus:outline-none",
-                      errors.academicPeriod && "border-destructive"
+                      errors.academicPeriod && "border-destructive",
                     )}
                   >
                     <option value=""></option>
-                    {academicSessions?.data?.items?.map((session) => (
-                      <option key={session?.createdAt} value={session?._id}>
-                        {session?.name}
-                      </option>
-                    ))}
+                    {academicSessions?.data?.items
+                      ?.filter((session) => session?.isActive)
+                      ?.map((session) => (
+                        <option key={session?.createdAt} value={session?._id}>
+                          {session?.name}
+                        </option>
+                      ))}
                   </select>
                   <ChevronDownIcon className="absolute right-3 top-1/2 -translate-y-1/2 size-4 text-muted-foreground pointer-events-none" />
                 </div>
@@ -273,7 +302,7 @@ export function CreateFeeModal({ open, onOpenChange, isEdit, initialData, paymen
               {...register("period")}
               className={cn(
                 "w-full h-10 px-3 pr-10 appearance-none  text-sm rounded-md border border-gray-200 focus:outline-none",
-                errors.period && "border-destructive"
+                errors.period && "border-destructive",
               )}
             >
               {FEE_TYPE_OPTIONS.map((option) => (
@@ -298,7 +327,7 @@ export function CreateFeeModal({ open, onOpenChange, isEdit, initialData, paymen
                     onClick={() => setIsOpen(!isOpen)}
                     className={cn(
                       "w-full h-10 px-3 pr-10 flex items-center justify-between rounded-md border border-gray-200 bg-background text-sm ",
-                      errors.classes && "border-destructive"
+                      errors.classes && "border-destructive",
                     )}
                   >
                     <span className="truncate text-left">
@@ -309,7 +338,7 @@ export function CreateFeeModal({ open, onOpenChange, isEdit, initialData, paymen
                     <ChevronDownIcon
                       className={cn(
                         "size-4 text-muted-foreground transition-transform",
-                        isOpen && "rotate-180"
+                        isOpen && "rotate-180",
                       )}
                     />
                   </button>
@@ -366,7 +395,7 @@ export function CreateFeeModal({ open, onOpenChange, isEdit, initialData, paymen
               type="number"
               className={cn(
                 "w-full h-10 px-3 rounded-md border border-gray-200 bg-background text-sm ",
-                errors.amount && "border-destructive"
+                errors.amount && "border-destructive",
               )}
             />
             {errors.amount && (
@@ -384,7 +413,7 @@ export function CreateFeeModal({ open, onOpenChange, isEdit, initialData, paymen
                 {...register("applicableTo")}
                 className={cn(
                   "w-full h-10 px-3 pr-10 appearance-none rounded-md border border-gray-200 bg-background text-sm ",
-                  errors.applicableTo && "border-destructive"
+                  errors.applicableTo && "border-destructive",
                 )}
               >
                 <option value=""></option>
@@ -416,7 +445,7 @@ export function CreateFeeModal({ open, onOpenChange, isEdit, initialData, paymen
                     {...register("category")}
                     className={cn(
                       "w-full h-10 px-3 pr-10 appearance-none rounded-md border border-gray-200 bg-background text-sm ",
-                      errors.category && "border-destructive"
+                      errors.category && "border-destructive",
                     )}
                   >
                     <option value=""></option>
@@ -437,13 +466,21 @@ export function CreateFeeModal({ open, onOpenChange, isEdit, initialData, paymen
             )}
           </div>
 
-          <div className="flex flex-col space-y-2 ">
+          <div className="flex flex-col space-y-2">
             <label htmlFor="">Due Date </label>
             <input
               type="date"
               {...register("dueDate")}
-              className="w-fit h-10 px-4 appearance-none  rounded-md border border-gray-200 bg-background text-sm "
+              className={cn(
+                "w-fit h-10 px-4 appearance-none rounded-md border border-gray-200 bg-background text-sm",
+                errors.dueDate && "border-destructive",
+              )}
             />
+            {errors.dueDate && (
+              <p className="text-sm text-destructive">
+                {errors.dueDate.message}
+              </p>
+            )}
           </div>
 
           <div className="flex flex-col space-y-2">
@@ -452,7 +489,7 @@ export function CreateFeeModal({ open, onOpenChange, isEdit, initialData, paymen
               {...register("description")}
               rows={7}
               className={cn(
-                "w-full min-h-20 px-3 rounded-md border border-gray-200 bg-background text-sm "
+                "w-full min-h-20 px-3 rounded-md border border-gray-200 bg-background text-sm ",
               )}
             />
             {errors.description && (
@@ -504,8 +541,16 @@ export function CreateFeeModal({ open, onOpenChange, isEdit, initialData, paymen
                   <input
                     type="date"
                     {...register("discount.expiresAt")}
-                    className="w-fit h-10 px-4 appearance-none  rounded-md border border-gray-200 bg-background text-sm "
+                    className={cn(
+                      "w-fit h-10 px-4 appearance-none rounded-md border border-gray-200 bg-background text-sm",
+                      errors.discount?.expiresAt && "border-destructive",
+                    )}
                   />
+                  {errors.discount?.expiresAt && (
+                    <p className="text-sm text-destructive">
+                      {String(errors.discount.expiresAt.message)}
+                    </p>
+                  )}
                 </div>
               </>
             )}
@@ -517,7 +562,13 @@ export function CreateFeeModal({ open, onOpenChange, isEdit, initialData, paymen
               type="submit"
               className="px-6 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-md text-sm font-medium transition-colors"
             >
-              {isLoading || isUpdating ? (isEdit ? "Updating Fee" : "Creating Fee") : (isEdit ? "Update Fee" : "Create Fee")}
+              {isLoading || isUpdating
+                ? isEdit
+                  ? "Updating Fee"
+                  : "Creating Fee"
+                : isEdit
+                  ? "Update Fee"
+                  : "Create Fee"}
             </button>
             <button
               type="button"

@@ -254,10 +254,23 @@ export function ManualPaymentModal({
                           `payments.${index}.dateOfPayment` as const,
                           {
                             required: "Date is required",
+                            validate: (date) => {
+                              const today = new Date();
+                              today.setHours(0, 0, 0, 0);
+                              return (
+                                new Date(date) >= today ||
+                                "Date cannot be in the past"
+                              );
+                            },
                           },
                         )}
                         className="w-full p-3 bg-gray-50/50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-purple-500/20 focus:border-purple-500 outline-none transition-all"
                       />
+                      {errors.payments?.[index]?.dateOfPayment && (
+                        <p className="text-red-500 text-xs mt-1 ml-1">
+                          {errors.payments[index].dateOfPayment?.message}
+                        </p>
+                      )}
                     </div>
                   </div>
                 </div>
