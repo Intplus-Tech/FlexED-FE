@@ -140,7 +140,7 @@ export function PaymentTable({
                         payment.status === "PAID"
                           ? "text-green-700 bg-green-50"
                           : payment.status === "PENDING"
-                            ? "text-yellow-700 bg-yellow-50"
+                            ? "text-yellow-600 bg-yellow-50"
                             : "text-red-700 bg-red-50"
                       }`}
                     >

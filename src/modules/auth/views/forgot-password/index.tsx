@@ -77,7 +77,7 @@ export default function ForgotPasswordView() {
           className="w-full bg-violet-600 hover:bg-violet-700 text-white font-medium py-3 active:scale-95  rounded-lg transition-colors"
         >
           {isLoading ? (
-            <Loader className="mx-auto animaate-spin" />
+            <Loader className="mx-auto animate-spin" />
           ) : (
             "Reset Password"
           )}

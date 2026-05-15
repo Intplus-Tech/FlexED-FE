@@ -1,6 +1,6 @@
 "use client";
 
-import { useForm, useFieldArray } from "react-hook-form";
+import { useForm } from "react-hook-form";
 import {
   Dialog,
   DialogContent,
@@ -8,15 +8,27 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { useGetAllStudentQuery } from "@/redux/api/student";
+import { useGetAllClassesQuery } from "@/redux/api/class";
 import {
-  useGetPaymentListQuery,
-  useCollectManualPaymentMutation,
+  useGetStudentFeeProfileQuery,
+  useAllocateManualPaymentMutation,
 } from "@/redux/api/transaction";
 import { useSelector } from "react-redux";
 import { RootState } from "@/redux/store";
-import { Plus, Trash2, Loader2 } from "lucide-react";
+import {
+  Loader2,
+  Search,
+  X,
+  Calendar,
+  CheckCircle2,
+  AlertCircle,
+  ChevronDown,
+} from "lucide-react";
 import { showsuccess, showerror } from "@/utils/toast";
-import { CollectManualPaymentRequest } from "@/@types/transaction";
+import { ManualAllocationRequest } from "@/@types/transaction";
+import { useMemo, useState, useRef, useEffect } from "react";
+import { cn } from "@/lib/utils";
+import { formatNaira } from "@/utils/functions";
 
 interface ManualPaymentModalProps {
   isOpen: boolean;
@@ -33,51 +45,123 @@ export function ManualPaymentModal({
   const { data: studentsData, isLoading: isLoadingStudents } =
     useGetAllStudentQuery({ schoolId, limit: 1000 }, { skip: !schoolId });
 
-  const { data: feesData, isLoading: isLoadingFees } = useGetPaymentListQuery();
-  const [collectManualPayment, { isLoading: isSubmitting }] =
-    useCollectManualPaymentMutation();
+  const { data: classesData } = useGetAllClassesQuery();
 
-  const {
-    register,
-    control,
-    handleSubmit,
-    watch,
-    setValue,
-    reset,
-    formState: { errors },
-  } = useForm<CollectManualPaymentRequest>({
+  const getClassName = (classId: string) => {
+    if (!classId) return "N/A";
+    const foundClass = classesData?.data?.find((c) => c._id === classId);
+    return foundClass?.name || classId;
+  };
+
+  const [selectedStudentId, setSelectedStudentId] = useState<string | null>(
+    null,
+  );
+  const [studentSearchQuery, setStudentSearchQuery] = useState("");
+  const [isStudentDropdownOpen, setIsStudentDropdownOpen] = useState(false);
+  const dropdownRef = useRef<HTMLDivElement>(null);
+
+  const { data: profileResponse, isLoading: isLoadingProfile } =
+    useGetStudentFeeProfileQuery(selectedStudentId!, {
+      skip: !selectedStudentId,
+    });
+
+  const [allocateManualPayment, { isLoading: isSubmitting }] =
+    useAllocateManualPaymentMutation();
+
+  const [allocations, setAllocations] = useState<Record<string, number>>({});
+  const [manualTotalAmount, setManualTotalAmount] = useState<number>(0);
+
+  const { register, handleSubmit, reset, setValue, watch } = useForm({
     defaultValues: {
-      studentId: "",
-      paidAllTogether: true,
-      groupRef: "",
-      payments: [
-        {
-          paymentItemId: "",
-          receiptNumber: "",
-          dateOfPayment: new Date().toISOString().split("T")[0],
-        },
-      ],
+      referenceNumber: "",
+      dateOfPayment: new Date().toISOString().split("T")[0],
     },
   });
 
-  const { fields, append, remove } = useFieldArray({
-    control,
-    name: "payments",
-  });
+  // Prefill total amount when profile is fetched
+  useEffect(() => {
+    if (profileResponse?.data?.totalExpectedBalance !== undefined) {
+      setManualTotalAmount(profileResponse.data.totalExpectedBalance);
+    }
+  }, [profileResponse]);
 
-  const onSubmit = async (data: CollectManualPaymentRequest) => {
+  const totalAllocated = useMemo(() => {
+    return Object.values(allocations).reduce((sum, val) => sum + val, 0);
+  }, [allocations]);
+
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (
+        dropdownRef.current &&
+        !dropdownRef.current.contains(event.target as Node)
+      ) {
+        setIsStudentDropdownOpen(false);
+      }
+    }
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
+  const selectedStudent = useMemo(() => {
+    return studentsData?.data?.items?.find((s) => s._id === selectedStudentId);
+  }, [selectedStudentId, studentsData]);
+
+  const filteredStudents = useMemo(() => {
+    if (!studentSearchQuery)
+      return studentsData?.data?.items?.slice(0, 10) || [];
+    return (
+      studentsData?.data?.items?.filter((s) =>
+        `${s.firstName} ${s.lastName} ${s.admissionNumber}`
+          .toLowerCase()
+          .includes(studentSearchQuery.toLowerCase()),
+      ) || []
+    );
+  }, [studentSearchQuery, studentsData]);
+
+  const getStatusColor = (status: string) => {
+    switch (status.toUpperCase()) {
+      case "COMPLETED":
+        return "text-green-600 border-gray-200 bg-white";
+      case "PART_PAYMENT":
+        return "text-orange-500 border-gray-200 bg-white";
+      case "OUTSTANDING":
+        return "text-red-500 border-gray-200 bg-white";
+      default:
+        return "text-gray-500 border-gray-200 bg-white";
+    }
+  };
+
+  const handleAllocationChange = (paymentItemId: string, value: string) => {
+    const numValue = parseFloat(value.replace(/[^0-9.]/g, "")) || 0;
+    setAllocations((prev) => ({
+      ...prev,
+      [paymentItemId]: numValue,
+    }));
+  };
+
+  const onSubmit = async (data: any) => {
+    if (!selectedStudentId) return showerror("Please select a student");
+    if (totalAllocated <= 0) return showerror("Please enter allocation amounts");
+
     try {
-      // Ensure date is in ISO format if needed, but the user requested HTML date picker which returns YYYY-MM-DD
-      const payload = {
-        ...data,
-        payments: data.payments.map((p) => ({
-          ...p,
-          dateOfPayment: new Date(p.dateOfPayment).toISOString(),
-        })),
+      const payload: ManualAllocationRequest = {
+        studentId: selectedStudentId,
+        referenceNumber: data.referenceNumber,
+        dateOfPayment: new Date(data.dateOfPayment).toISOString(),
+        totalAmountPaid: manualTotalAmount,
+        allocations: Object.entries(allocations)
+          .filter(([_, amount]) => amount > 0)
+          .map(([paymentItemId, amountAllocated]) => ({
+            paymentItemId,
+            amountAllocated,
+          })),
       };
 
-      await collectManualPayment(payload).unwrap();
+      await allocateManualPayment(payload).unwrap();
       showsuccess("Payment recorded successfully");
+      setAllocations({});
+      setSelectedStudentId(null);
+      setManualTotalAmount(0);
       reset();
       onClose();
     } catch (error: any) {
@@ -85,187 +169,276 @@ export function ManualPaymentModal({
     }
   };
 
-  const groupRef = watch("groupRef");
-
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-3xl! max-h-[90vh] border-none shadow-2xl p-0 flex flex-col">
-        <DialogHeader className="p-6 pb-4 bg-gray-50/80 border-b shrink-0">
-          <DialogTitle className="text-2xl font-bold text-gray-900 tracking-tight">
-            Add Manual Payment
+      <DialogContent className="max-w-3xl! h-[90vh] border-none shadow-2xl p-0 flex flex-col overflow-hidden">
+        <DialogHeader className="p-6 border-b border-gray-200 bg-white shrink-0">
+          <DialogTitle className="text-xl font-bold text-gray-900">
+            Add New Payment
           </DialogTitle>
         </DialogHeader>
 
         <form
           onSubmit={handleSubmit(onSubmit)}
-          className="p-6 space-y-8 overflow-y-auto flex-1"
+          className="flex flex-col flex-1 overflow-hidden"
         >
-          <div className="space-y-6">
-            <div className="space-y-2">
-              <label className="text-sm font-semibold text-gray-900 ml-1">
+          {/* Scrollable Content Area */}
+          <div className="flex-1 overflow-y-auto p-6 space-y-8 bg-white">
+            {/* Select Student Section */}
+            <div className="space-y-4">
+              <h3 className="text-lg font-bold text-gray-900">
                 Select Student
-              </label>
-              <select
-                {...register("studentId", { required: "Student is required" })}
-                className="w-full p-3 bg-white border border-gray-200 rounded-xl focus:ring-2 focus:ring-purple-500/20 focus:border-purple-500 outline-none transition-all shadow-sm"
-              >
-                <option value="">Select a student</option>
-                {studentsData?.data?.items?.map((student) => (
-                  <option key={student._id} value={student._id}>
-                    {student.firstName} {student.lastName} (
-                    {student.admissionNumber})
-                  </option>
-                ))}
-              </select>
-              {errors.studentId && (
-                <p className="text-red-500 text-xs mt-1 ml-1">
-                  {errors.studentId.message}
-                </p>
+              </h3>
+
+              <div className="relative" ref={dropdownRef}>
+                <div className="relative">
+                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 size-5 text-gray-400" />
+                  <input
+                    type="text"
+                    placeholder="Search Student"
+                    value={studentSearchQuery}
+                    onChange={(e) => {
+                      setStudentSearchQuery(e.target.value);
+                      setIsStudentDropdownOpen(true);
+                    }}
+                    onFocus={() => setIsStudentDropdownOpen(true)}
+                    className="w-full pl-10 pr-4 py-3 bg-white border border-gray-200 rounded-xl focus:ring-2 focus:ring-purple-500/20 focus:border-purple-500 outline-none transition-all shadow-sm"
+                  />
+                </div>
+
+                {isStudentDropdownOpen && (
+                  <div className="absolute z-20 w-full mt-2 bg-white border border-gray-200 rounded-xl shadow-xl max-h-60 overflow-y-auto">
+                    {isLoadingStudents ? (
+                      <div className="p-4 text-center text-sm text-gray-500">
+                        Loading students...
+                      </div>
+                    ) : filteredStudents.length > 0 ? (
+                      filteredStudents.map((student) => (
+                        <button
+                          key={student._id}
+                          type="button"
+                          onClick={() => {
+                            setSelectedStudentId(student._id);
+                            setStudentSearchQuery("");
+                            setIsStudentDropdownOpen(false);
+                            setAllocations({});
+                          }}
+                          className="w-full p-4 text-left hover:bg-gray-50 flex items-center justify-between border-b last:border-0 border-gray-100 transition-colors"
+                        >
+                          <div className="flex items-center gap-3">
+                            <div className="size-8 bg-purple-100 rounded-full flex items-center justify-center text-purple-700 font-bold text-xs">
+                              {student.firstName[0]}
+                              {student.lastName[0]}
+                            </div>
+                            <div>
+                              <p className="font-semibold text-gray-900">
+                                {student.firstName} {student.lastName}
+                              </p>
+                              <p className="text-xs text-gray-500">
+                                {student.admissionNumber} • {getClassName(student.class)}
+                              </p>
+                            </div>
+                          </div>
+                          {selectedStudentId === student._id && (
+                            <CheckCircle2 className="size-5 text-purple-600" />
+                          )}
+                        </button>
+                      ))
+                    ) : (
+                      <div className="p-4 text-center text-sm text-gray-500">
+                        No students found
+                      </div>
+                    )}
+                  </div>
+                )}
+              </div>
+
+              {selectedStudent && (
+                <div className="relative p-5 bg-[#EDEEEF] rounded-2xl border border-gray-200 space-y-3 animate-in fade-in slide-in-from-top-2">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setSelectedStudentId(null);
+                      setAllocations({});
+                      setManualTotalAmount(0);
+                    }}
+                    className="absolute right-4 top-4 text-gray-400 hover:text-red-500 hover:bg-red-50 p-1 rounded-full transition-colors"
+                  >
+                    <X size={18} />
+                  </button>
+                  <div className="grid grid-cols-[100px_1fr] gap-x-4 gap-y-2">
+                    <span className="text-sm font-medium text-gray-500">
+                      Name:
+                    </span>
+                    <span className="text-sm font-bold text-gray-900">
+                      {selectedStudent.firstName} {selectedStudent.lastName}
+                    </span>
+                    <span className="text-sm font-medium text-gray-500">
+                      Class:
+                    </span>
+                    <span className="text-sm font-bold text-gray-900 uppercase">
+                      {getClassName(selectedStudent.class)}
+                    </span>
+                    <span className="text-sm font-medium text-gray-500">
+                      Expected Amount:
+                    </span>
+                    <span className="text-sm font-bold text-gray-900">
+                      {profileResponse?.data?.totalExpectedBalance !== undefined
+                        ? formatNaira(profileResponse.data.totalExpectedBalance)
+                        : "..."}
+                    </span>
+                  </div>
+                </div>
               )}
-            </div>
-
-            <div className="space-y-2">
-              <label className="text-sm font-semibold text-gray-900 ml-1">
-                Group Receipt Number
-              </label>
-              <input
-                {...register("groupRef", {
-                  required: "Group receipt number is required",
-                })}
-                placeholder="e.g. RCPT-000200"
-                className="w-full p-3 bg-white border border-gray-200 rounded-xl focus:ring-2 focus:ring-purple-500/20 focus:border-purple-500 outline-none transition-all shadow-sm"
-                onChange={(e) => {
-                  const val = e.target.value;
-                  setValue("groupRef", val);
-                  fields.forEach((_, index) => {
-                    setValue(`payments.${index}.receiptNumber`, val);
-                  });
-                }}
-              />
-              {errors.groupRef && (
-                <p className="text-red-500 text-xs mt-1 ml-1">
-                  {errors.groupRef.message}
-                </p>
-              )}
-            </div>
-
-            <div className="flex items-center gap-3 p-3 bg-purple-50/50 rounded-xl border border-purple-100/50">
-              <input
-                type="checkbox"
-                id="paidAllTogether"
-                {...register("paidAllTogether")}
-                className="w-5 h-5 text-purple-600 rounded-md border-gray-300 focus:ring-purple-500 transition-colors"
-              />
-              <label
-                htmlFor="paidAllTogether"
-                className="text-sm font-medium text-purple-900"
-              >
-                Paid All Together
-              </label>
-            </div>
-          </div>
-
-          <div className="space-y-5">
-            <div className="flex items-center justify-between border-b border-gray-100 pb-3">
-              <h3 className="text-lg font-bold text-gray-900">Payment Items</h3>
-              <button
-                type="button"
-                onClick={() =>
-                  append({
-                    paymentItemId: "",
-                    receiptNumber: groupRef,
-                    dateOfPayment: new Date().toISOString().split("T")[0],
-                  })
-                }
-                className="flex items-center gap-1.5 px-3 py-1.5 text-sm font-semibold text-purple-600 hover:bg-purple-50 rounded-lg transition-colors"
-              >
-                <Plus size={18} />
-                Add Item
-              </button>
             </div>
 
             <div className="space-y-4">
-              {fields.map((field, index) => (
-                <div
-                  key={field.id}
-                  className="p-5 border border-gray-200 rounded-2xl bg-white shadow-sm hover:shadow-md transition-shadow relative space-y-5"
-                >
-                  <div className="flex items-center justify-between">
-                    <span className="text-xs font-bold text-gray-400 uppercase tracking-wider">
-                      Item #{index + 1}
-                    </span>
-                    {index > 0 && (
-                      <button
-                        type="button"
-                        onClick={() => remove(index)}
-                        className="p-1.5 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-all"
-                      >
-                        <Trash2 size={18} />
-                      </button>
-                    )}
-                  </div>
+              <div className="flex flex-col space-y-1">
+                <h3 className="text-lg font-bold text-gray-900">
+                  Payment Details
+                </h3>
+                <div className="h-[1px] bg-gray-100 w-full" />
+              </div>
 
-                  <div className="space-y-4">
-                    <div className="space-y-2">
-                      <label className="text-sm font-semibold text-gray-700 ml-1">
-                        Fee / Payment Item
-                      </label>
-                      <select
-                        {...register(
-                          `payments.${index}.paymentItemId` as const,
-                          {
-                            required: "Fee is required",
-                          },
-                        )}
-                        className="w-full p-3 bg-gray-50/50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-purple-500/20 focus:border-purple-500 outline-none transition-all"
-                      >
-                        <option value="">Select a fee</option>
-                        {feesData?.data?.items?.map((fee) => (
-                          <option key={fee._id} value={fee._id}>
-                            {fee.name} — ₦{fee.amount.toLocaleString()}
-                          </option>
-                        ))}
-                      </select>
-                    </div>
-
-                    <div className="space-y-2">
-                      <label className="text-sm font-semibold text-gray-700 ml-1">
-                        Receipt Number
-                      </label>
-                      <input
-                        {...register(
-                          `payments.${index}.receiptNumber` as const,
-                          {
-                            required: "Receipt number is required",
-                          },
-                        )}
-                        placeholder="Receipt Number"
-                        className="w-full p-3 bg-gray-50/50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-purple-500/20 focus:border-purple-500 outline-none transition-all"
-                      />
-                    </div>
-
-                    <div className="space-y-2">
-                      <label className="text-sm font-semibold text-gray-700 ml-1">
-                        Date of Payment
-                      </label>
-                      <input
-                        type="date"
-                        {...register(
-                          `payments.${index}.dateOfPayment` as const,
-                          {
-                            required: "Date is required",
-                          },
-                        )}
-                        className="w-full p-3 bg-gray-50/50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-purple-500/20 focus:border-purple-500 outline-none transition-all"
-                      />
-                    </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <label className="text-sm font-medium text-gray-400">
+                    Payment Date
+                  </label>
+                  <div className="relative">
+                    <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 size-5 text-gray-400" />
+                    <input
+                      type="date"
+                      {...register("dateOfPayment")}
+                      className="w-full pl-10 pr-4 py-3 bg-white border border-gray-200 rounded-xl focus:ring-2 focus:ring-purple-500/20 focus:border-purple-500 outline-none transition-all"
+                    />
                   </div>
                 </div>
-              ))}
+
+                <div className="space-y-2">
+                  <label className="text-sm font-medium text-gray-400">
+                    Teller / Reference no.
+                  </label>
+                  <input
+                    type="text"
+                    placeholder="727292101"
+                    {...register("referenceNumber")}
+                    className="w-full px-4 py-3 bg-white border border-gray-200 rounded-xl focus:ring-2 focus:ring-purple-500/20 focus:border-purple-500 outline-none transition-all"
+                  />
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                <label className="text-sm font-medium text-gray-400">
+                  Amount
+                </label>
+                <div className="relative">
+                  <span className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-900 font-medium">
+                    ₦
+                  </span>
+                  <input
+                    type="text"
+                    value={manualTotalAmount.toLocaleString()}
+                    onChange={(e) => {
+                      const val = parseFloat(e.target.value.replace(/[^0-9.]/g, "")) || 0;
+                      setManualTotalAmount(val);
+                    }}
+                    className="w-full pl-8 pr-4 py-3 bg-white border border-gray-200 rounded-xl focus:ring-2 focus:ring-purple-500/20 focus:border-purple-500 outline-none transition-all text-lg font-medium text-gray-900"
+                  />
+                </div>
+              </div>
+            </div>
+
+            {/* Fee Breakdown Section */}
+            <div className="space-y-4">
+              <div className="flex flex-col space-y-1">
+                <h3 className="text-lg font-bold text-gray-900">
+                  Fee Breakdown
+                </h3>
+                <div className="h-[1px] bg-gray-100 w-full" />
+              </div>
+
+              <div className="space-y-2">
+                {isLoadingProfile ? (
+                  <div className="flex flex-col items-center justify-center py-12 space-y-3">
+                    <Loader2 className="animate-spin text-purple-600" size={32} />
+                    <p className="text-sm text-gray-500">Fetching fee profile...</p>
+                  </div>
+                ) : profileResponse?.data?.paymentItem?.length ? (
+                  <div className="space-y-4">
+                    {profileResponse.data.paymentItem.map((item) => (
+                      <div
+                        key={item.paymentItemId}
+                        className="flex items-center gap-6 group min-h-[50px]"
+                      >
+                        {/* Status Dropdown-style Button */}
+                        <div
+                          className={cn(
+                            "min-w-[140px] px-3 py-2.5 rounded-xl border text-sm font-medium flex items-center justify-between transition-all",
+                            getStatusColor(item.status),
+                          )}
+                        >
+                          {item.status.charAt(0).toUpperCase() + item.status.slice(1).toLowerCase().replace("_", " ")}
+                          <ChevronDown size={16} className="text-gray-400" />
+                        </div>
+
+                        {/* Divider */}
+                        <div className="w-[2px] h-6 bg-gray-200" />
+
+                        {/* Fee Info */}
+                        <div className="flex-1 flex items-center gap-4">
+                          <span className="text-sm font-medium text-gray-400 flex-1">
+                            {item.name}
+                          </span>
+                          <span className="text-sm font-bold text-gray-900">
+                            {formatNaira(item.totalAmount)}
+                          </span>
+                        </div>
+
+                        {/* Right Section Divider and Input */}
+                        {item.status !== "COMPLETED" && (
+                          <>
+                            <div className="w-[2px] h-6 bg-gray-200" />
+                            <div className="relative w-48 group/input border border-gray-200 rounded-xl bg-gray-50/30 transition-all focus-within:ring-2 focus-within:ring-purple-500/20 focus-within:border-purple-400 focus-within:bg-white overflow-hidden">
+                              <input
+                                type="text"
+                                placeholder="Amount Paid ₦0"
+                                value={allocations[item.paymentItemId] ? `₦${allocations[item.paymentItemId].toLocaleString()}` : ""}
+                                onChange={(e) =>
+                                  handleAllocationChange(
+                                    item.paymentItemId,
+                                    e.target.value,
+                                  )
+                                }
+                                className="w-full px-3 py-2.5 bg-transparent text-sm font-medium text-gray-900 text-right outline-none placeholder:text-gray-400 placeholder:text-[11px]"
+                              />
+                            </div>
+                          </>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                ) : selectedStudentId ? (
+                  <div className="text-center py-12 bg-gray-50 rounded-2xl border border-dashed border-gray-200">
+                    <CheckCircle2 className="size-8 text-green-400 mx-auto mb-2" />
+                    <p className="text-sm text-gray-500">
+                      No outstanding fees for this student
+                    </p>
+                  </div>
+                ) : (
+                  <div className="text-center py-12 bg-gray-50 rounded-2xl border border-dashed border-gray-200">
+                    <AlertCircle className="size-8 text-gray-300 mx-auto mb-2" />
+                    <p className="text-sm text-gray-500">
+                      Select a student to view their fee profile
+                    </p>
+                  </div>
+                )}
+              </div>
             </div>
           </div>
 
-          <div className="flex items-center justify-end gap-3 pt-4 border-t border-gray-100">
+          {/* Sticky Footer */}
+          <div className="flex items-center justify-between gap-4 p-6 border-t border-gray-100 bg-white shrink-0">
             <button
               type="button"
               onClick={onClose}
@@ -275,11 +448,11 @@ export function ManualPaymentModal({
             </button>
             <button
               type="submit"
-              disabled={isSubmitting}
-              className="px-8 py-3 bg-gray-900 text-white rounded-xl font-bold hover:bg-gray-800 active:scale-[0.98] transition-all flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed shadow-lg shadow-gray-200"
+              disabled={isSubmitting || !selectedStudentId}
+              className="px-12 py-3 bg-[#9333EA] text-white rounded-xl font-bold hover:bg-[#7E22CE] active:scale-[0.98] transition-all flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed shadow-lg shadow-purple-200"
             >
               {isSubmitting && <Loader2 className="animate-spin" size={18} />}
-              {isSubmitting ? "Processing..." : "Confirm Payment"}
+              {isSubmitting ? "Allocating..." : "Confirm Allocation"}
             </button>
           </div>
         </form>

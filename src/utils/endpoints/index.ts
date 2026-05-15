@@ -54,6 +54,8 @@ export const payment = {
   getBanks: "/payments/banks",
   validateAccount: "/payments/validate-account",
   createSettlementAccount: "/settlement-accounts",
+  getStudentFeeProfile: (studentId: string) => `/payments/students/${studentId}/fee-profile`,
+  allocateManualPayment: "/payments/manual-allocations",
 };
 
 export const academicSession = {

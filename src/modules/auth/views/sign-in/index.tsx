@@ -150,12 +150,13 @@ export default function LoginView() {
               Remember me
             </label>
           </div>
-          <Link
-            href="/auth/forgot-password"
-            className="text-sm text-violet-600 hover:text-violet-700"
+          <button
+            type="button"
+            onClick={() => router.push("/auth/forgot-password")}
+            className="text-sm text-violet-600 hover:text-violet-700 outline-none"
           >
             Forgot password?
-          </Link>
+          </button>
         </div>
 
         <button

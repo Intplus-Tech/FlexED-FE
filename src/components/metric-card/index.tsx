@@ -1,7 +1,7 @@
 interface MetricCardProps {
   title: string;
   amount: string;
-  amountColor?: "green" | "red" | "gray";
+  amountColor?: "green" | "red" | "gray" | "yellow";
   studentCount: number;
   onClick?: () => void;
 }
@@ -17,6 +17,7 @@ export function MetricCard({
     green: "text-green-600",
     red: "text-red-500",
     gray: "text-gray-400",
+    yellow: "text-yellow-500",
   };
 
   return (

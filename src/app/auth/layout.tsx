@@ -61,7 +61,7 @@ export default function AuthLayout({
         <div className="max-w-md">
           <div className="mb-8 auth-logo">
             {/* <Logo /> */}
-            <Image src="/favicon.ico" width={100} height={100} alt="" />
+            <Image src="/images/company-logo.svg" width={100} height={100} alt="" />
           </div>
 
           <h1 className="text-4xl font-bold mb-2 text-gray-900 auth-heading-1">

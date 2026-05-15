@@ -18,6 +18,8 @@ import {
   ValidateAccountResponse,
   CreateSettlementAccountRequest,
   CreateSettlementAccountResponse,
+  StudentFeeProfileResponse,
+  ManualAllocationRequest,
 } from "@/@types/transaction";
 import { methods } from "@/utils/methods";
 import { GetCollectionsTotalsResponse } from "@/@types/dashboard";
@@ -41,6 +43,7 @@ export const transactionApi = apiSlice.injectEndpoints({
     >({
       query: (request) =>
         QueryHelper(ApiEndpoints.payment.getPaymentTransactions, request),
+      providesTags: ["Transaction"],
     }),
 
     getPaymentCategories: builder.query<
@@ -49,7 +52,7 @@ export const transactionApi = apiSlice.injectEndpoints({
     >({
       query: (request) =>
         QueryHelper(ApiEndpoints.payment.getPaymentCategories, request || {}),
-      providesTags: ["Transaction"],
+      providesTags: ["PaymentCategory"],
     }),
 
     createPaymentCategory: builder.mutation<
@@ -61,7 +64,7 @@ export const transactionApi = apiSlice.injectEndpoints({
         method: methods.POST,
         body: request,
       }),
-      invalidatesTags: ["Transaction"],
+      invalidatesTags: ["PaymentCategory"],
     }),
 
     createPaymentItems: builder.mutation<
@@ -106,7 +109,7 @@ export const transactionApi = apiSlice.injectEndpoints({
 
     getPaymentList: builder.query<
       GetPaymentItemsResponse,
-      { search?: string; limit?: number } | void
+      { search?: string; limit?: number; page?: number } | void
     >({
       query: (request) =>
         QueryHelper(ApiEndpoints.payment.getPaymentItems, request || {}),
@@ -182,6 +185,23 @@ export const transactionApi = apiSlice.injectEndpoints({
       }),
       invalidatesTags: ["Transaction"],
     }),
+
+    getStudentFeeProfile: builder.query<StudentFeeProfileResponse, string>({
+      query: (studentId) => ApiEndpoints.payment.getStudentFeeProfile(studentId),
+      providesTags: ["Transaction"],
+    }),
+
+    allocateManualPayment: builder.mutation<
+      { success: boolean; message: string },
+      ManualAllocationRequest
+    >({
+      query: (request) => ({
+        url: ApiEndpoints.payment.allocateManualPayment,
+        method: methods.POST,
+        body: request,
+      }),
+      invalidatesTags: ["Transaction"],
+    }),
   }),
 });
 
@@ -202,4 +222,6 @@ export const {
   useGetBanksQuery,
   useValidateAccountMutation,
   useCreateSettlementAccountMutation,
+  useGetStudentFeeProfileQuery,
+  useAllocateManualPaymentMutation,
 } = transactionApi;

@@ -262,7 +262,7 @@ export function PaymentSettingsTab() {
             </div>
 
             {/* PTA Account Section */}
-            <div>
+            {/* <div>
               <h3 className="text-lg font-semibold text-gray-900 mb-4">
                 PTA Account
               </h3>
@@ -312,7 +312,7 @@ export function PaymentSettingsTab() {
                   />
                 </div>
               </div>
-            </div>
+            </div> */}
 
             <div className="flex items-center gap-4 pt-4">
               <button
