@@ -48,6 +48,7 @@ const apiSlice = createApi({
   baseQuery: baseQueryWithAuthRedirect,
   tagTypes: [
     "Transaction",
+    "PaymentCategory",
     "sms",
     "students",
     "academicSession",

@@ -25,12 +25,14 @@ export function StudentProfileModal({
   classItems,
 }: StudentProfileModalProps) {
   const [activeTab, setActiveTab] = useState<"parent" | "fees" | "payment">(
-    "parent"
+    "parent",
   );
 
   if (!student) return null;
 
   const getClassById = (classId: string) => {
+    console.log(classId, "id");
+    console.log(classItems, "classItems");
     const classItem = classItems?.find((item) => item._id === classId);
     return classItem ? classItem.name : "";
   };

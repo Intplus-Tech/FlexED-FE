@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { SearchInput } from "@/components/search-input";
 import { FeeTable } from "../components/fee-table";
+import { Pagination } from "@/components/pagination";
 import {
   useGetPaymentCategoriesQuery,
   useGetPaymentListQuery,
@@ -19,6 +20,8 @@ export default function FeeManagementView() {
   const [categoriesSearchQuery, setCategoriesSearchQuery] = useState("");
   const [open, setOpen] = useState(false);
   const [categoryOpen, setCategoryOpen] = useState(false);
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 10;
 
   const {
     data: feeCategories,
@@ -30,7 +33,11 @@ export default function FeeManagementView() {
     data: fees,
     isFetching,
     isLoading: isLoadingFees,
-  } = useGetPaymentListQuery({ search: feesSearchQuery,limit:100 });
+  } = useGetPaymentListQuery({
+    search: feesSearchQuery,
+    limit: itemsPerPage,
+    page: currentPage,
+  });
 
   const exportData = useMemo(() => {
     return (
@@ -43,6 +50,12 @@ export default function FeeManagementView() {
       })) || []
     );
   }, [fees]);
+
+  const handlePageChange = (page: number) => {
+    setCurrentPage(page);
+  };
+
+  const totalPages = fees?.data?.meta?.totalPages || 1;
 
   return (
     <div className="space-y-6">
@@ -68,7 +81,10 @@ export default function FeeManagementView() {
 
         <div className="flex items-center gap-4 mb-4 max-w-xl">
           <SearchInput
-            onSearch={setFeesSearchQuery}
+            onSearch={(query) => {
+              setFeesSearchQuery(query);
+              setCurrentPage(1);
+            }}
             placeholder="Search Fees"
           />
         </div>
@@ -78,6 +94,16 @@ export default function FeeManagementView() {
           isLoading={isFetching || isLoadingFees}
           searchQuery={feesSearchQuery}
         />
+
+        {totalPages > 1 && (
+          <div className="mt-6">
+            <Pagination
+              currentPage={currentPage}
+              totalPages={totalPages}
+              onPageChange={handlePageChange}
+            />
+          </div>
+        )}
       </div>
 
       <h1 className="text-2xl font-semibold text-gray-900 mt-12">

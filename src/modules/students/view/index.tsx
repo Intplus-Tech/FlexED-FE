@@ -23,6 +23,7 @@ export default function StudentView() {
   const [isAddStudentOpen, setIsAddStudentOpen] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isBulkModalOpen, setIsBulkModalOpen] = useState(false);
+  const [selectedClassId, setSelectedClassId] = useState("");
   const itemsPerPage = 10;
 
   const { currentUser } = useSelector((state: RootState) => state.authState);
@@ -35,6 +36,7 @@ export default function StudentView() {
     limit: itemsPerPage,
     schoolId: currentUser?.schoolId as string,
     search: searchQuery,
+    classId: selectedClassId,
   });
 
   const {
@@ -82,6 +84,11 @@ export default function StudentView() {
 
   const handleSearch = (query: string) => {
     setSearchQuery(query);
+    setCurrentPage(1);
+  };
+
+  const handleClassChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    setSelectedClassId(e.target.value);
     setCurrentPage(1);
   };
 
@@ -134,7 +141,27 @@ export default function StudentView() {
         </div>
 
         <div className="flex flex-col md:flex-row gap-4 items-start md:items-center w-full md:w-auto">
-          <SearchInput onSearch={handleSearch} placeholder="Search" />
+          <div className="flex flex-col md:flex-row gap-4 w-full md:w-auto">
+            <SearchInput onSearch={handleSearch} placeholder="Search students..." />
+            
+            <div className="relative">
+              <select
+                value={selectedClassId}
+                onChange={handleClassChange}
+                className="w-full md:w-auto pl-4 pr-10 py-3 bg-gray-100 text-gray-900 font-medium rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 focus:bg-white transition-all appearance-none min-w-[160px] cursor-pointer"
+              >
+                <option value="">All Classes</option>
+                {classes?.data?.map((classItem) => (
+                  <option key={classItem._id} value={classItem._id}>
+                    {classItem.name}
+                  </option>
+                ))}
+              </select>
+              <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-gray-500">
+                <ChevronDownIcon />
+              </div>
+            </div>
+          </div>
 
           <div className="flex gap-3">
             {/* <button className="flex items-center gap-2 px-4 py-3 border border-gray-300 bg-white text-gray-700 font-medium rounded-lg hover:bg-gray-50 transition-colors">

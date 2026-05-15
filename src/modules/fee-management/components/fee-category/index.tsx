@@ -15,7 +15,7 @@ import { Loader } from "lucide-react";
 
 const feeCategorySchema = z.object({
   name: z.string().min(1, "Category name is required"),
-  description: z.string().min(1, "Description is required"),
+  description: z.string().optional().or(z.literal("")),
 });
 
 type FeeCategoryFormData = z.infer<typeof feeCategorySchema>;
@@ -36,6 +36,10 @@ export function CreateFeeCategoryModal({
     formState: { errors },
   } = useForm<FeeCategoryFormData>({
     resolver: zodResolver(feeCategorySchema),
+    defaultValues: {
+      name: "",
+      description: "",
+    },
   });
 
   const [createPaymentCategory, { isLoading }] =
@@ -97,11 +101,6 @@ export function CreateFeeCategoryModal({
               {...register("description")}
               className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-purple-500 focus:outline-none focus:ring-1 focus:ring-purple-500 resize-none"
             />
-            {errors.description && (
-              <p className="text-sm text-red-600">
-                {errors.description.message}
-              </p>
-            )}
           </div>
 
           <div className="flex items-center gap-4 pt-4">

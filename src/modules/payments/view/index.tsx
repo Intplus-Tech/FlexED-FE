@@ -67,12 +67,27 @@ export default function PaymentView() {
     { skip: !authstate.currentUser || isStaff },
   );
 
-  const colors = ["green", "red", "gray"] as const;
+  const getCategoryColor = (category: string) => {
+    switch (category) {
+      case "FULLY_PAID":
+        return "green";
+      case "PARTIALLY_PAID":
+        return "yellow";
+      case "OVERDUE":
+        return "red";
+      default:
+        return "gray";
+    }
+  };
 
   const schoolMetric =
-    schoolMetrics?.data?.categories?.map((category, index) => ({
+    schoolMetrics?.data?.categories?.map((category) => ({
       ...category,
-      color: colors[index],
+      color: getCategoryColor(category.category) as
+        | "green"
+        | "red"
+        | "gray"
+        | "yellow",
     })) ?? [];
 
   const totalPages = data?.data?.meta?.totalPages ?? 1;

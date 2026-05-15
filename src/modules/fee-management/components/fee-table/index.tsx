@@ -73,7 +73,14 @@ export function FeeTable({
       dueDate: fee.dueDate
         ? new Date(fee.dueDate).toISOString().split("T")[0]
         : "",
-      discount: fee.discount || { type: "", value: "" },
+      discount: fee.discount
+        ? {
+            ...fee.discount,
+            expiresAt: fee.discount.expiresAt
+              ? new Date(fee.discount.expiresAt).toISOString().split("T")[0]
+              : "",
+          }
+        : { type: "", value: "" },
     };
 
     setEditFeeData(mappedData);

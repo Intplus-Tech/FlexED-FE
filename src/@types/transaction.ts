@@ -112,6 +112,50 @@ export interface CollectManualPaymentRequest {
   payments: ManualPaymentItem[];
 }
 
+export interface StudentFeeProfilePaymentItem {
+  paymentItemId: string;
+  name: string;
+  totalAmount: number;
+  amountPaidPreviously: number;
+  currentBalance: number;
+  status: "COMPLETED" | "PART_PAYMENT" | "OUTSTANDING";
+  discount: Discount | null;
+  dueDate: string | null;
+}
+
+export interface StudentFeeProfile {
+  studentId: string;
+  name: string;
+  admissionNumber: string;
+  class: {
+    id: string;
+    name: string;
+    level: string;
+  };
+  totalExpectedBalance: number;
+  paymentItem: StudentFeeProfilePaymentItem[];
+}
+
+export interface StudentFeeProfileResponse {
+  success: boolean;
+  message: string;
+  data: StudentFeeProfile;
+  statusCode: number;
+}
+
+export interface ManualAllocationItem {
+  paymentItemId: string;
+  amountAllocated: number;
+}
+
+export interface ManualAllocationRequest {
+  studentId: string;
+  referenceNumber: string;
+  dateOfPayment: string;
+  totalAmountPaid: number;
+  allocations: ManualAllocationItem[];
+}
+
 export interface GetPaymentMetricsResponse {
   success: boolean;
   message: string;
@@ -194,6 +238,7 @@ export interface CreatePaymentItemRequest {
   description: string;
   dueDate: string;
   discount?: Discount;
+  students?: string[];
 }
 
 export interface UpdatePaymentItemRequest {
@@ -205,6 +250,7 @@ export interface UpdatePaymentItemRequest {
   applicableTo: string;
   dueDate: string;
   discount?: Discount | null;
+  students?: string[];
 }
 
 export interface Discount {
@@ -241,6 +287,7 @@ export interface PaymentItem {
   dueDate: string;
   status: PaymentStatus;
   isSmsTopup: boolean;
+  students?: string[];
   createdAt: string;
   updatedAt: string;
 }

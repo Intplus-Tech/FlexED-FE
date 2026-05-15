@@ -16,13 +16,20 @@ export const studentApi = apiSlice.injectEndpoints({
   endpoints: (builder) => ({
     getAllStudent: builder.query<
       GetStudentsResponse,
-      { schoolId: string; limit: number; page?: number; search?: string }
+      {
+        schoolId: string;
+        limit: number;
+        page?: number;
+        search?: string;
+        classId?: string;
+      }
     >({
-      query: ({ schoolId, limit, page, search }) =>
+      query: ({ schoolId, limit, page, search, classId }) =>
         QueryHelper(ApiEndpoints.student.getStudentsBySchool, {
           limit,
           page,
           search,
+          classId,
         }),
       providesTags: ["students"],
     }),
