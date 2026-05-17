@@ -48,9 +48,12 @@ export function PaymentTable({
     setSelectedRows(newSelected);
   };
 
-  const getClassById = (classId: string) => {
-    const classItem = classItems.find((item) => item._id === classId);
-    return classItem ? classItem.name : "";
+  const getClassById = (classId: string | any) => {
+    if (!classId) return "";
+    if (typeof classId === 'object' && classId.name) return classId.name;
+    const idToSearch = typeof classId === 'object' ? classId._id : classId;
+    const classItem = classItems.find((item) => item._id === idToSearch);
+    return classItem ? classItem.name : (typeof classId === 'string' ? classId : "");
   };
 
   return (
