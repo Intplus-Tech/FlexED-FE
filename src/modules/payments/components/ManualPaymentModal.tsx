@@ -47,10 +47,12 @@ export function ManualPaymentModal({
 
   const { data: classesData } = useGetAllClassesQuery();
 
-  const getClassName = (classId: string) => {
+  const getClassName = (classId: string | any) => {
     if (!classId) return "N/A";
-    const foundClass = classesData?.data?.find((c) => c._id === classId);
-    return foundClass?.name || classId;
+    if (typeof classId === 'object' && classId.name) return classId.name;
+    const idToSearch = typeof classId === 'object' ? classId._id : classId;
+    const foundClass = classesData?.data?.find((c) => c._id === idToSearch);
+    return foundClass?.name || (typeof classId === 'string' ? classId : "Unknown");
   };
 
   const [selectedStudentId, setSelectedStudentId] = useState<string | null>(
