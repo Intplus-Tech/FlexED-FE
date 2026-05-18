@@ -161,7 +161,10 @@ export function AddStudentModal({
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-4xl! w-full p-0 overflow-hidden border-none shadow-2xl rounded-2xl bg-gray-50/50 backdrop-blur-sm">
+      <DialogContent
+        showCloseButton={false}
+        className="max-w-4xl! w-full p-0 overflow-hidden border-none shadow-2xl rounded-2xl bg-gray-50/50 backdrop-blur-sm"
+      >
         <div className="flex h-full max-h-[90vh]">
           {/* Sidebar Stepper - Desktop Only */}
           <div className="hidden md:flex flex-col w-64 bg-gray-900 p-8 text-white shrink-0">

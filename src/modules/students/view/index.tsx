@@ -16,6 +16,12 @@ import { Dialog } from "@/components/ui/dialog";
 import AddBulkStudentModal from "../components/add-bulk-student";
 import { ExportButton } from "@/components/export-button";
 import { usePermission } from "@/utils/permissions";
+import { DeleteModal } from "@/components/delete-modal";
+import { BulkAssignClassModal } from "../components/bulk-assign-modal";
+import { BulkDiscountModal } from "../components/bulk-discount-modal";
+import { EditStudentModal } from "../components/edit-student";
+import { useBulkDeleteStudentsMutation } from "@/redux/api/student";
+import { showerror, showsuccess } from "@/utils/toast";
 
 export default function StudentView() {
   const [searchQuery, setSearchQuery] = useState("");
@@ -24,6 +30,14 @@ export default function StudentView() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isBulkModalOpen, setIsBulkModalOpen] = useState(false);
   const [selectedClassId, setSelectedClassId] = useState("");
+  const [selectedStudentIds, setSelectedStudentIds] = useState<string[]>([]);
+  const [isAssignModalOpen, setIsAssignModalOpen] = useState(false);
+  const [isDiscountModalOpen, setIsDiscountModalOpen] = useState(false);
+  const [isDeleteConfirmOpen, setIsDeleteConfirmOpen] = useState(false);
+  const [editingStudentId, setEditingStudentId] = useState<string | null>(null);
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  
+  const [bulkDeleteStudents, { isLoading: isBulkDeleting }] = useBulkDeleteStudentsMutation();
   const itemsPerPage = 10;
 
   const { currentUser } = useSelector((state: RootState) => state.authState);
@@ -85,15 +99,31 @@ export default function StudentView() {
   const handleSearch = (query: string) => {
     setSearchQuery(query);
     setCurrentPage(1);
+    setSelectedStudentIds([]);
   };
 
   const handleClassChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     setSelectedClassId(e.target.value);
     setCurrentPage(1);
+    setSelectedStudentIds([]);
   };
 
   const handlePageChange = (page: number) => {
     setCurrentPage(page);
+    setSelectedStudentIds([]);
+  };
+
+  const handleBulkDeleteConfirm = async () => {
+    try {
+      const res = await bulkDeleteStudents({ studentIds: selectedStudentIds }).unwrap();
+      showsuccess(res?.message || "Students deleted successfully");
+      setSelectedStudentIds([]);
+      setIsDeleteConfirmOpen(false);
+    } catch (error: any) {
+      showerror(
+        error?.data?.message || "Failed to delete selected students"
+      );
+    }
   };
 
   const totalPages = students?.data?.meta?.totalPages || 1;
@@ -116,8 +146,9 @@ export default function StudentView() {
       <div className="flex flex-col md:flex-row gap-4 items-start md:items-center justify-between">
         <div className="relative">
           <button
-            onClick={() => setIsModalOpen(!isModalOpen)}
-            className="flex items-center gap-2 px-6 py-3 bg-gray-900 text-white font-medium rounded-lg hover:bg-gray-800 transition-colors"
+            disabled={selectedStudentIds.length > 0}
+            onClick={() => !isModalOpen && setIsModalOpen(!isModalOpen)}
+            className="flex items-center gap-2 px-6 py-3 bg-gray-900 text-white font-medium rounded-lg hover:bg-gray-800 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
           >
             Add Student
           </button>
@@ -142,13 +173,18 @@ export default function StudentView() {
 
         <div className="flex flex-col md:flex-row gap-4 items-start md:items-center w-full md:w-auto">
           <div className="flex flex-col md:flex-row gap-4 w-full md:w-auto">
-            <SearchInput onSearch={handleSearch} placeholder="Search students..." />
+            <SearchInput
+              disabled={selectedStudentIds.length > 0}
+              onSearch={handleSearch}
+              placeholder="Search students..."
+            />
             
             <div className="relative">
               <select
+                disabled={selectedStudentIds.length > 0}
                 value={selectedClassId}
                 onChange={handleClassChange}
-                className="w-full md:w-auto pl-4 pr-10 py-3 bg-gray-100 text-gray-900 font-medium rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 focus:bg-white transition-all appearance-none min-w-[160px] cursor-pointer"
+                className="w-full md:w-auto pl-4 pr-10 py-3 bg-gray-100 text-gray-900 font-medium rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 focus:bg-white transition-all appearance-none min-w-[160px] cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 <option value="">All Classes</option>
                 {classes?.data?.map((classItem) => (
@@ -170,6 +206,7 @@ export default function StudentView() {
             </button> */}
 
             <ExportButton
+              disabled={selectedStudentIds.length > 0}
               data={exportData}
               filename="Students_List"
               sheetName="Students"
@@ -177,6 +214,45 @@ export default function StudentView() {
           </div>
         </div>
       </div>
+
+      {selectedStudentIds.length > 0 && (
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between bg-purple-50 border border-purple-100 rounded-xl p-4 sm:px-6 animate-in fade-in slide-in-from-top-4 duration-300 gap-4">
+          <div className="flex items-center gap-3">
+            <span className="text-sm font-semibold text-purple-900 bg-purple-100 px-3 py-1 rounded-full">
+              {selectedStudentIds.length} Selected
+            </span>
+            <span className="text-sm text-purple-700 font-medium">
+              student{selectedStudentIds.length > 1 ? "s" : ""} chosen for bulk actions
+            </span>
+          </div>
+          <div className="flex flex-wrap items-center gap-3 w-full sm:w-auto">
+            <button
+              onClick={() => setIsAssignModalOpen(true)}
+              className="flex-1 sm:flex-none px-4 py-2.5 bg-purple-600 hover:bg-purple-700 text-white rounded-lg text-sm font-semibold shadow-sm transition-all active:scale-95"
+            >
+              Assign Class
+            </button>
+            <button
+              onClick={() => setIsDiscountModalOpen(true)}
+              className="flex-1 sm:flex-none px-4 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg text-sm font-semibold shadow-sm transition-all active:scale-95"
+            >
+              Give Discount
+            </button>
+            <button
+              onClick={() => setIsDeleteConfirmOpen(true)}
+              className="flex-1 sm:flex-none px-4 py-2.5 bg-red-600 hover:bg-red-700 text-white rounded-lg text-sm font-semibold shadow-sm transition-all active:scale-95"
+            >
+              Delete Selected
+            </button>
+            <button
+              onClick={() => setSelectedStudentIds([])}
+              className="w-full sm:w-auto px-4 py-2.5 text-gray-500 hover:text-gray-700 text-sm font-semibold transition-colors text-center cursor-pointer"
+            >
+              Cancel
+            </button>
+          </div>
+        </div>
+      )}
       <div className="space-y-6">
         <StudentTable
           students={
@@ -199,6 +275,12 @@ export default function StudentView() {
           }
           isLoading={isFetchingStudents || isLoadingStudents}
           classItems={classes?.data ?? []}
+          selectedStudentIds={selectedStudentIds}
+          setSelectedStudentIds={setSelectedStudentIds}
+          onEditStudent={(id) => {
+            setEditingStudentId(id);
+            setIsEditModalOpen(true);
+          }}
         />
 
         {totalPages > 1 && (
@@ -222,6 +304,41 @@ export default function StudentView() {
         setIsBulkModalOpen={setIsBulkModalOpen}
         classItems={classes?.data ?? []}
         isClassLoading={isFetchingClasses || isLoadingClasses}
+      />
+
+      <DeleteModal
+        isOpen={isDeleteConfirmOpen}
+        onClose={() => setIsDeleteConfirmOpen(false)}
+        onConfirm={handleBulkDeleteConfirm}
+        title="Delete Selected Students"
+        description={`Are you sure you want to delete ${selectedStudentIds.length} selected student(s)? This action cannot be undone.`}
+        isLoading={isBulkDeleting}
+      />
+
+      <BulkAssignClassModal
+        open={isAssignModalOpen}
+        onOpenChange={setIsAssignModalOpen}
+        studentIds={selectedStudentIds}
+        classItems={classes?.data ?? []}
+        onSuccess={() => setSelectedStudentIds([])}
+      />
+
+      <BulkDiscountModal
+        open={isDiscountModalOpen}
+        onOpenChange={setIsDiscountModalOpen}
+        studentIds={selectedStudentIds}
+        onSuccess={() => setSelectedStudentIds([])}
+      />
+
+      <EditStudentModal
+        isOpen={isEditModalOpen}
+        onClose={() => {
+          setIsEditModalOpen(false);
+          setEditingStudentId(null);
+        }}
+        studentId={editingStudentId}
+        classItems={classes?.data ?? []}
+        isClassesLoading={isFetchingClasses || isLoadingClasses}
       />
     </div>
   );

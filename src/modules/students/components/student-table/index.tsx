@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import React, { useState } from "react";
 import StudentTableLoader from "../../Loader/table-loader";
 import { StudentProfileModal } from "../student-profile";
 import { GetStudentsResponse, Student } from "@/@types/student";
@@ -8,18 +8,24 @@ import { ClassItem } from "@/@types/class";
 import { useDeleteStudentMutation } from "@/redux/api/student";
 import { DeleteModal } from "@/components/delete-modal";
 import { showerror, showsuccess } from "@/utils/toast";
-import { Eye, Trash2 } from "lucide-react";
+import { Eye, Trash2, Pencil } from "lucide-react";
 
 interface StudentTableProps {
   students: GetStudentsResponse;
   isLoading?: boolean;
   classItems: ClassItem[];
+  selectedStudentIds: string[];
+  setSelectedStudentIds: React.Dispatch<React.SetStateAction<string[]>>;
+  onEditStudent: (id: string) => void;
 }
 
 export function StudentTable({
   students,
   isLoading = false,
   classItems,
+  selectedStudentIds,
+  setSelectedStudentIds,
+  onEditStudent,
 }: StudentTableProps) {
   const [selectedStudent, setSelectedStudent] = useState<Student | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -40,10 +46,14 @@ export function StudentTable({
 
   const getClassById = (classId: string | any) => {
     if (!classId) return "";
-    if (typeof classId === 'object' && classId.name) return classId.name;
-    const idToSearch = typeof classId === 'object' ? classId._id : classId;
+    if (typeof classId === "object" && classId.name) return classId.name;
+    const idToSearch = typeof classId === "object" ? classId._id : classId;
     const classItem = classItems.find((item) => item._id === idToSearch);
-    return classItem ? classItem.name : (typeof classId === 'string' ? classId : "");
+    return classItem
+      ? classItem.name
+      : typeof classId === "string"
+        ? classId
+        : "";
   };
 
   const handleDeleteStudent = (student: Student) => {
@@ -72,7 +82,24 @@ export function StudentTable({
                 <div className="flex items-center gap-3">
                   <input
                     type="checkbox"
-                    className="w-4 h-4 border-2 border-gray-300 rounded cursor-pointer"
+                    checked={
+                      students?.data?.items?.length > 0 &&
+                      students.data.items.every((student) =>
+                        selectedStudentIds.includes(student._id),
+                      )
+                    }
+                    onChange={(e) => {
+                      if (e.target.checked) {
+                        const allIds =
+                          students?.data?.items?.map(
+                            (student) => student._id,
+                          ) || [];
+                        setSelectedStudentIds(allIds);
+                      } else {
+                        setSelectedStudentIds([]);
+                      }
+                    }}
+                    className="w-4 h-4 border-2 border-gray-300 rounded cursor-pointer accent-purple-500 focus:ring-purple-500 text-purple-600"
                   />
                   <span className="text-sm font-medium text-gray-600">
                     Student ID
@@ -91,7 +118,7 @@ export function StudentTable({
               <th className="px-6 py-4 text-left text-sm font-medium text-gray-600 whitespace-nowrap">
                 Gender
               </th>
-              <th className="px-6 py-4 text-left text-sm font-medium text-gray-600 whitespace-nowrap">
+              {/* <th className="px-6 py-4 text-left text-sm font-medium text-gray-600 whitespace-nowrap">
                 Amount Fee
               </th>
               <th className="px-6 py-4 text-left text-sm font-medium text-gray-600 whitespace-nowrap">
@@ -99,7 +126,7 @@ export function StudentTable({
               </th>
               <th className="px-6 py-4 text-left text-sm font-medium text-gray-600 whitespace-nowrap">
                 Balance
-              </th>
+              </th> */}
               <th className="px-6 py-4 text-left text-sm font-medium text-gray-600 whitespace-nowrap">
                 Action
               </th>
@@ -124,7 +151,20 @@ export function StudentTable({
                       <div className="flex items-center gap-3">
                         <input
                           type="checkbox"
-                          className="w-4 h-4 border-2 border-gray-300 rounded cursor-pointer"
+                          checked={selectedStudentIds.includes(student._id)}
+                          onChange={(e) => {
+                            if (e.target.checked) {
+                              setSelectedStudentIds((prev) => [
+                                ...prev,
+                                student._id,
+                              ]);
+                            } else {
+                              setSelectedStudentIds((prev) =>
+                                prev.filter((id) => id !== student._id),
+                              );
+                            }
+                          }}
+                          className="w-4 h-4 border-2 border-gray-300 rounded cursor-pointer accent-purple-500 focus:ring-purple-500 text-purple-600"
                         />
                         <span className="text-sm text-gray-900">
                           {student._id}
@@ -145,29 +185,42 @@ export function StudentTable({
                       {student.gender}
                     </td>
 
-                    <td className="px-6 py-4 text-sm font-medium text-gray-900">
-                      {"-"}
+                    {/* <td className="px-6 py-4 text-sm font-medium text-gray-900"> */}
+                    {/* {"-"}
                     </td>
                     <td className="px-6 py-4 text-sm font-medium text-gray-900">
                       {"-"}
                     </td>
                     <td className="px-6 py-4 text-sm font-medium text-gray-900">
                       {"-"}
-                    </td>
+                    </td> */}
                     <td className="px-6 py-4">
                       <div className="flex items-center gap-3">
                         <button
+                          disabled={selectedStudentIds.length > 0}
                           onClick={() => handleViewStudent(student)}
-                          className="text-sm text-gray-700 hover:text-gray-900 underline"
+                          className="text-sm text-gray-700 hover:text-gray-900 underline disabled:opacity-50 disabled:cursor-not-allowed"
+                          title="View Student"
                         >
-                          <Eye />
+                          <Eye size={18} />
                         </button>
                         <span className="text-gray-300">|</span>
                         <button
-                          onClick={() => handleDeleteStudent(student)}
-                          className="text-sm text-gray-700 hover:text-gray-900 underline"
+                          disabled={selectedStudentIds.length > 0}
+                          onClick={() => onEditStudent(student._id)}
+                          className="text-sm text-gray-700 hover:text-purple-600 underline disabled:opacity-50 disabled:cursor-not-allowed"
+                          title="Edit Student"
                         >
-                          <Trash2 />
+                          <Pencil size={18} />
+                        </button>
+                        <span className="text-gray-300">|</span>
+                        <button
+                          disabled={selectedStudentIds.length > 0}
+                          onClick={() => handleDeleteStudent(student)}
+                          className="text-sm text-gray-700 hover:text-red-600 underline disabled:opacity-50 disabled:cursor-not-allowed"
+                          title="Delete Student"
+                        >
+                          <Trash2 size={18} />
                         </button>
                       </div>
                     </td>

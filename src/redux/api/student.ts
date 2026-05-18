@@ -60,7 +60,7 @@ export const studentApi = apiSlice.injectEndpoints({
       invalidatesTags: ["students"],
     }),
 
-    getStudentById: builder.query<GetStudentsResponse, string>({
+    getStudentById: builder.query<any, string>({
       query: (id) => ApiEndpoints.student.getStudentById(id),
       providesTags: ["students"],
     }),
@@ -86,6 +86,48 @@ export const studentApi = apiSlice.injectEndpoints({
       }),
       invalidatesTags: ["students"],
     }),
+
+    bulkDeleteStudents: builder.mutation<
+      { success: boolean; message: string; data?: any },
+      { studentIds: string[] }
+    >({
+      query: (body) => ({
+        url: ApiEndpoints.student.bulkDelete,
+        method: methods.POST,
+        body,
+      }),
+      invalidatesTags: ["students"],
+    }),
+
+    bulkDiscountStudents: builder.mutation<
+      { success: boolean; message: string; data?: any },
+      {
+        studentIds: string[];
+        paymentItem: string;
+        type: "PERCENTAGE" | "FLAT";
+        value: number;
+        expiresAt: string;
+      }
+    >({
+      query: (body) => ({
+        url: ApiEndpoints.student.bulkDiscount,
+        method: methods.POST,
+        body,
+      }),
+      invalidatesTags: ["students"],
+    }),
+
+    bulkAssignClass: builder.mutation<
+      { success: boolean; message: string },
+      { classId: string; studentIds: string[] }
+    >({
+      query: (body) => ({
+        url: ApiEndpoints.student.assignClass,
+        method: methods.PATCH,
+        body,
+      }),
+      invalidatesTags: ["students"],
+    }),
   }),
 });
 
@@ -97,4 +139,7 @@ export const {
   useDeleteStudentMutation,
   useDowloadStudentCSVFormatMutation,
   useUploadBulkStudentMutation,
+  useBulkDeleteStudentsMutation,
+  useBulkDiscountStudentsMutation,
+  useBulkAssignClassMutation,
 } = studentApi;
