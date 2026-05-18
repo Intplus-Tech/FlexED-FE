@@ -4,21 +4,20 @@ import type React from "react";
 
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useState, useRef } from "react";
+import { useState, useRef, useCallback } from "react";
 import {
   paymentSettingsSchema,
   type PaymentSettingsFormData,
 } from "@/lib/validations";
 import { Trash2, X, Loader2, CheckCircle2 } from "lucide-react";
 import {
-  useGetBanksQuery,
-  useValidateAccountMutation,
   useCreateSettlementAccountMutation,
 } from "@/redux/api/transaction";
 import { useGetShoolProfileQuery } from "@/redux/api/school";
 import { useEffect } from "react";
 import { toast } from "sonner";
 import { useDebounce } from "@/hooks/use-debounce";
+import { resolveBankAccount, getBanks } from "@/lib/paystack";
 
 interface VirtualAccountDetails {
   bankName: string;
@@ -41,45 +40,64 @@ export function PaymentSettingsTab() {
   });
 
   const { data: schoolProfile } = useGetShoolProfileQuery();
-  const { data: banksData, isLoading: isLoadingBanks } = useGetBanksQuery();
-  const [validateAccount, { isLoading: isValidating }] =
-    useValidateAccountMutation();
+  const [banksData, setBanksData] = useState<{ data: { name: string; code: string }[] } | null>(null);
+  const [isLoadingBanks, setIsLoadingBanks] = useState(false);
+  const [isValidating, setIsValidating] = useState(false);
   const [createSettlementAccount] = useCreateSettlementAccountMutation();
+
+  useEffect(() => {
+    const fetchBanks = async () => {
+      setIsLoadingBanks(true);
+      try {
+        const res = await getBanks();
+        if (res.status) {
+          setBanksData(res);
+        }
+      } catch (error) {
+        console.error("Failed to fetch banks", error);
+      } finally {
+        setIsLoadingBanks(false);
+      }
+    };
+    fetchBanks();
+  }, []);
 
   const watchBankCode = watch("bankCode");
   const watchAccountNumber = watch("accountNumber");
   const debouncedAccountNumber = useDebounce(watchAccountNumber, 3000);
 
-  useEffect(() => {
-    const validate = async () => {
-      if (watchBankCode && debouncedAccountNumber?.length === 10) {
-        try {
-          const res = await validateAccount({
-            bankCode: watchBankCode,
-            accountNumber: debouncedAccountNumber,
-          }).unwrap();
-          if (res.success) {
-            setValue("accountName", res.data.account_name);
-            const selectedBank = banksData?.data.find(
-              (b) => b.code === watchBankCode,
-            );
-            if (selectedBank) {
-              setValue("bankName", selectedBank.name);
-            }
-          }
-        } catch (error) {
-          console.error("Account validation failed", error);
+  const validateBankAccount = useCallback(async (bankCode: string, accountNumber: string) => {
+    setIsValidating(true);
+    try {
+      const res = await resolveBankAccount(accountNumber, bankCode);
+      if (res.status && res.data) {
+        setValue("accountName", res.data.account_name, { shouldValidate: true });
+        const selectedBank = banksData?.data.find(
+          (b) => b.code === bankCode,
+        );
+        if (selectedBank) {
+          setValue("bankName", selectedBank.name, { shouldValidate: true });
         }
+      } else {
+        setValue("accountName", "", { shouldValidate: true });
+        toast.error(res.message || "Account validation failed");
       }
-    };
-    validate();
-  }, [
-    watchBankCode,
-    debouncedAccountNumber,
-    validateAccount,
-    setValue,
-    banksData,
-  ]);
+    } catch (error) {
+      console.error("Account validation failed", error);
+      setValue("accountName", "", { shouldValidate: true });
+      toast.error("Failed to validate account");
+    } finally {
+      setIsValidating(false);
+    }
+  }, [banksData, setValue]);
+
+  useEffect(() => {
+    if (watchBankCode && debouncedAccountNumber?.length === 10) {
+      validateBankAccount(watchBankCode, debouncedAccountNumber);
+    } else if (debouncedAccountNumber?.length !== 10) {
+      setValue("accountName", "", { shouldValidate: true });
+    }
+  }, [watchBankCode, debouncedAccountNumber, validateBankAccount, setValue]);
 
   const [cacFile, setCacFile] = useState<File | null>(null);
   const [memarrtFile, setMemarrtFile] = useState<File | null>(null);

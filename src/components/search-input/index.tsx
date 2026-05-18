@@ -6,11 +6,13 @@ import { useState, useCallback } from "react";
 interface SearchInputProps {
   onSearch?: (query: string) => void;
   placeholder?: string;
+  disabled?: boolean;
 }
 
 export function SearchInput({
   onSearch,
   placeholder = "Search",
+  disabled = false,
 }: SearchInputProps) {
   const [query, setQuery] = useState("");
 
@@ -35,10 +37,11 @@ export function SearchInput({
       </div>
       <input
         type="text"
+        disabled={disabled}
         value={query}
         onChange={handleChange}
         placeholder={placeholder}
-        className="w-full pl-10 pr-4 py-3 bg-gray-100 text-gray-900 placeholder-gray-500 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 focus:bg-white transition-all"
+        className="w-full pl-10 pr-4 py-3 bg-gray-100 text-gray-900 placeholder-gray-500 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 focus:bg-white transition-all disabled:opacity-50 disabled:cursor-not-allowed"
       />
       {query && (
         <button

@@ -82,6 +82,9 @@ export const student = {
     `/students/admission/${admissionNumber}`,
   dowloadStudentCSVFormat: `/students/bulk/template`,
   uploadBulkStudent: (id: string) => `/students/bulk/upload/${id}`,
+  bulkDelete: "/students/bulk/delete",
+  bulkDiscount: "/students/bulk/discounts",
+  assignClass: "/students/assign-class",
 };
 
 export const classes = {

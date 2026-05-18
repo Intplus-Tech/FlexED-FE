@@ -9,6 +9,7 @@ interface ExportButtonProps {
   filename: string;
   sheetName?: string;
   className?: string;
+  disabled?: boolean;
 }
 
 export function ExportButton({
@@ -16,6 +17,7 @@ export function ExportButton({
   filename,
   sheetName = "Sheet1",
   className = "",
+  disabled = false,
 }: ExportButtonProps) {
   const [isOpen, setIsOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
@@ -46,8 +48,9 @@ export function ExportButton({
   return (
     <div className={`relative ${className}`} ref={dropdownRef}>
       <button
-        onClick={() => setIsOpen(!isOpen)}
-        className="flex items-center gap-2 px-4 py-3 bg-gray-900 text-white font-medium rounded-lg hover:bg-gray-800 transition-colors"
+        disabled={disabled}
+        onClick={() => !disabled && setIsOpen(!isOpen)}
+        className="flex items-center gap-2 px-4 py-3 bg-gray-900 text-white font-medium rounded-lg hover:bg-gray-800 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
       >
         <ExportIcon />
         Export
