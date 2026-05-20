@@ -12,6 +12,9 @@ import {
 import {
   useGetPaymentMetricsQuery,
   useGetTransactionsQuery,
+  useGetPaymentCategoriesQuery,
+  useDeletePaymentItemMutation,
+  useBulkDeleteTransactionsMutation,
 } from "@/redux/api/transaction";
 import { useSelector } from "react-redux";
 import { RootState } from "@/redux/store";
@@ -22,8 +25,10 @@ import { useGetAllClassesQuery } from "@/redux/api/class";
 import { ManualPaymentModal } from "../components/ManualPaymentModal";
 import { ExportButton } from "@/components/export-button";
 import { useGetAllAcademicSessionQuery } from "@/redux/api/academicSession";
-import { useGetPaymentCategoriesQuery } from "@/redux/api/transaction";
+
 import { usePermission } from "@/utils/permissions";
+import { DeleteModal } from "@/components/delete-modal";
+import { showerror, showsuccess } from "@/utils/toast";
 
 const ITEMS_PER_PAGE = 10;
 
@@ -41,6 +46,10 @@ export default function PaymentView() {
     useState<PaymentStatus>("FULLY_PAID");
   const [modalOpen, setModalOpen] = useState(false);
   const [isManualModalOpen, setIsManualModalOpen] = useState(false);
+  const [selectedPaymentIds, setSelectedPaymentIds] = useState<string[]>([]);
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+  const [paymentToDelete, setPaymentToDelete] = useState<string | null>(null);
+
   const authstate = useSelector((state: RootState) => state.authState);
 
   const { data: academicSessions } = useGetAllAcademicSessionQuery();
@@ -59,6 +68,8 @@ export default function PaymentView() {
   );
 
   const { isStaff } = usePermission();
+  const [deletePaymentItem, { isLoading: isDeleting }] = useDeletePaymentItemMutation();
+  const [bulkDeleteTransactions, { isLoading: isBulkDeleting }] = useBulkDeleteTransactionsMutation();
 
   const { data: schoolMetrics } = useGetSchoolMetricsQuery(
     {
@@ -123,6 +134,34 @@ export default function PaymentView() {
     setModalOpen(true);
   };
 
+  const handleDeleteClick = (id: string) => {
+    setPaymentToDelete(id);
+    setIsDeleteModalOpen(true);
+  };
+
+  const handleBulkDeleteClick = () => {
+    setPaymentToDelete(null); // null means bulk delete
+    setIsDeleteModalOpen(true);
+  };
+
+  const handleConfirmDelete = async () => {
+    try {
+      if (paymentToDelete) {
+        // Single delete
+        const res = await deletePaymentItem(paymentToDelete).unwrap();
+        showsuccess(res.message || "Payment deleted successfully");
+      } else {
+        // Bulk delete
+        const res = await bulkDeleteTransactions({ transactionIds: selectedPaymentIds }).unwrap();
+        showsuccess(res.message || "Payments deleted successfully");
+        setSelectedPaymentIds([]);
+      }
+      setIsDeleteModalOpen(false);
+    } catch (error: any) {
+      showerror(error?.data?.message || "Failed to delete payment(s)");
+    }
+  };
+
   return (
     <div className="min-h-screen bg-white">
       <div className="space-y-6 ">
@@ -162,6 +201,33 @@ export default function PaymentView() {
             sheetName="Transactions"
           />
         </div>
+
+        {selectedPaymentIds.length > 0 && (
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between bg-purple-50 border border-purple-100 rounded-xl p-4 sm:px-6 animate-in fade-in slide-in-from-top-4 duration-300 gap-4">
+            <div className="flex items-center gap-3">
+              <span className="text-sm font-semibold text-purple-900 bg-purple-100 px-3 py-1 rounded-full">
+                {selectedPaymentIds.length} Selected
+              </span>
+              <span className="text-sm text-purple-700 font-medium">
+                payment{selectedPaymentIds.length > 1 ? "s" : ""} chosen for bulk actions
+              </span>
+            </div>
+            <div className="flex flex-wrap items-center gap-3 w-full sm:w-auto">
+              <button
+                onClick={handleBulkDeleteClick}
+                className="flex-1 sm:flex-none px-4 py-2.5 bg-red-600 hover:bg-red-700 text-white rounded-lg text-sm font-semibold shadow-sm transition-all active:scale-95"
+              >
+                Delete Selected
+              </button>
+              <button
+                onClick={() => setSelectedPaymentIds([])}
+                className="w-full sm:w-auto px-4 py-2.5 text-gray-500 hover:text-gray-700 text-sm font-semibold transition-colors text-center cursor-pointer"
+              >
+                Clear Selection
+              </button>
+            </div>
+          </div>
+        )}
 
         {/* Filters Section */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 p-4 bg-gray-50 rounded-xl border border-gray-100">
@@ -244,6 +310,9 @@ export default function PaymentView() {
           data={data?.data}
           isLoading={isFetching || isLoading}
           classItems={classItems?.data ?? []}
+          selectedPaymentIds={selectedPaymentIds}
+          setSelectedPaymentIds={setSelectedPaymentIds}
+          onDelete={handleDeleteClick}
         />
 
         {totalPages > 1 && (
@@ -263,6 +332,16 @@ export default function PaymentView() {
       <ManualPaymentModal
         isOpen={isManualModalOpen}
         onClose={() => setIsManualModalOpen(false)}
+      />
+      <DeleteModal
+        isOpen={isDeleteModalOpen}
+        onClose={() => setIsDeleteModalOpen(false)}
+        onConfirm={handleConfirmDelete}
+        title={paymentToDelete ? "Delete Payment" : "Delete Selected Payments"}
+        description={`Are you sure you want to delete ${
+          paymentToDelete ? "this payment" : `these ${selectedPaymentIds.length} payments`
+        }? This action cannot be undone.`}
+        isLoading={isDeleting || isBulkDeleting}
       />
     </div>
   );

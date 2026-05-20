@@ -153,6 +153,17 @@ export const transactionApi = apiSlice.injectEndpoints({
       }),
       invalidatesTags: ["Transaction"],
     }),
+    bulkDeleteTransactions: builder.mutation<
+      { success: boolean; message: string },
+      { transactionIds: string[] }
+    >({
+      query: (body) => ({
+        url: ApiEndpoints.payment.bulkDeleteTransactions,
+        method: methods.POST,
+        body,
+      }),
+      invalidatesTags: ["Transaction"],
+    }),
     getPaymentItem: builder.query<
       { success: boolean; message: string; data: PaymentItem },
       string
@@ -224,4 +235,5 @@ export const {
   useCreateSettlementAccountMutation,
   useGetStudentFeeProfileQuery,
   useAllocateManualPaymentMutation,
+  useBulkDeleteTransactionsMutation,
 } = transactionApi;
