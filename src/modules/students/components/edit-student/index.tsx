@@ -97,8 +97,8 @@ export function EditStudentModal({
 
   // Prefill the form when student details are loaded
   useEffect(() => {
-    if (studentData?.data && isOpen) {
-      const student = studentData.data;
+    if (studentData && isOpen) {
+      const student = studentData;
       reset({
         firstName: student.firstName || "",
         lastName: student.lastName || "",
@@ -157,7 +157,7 @@ export function EditStudentModal({
         class: data.class,
         admissionNumber: data?.admissionNumber as string,
         parentDetails: data.parentDetails,
-        school: studentData?.data?.school || "",
+        school: studentData?.school || "",
       } as any).unwrap();
       
       showsuccess(res?.message || "Student updated successfully");

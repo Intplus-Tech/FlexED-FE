@@ -35,6 +35,11 @@ const navItems: NavItem[] = [
     icon: <DashboardIcon />,
   },
   {
+    label: "Settlement",
+    href: "/dashboard/settlement",
+    icon: <PaymentsIcon />,
+  },
+  {
     label: "Payments",
     href: "/dashboard/payments",
     icon: <PaymentsIcon />,
