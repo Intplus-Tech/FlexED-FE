@@ -6,10 +6,15 @@ import { TableSkeleton } from "../../Loader/table-loader";
 import { ClassItem } from "@/@types/class";
 import { TransactionsItems } from "@/@types/transaction";
 
+import { Trash2 } from "lucide-react";
+
 interface PaymentTableProps {
   data?: TransactionsItems;
   isLoading?: boolean;
   classItems: ClassItem[];
+  selectedPaymentIds: string[];
+  setSelectedPaymentIds: React.Dispatch<React.SetStateAction<string[]>>;
+  onDelete?: (id: string) => void;
 }
 
 export function PaymentTable({
@@ -26,26 +31,26 @@ export function PaymentTable({
   },
   isLoading = false,
   classItems = [],
+  selectedPaymentIds,
+  setSelectedPaymentIds,
+  onDelete,
 }: PaymentTableProps) {
-  const [selectedRows, setSelectedRows] = useState<Set<string>>(new Set());
 
   console.log("Payment data:", data);
   const handleSelectAll = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.checked) {
-      setSelectedRows(new Set(data?.items?.map((row: any) => row.id)));
+      setSelectedPaymentIds(data?.items?.map((row: any) => row._id) || []);
     } else {
-      setSelectedRows(new Set());
+      setSelectedPaymentIds([]);
     }
   };
 
   const handleSelectRow = (id: string) => {
-    const newSelected = new Set(selectedRows);
-    if (newSelected.has(id)) {
-      newSelected.delete(id);
+    if (selectedPaymentIds.includes(id)) {
+      setSelectedPaymentIds(selectedPaymentIds.filter((pId) => pId !== id));
     } else {
-      newSelected.add(id);
+      setSelectedPaymentIds([...selectedPaymentIds, id]);
     }
-    setSelectedRows(newSelected);
   };
 
   const getClassById = (classId: string | any) => {
@@ -66,6 +71,13 @@ export function PaymentTable({
                 <div className="flex items-center gap-3">
                   <input
                     type="checkbox"
+                    checked={
+                      data?.items?.length > 0 &&
+                      data.items.every((item) =>
+                        selectedPaymentIds.includes(item._id),
+                      )
+                    }
+                    onChange={handleSelectAll}
                     className="w-4 h-4 border-2 border-gray-300 rounded cursor-pointer"
                   />
                   <span className="text-sm font-medium text-gray-600">
@@ -88,6 +100,9 @@ export function PaymentTable({
 
               <th className="px-6 py-4 text-left text-sm font-medium text-gray-600">
                 Status
+              </th>
+              <th className="px-6 py-4 text-left text-sm font-medium text-gray-600">
+                Action
               </th>
             </tr>
           </thead>
@@ -113,6 +128,8 @@ export function PaymentTable({
                     <div className="flex items-center gap-3">
                       <input
                         type="checkbox"
+                        checked={selectedPaymentIds.includes(payment._id)}
+                        onChange={() => handleSelectRow(payment._id)}
                         className="w-4 h-4 border-2 border-gray-300 rounded cursor-pointer"
                       />
                       <span className="text-sm text-gray-900">
@@ -149,6 +166,15 @@ export function PaymentTable({
                     >
                       {payment.status}
                     </span>
+                  </td>
+                  <td className="px-6 py-4">
+                    <button
+                      onClick={() => onDelete?.(payment._id)}
+                      className="text-gray-400 hover:text-red-600 transition-colors"
+                      title="Delete payment"
+                    >
+                      <Trash2 size={18} />
+                    </button>
                   </td>
                 </tr>
               ))

@@ -46,6 +46,8 @@ export const payment = {
   makePayment: `/payments/initiate-student-payment`,
   collectManualPayment: "/payments/manual",
   getClassCollection: `/payments/class-collections`,
+  bulkDeleteTransactions: "/payments/transactions/bulk/delete",
+
   getTransactionChartData: (schoolId: string) =>
     `/payments/school/${schoolId}/weekly-summary`,
   updatePaymentItem: (paymentItemId: string) => `/payments/items/${paymentItemId}`,
