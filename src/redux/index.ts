@@ -55,6 +55,7 @@ const apiSlice = createApi({
     "classes",
     "staff",
     "schoolProfile",
+    "Payout",
   ],
   endpoints: () => ({}),
 });

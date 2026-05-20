@@ -6,6 +6,7 @@ import {
   BulkUploadResponse,
   CreateStudentRequest,
   GetStudentsResponse,
+  GetStudentByIdResponse,
 } from "@/@types/student";
 import { request } from "http";
 import { QueryHelper } from "@/utils/functions";
@@ -60,8 +61,10 @@ export const studentApi = apiSlice.injectEndpoints({
       invalidatesTags: ["students"],
     }),
 
-    getStudentById: builder.query<any, string>({
+    getStudentById: builder.query<GetStudentByIdResponse, string>({
       query: (id) => ApiEndpoints.student.getStudentById(id),
+      transformResponse: (response: { success: boolean; message: string; data: GetStudentByIdResponse }) =>
+        response.data,
       providesTags: ["students"],
     }),
 

@@ -103,6 +103,17 @@ export const sms = {
   smsTopupInitiate: `/sms-wallet/topup/initiate`,
 };
 
+export const payout = {
+  getPayouts: "/payouts",
+  getPayoutById: (id: string) => `/payouts/${id}`,
+  getWallet: "/wallet",
+  createPayout: "/payouts",
+};
+
+export const settlementAccount = {
+  getSchoolAccounts: (schoolId: string) => `/settlement-accounts/school/${schoolId}`,
+};
+
 export const ApiEndpoints = {
   baseUrl: process.env.NEXT_PUBLIC_API_BASE_URL!,
   auth,
@@ -114,4 +125,6 @@ export const ApiEndpoints = {
   academicSession,
   classes,
   file,
+  payout,
+  settlementAccount,
 };

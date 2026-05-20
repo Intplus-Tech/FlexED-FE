@@ -96,3 +96,60 @@ export interface FailedStudent {
     admissionNumber: string;
     error: string;
 }
+
+export type GetStudentByIdResponse = StudentDetail;
+
+export interface StudentDetail {
+  _id: string;
+  id?: string;
+  firstName: string;
+  lastName: string;
+  admissionNumber: string;
+  school: string;
+  class: {
+    _id: string;
+    name: string;
+    level: string;
+    classType: string;
+    subClass?: string;
+    description?: string;
+  };
+  profileImageId?: {
+    _id: string;
+    url: string;
+    publicId: string;
+  } | null;
+  dateOfBirth: string;
+  gender: "MALE" | "FEMALE";
+  discounts: StudentDiscount[];
+  parentDetails: ParentDetailResponse[];
+  isDeleted: boolean;
+  deletedAt?: string | null;
+  deletedBy?: string | null;
+  createdAt: string;
+  updatedAt: string;
+  __v?: number;
+}
+
+export interface StudentDiscount {
+  paymentItem: string;
+  type: "PERCENTAGE" | "FLAT";
+  value: number;
+  expiresAt: string;
+}
+
+export interface ParentDetailResponse {
+  _id: string;
+  firstName: string;
+  lastName: string;
+  email: string;
+  phone: string;
+  relationship: string;
+  isRegistered: boolean;
+  address?: string;
+  occupation?: string;
+  gender?: "MALE" | "FEMALE";
+  title?: string;
+  authUserId?: string | null;
+  children?: string[];
+}
