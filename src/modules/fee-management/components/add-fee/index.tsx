@@ -172,8 +172,7 @@ export function CreateFeeModal({
     data: paymentCategories,
     isLoading: isLoadingPaymentCategories,
     isFetching: isPaymentCategoriesFetching,
-  } = useGetPaymentCategoriesQuery();
-
+  } = useGetPaymentCategoriesQuery({ limit: 1000 });
   const {
     data: academicSessions,
     isLoading: isLoadingAcademicSessions,
@@ -216,7 +215,11 @@ export function CreateFeeModal({
   }, [studentSearchQuery, studentsData]);
 
   const selectedStudentsData = useMemo(() => {
-    return studentsData?.data?.items?.filter((s) => selectedStudents.includes(s._id)) || [];
+    return (
+      studentsData?.data?.items?.filter((s) =>
+        selectedStudents.includes(s._id),
+      ) || []
+    );
   }, [selectedStudents, studentsData]);
 
   console.log(academicSessions, "academicSessions");
@@ -237,7 +240,10 @@ export function CreateFeeModal({
             description: data.description || "",
             classes: data.classes,
             applicableTo: data.applicableTo,
-            students: data.applicableTo === "INDIVIDUAL_SELECTION" ? data.students : undefined,
+            students:
+              data.applicableTo === "INDIVIDUAL_SELECTION"
+                ? data.students
+                : undefined,
             dueDate: new Date(data.dueDate).toISOString(),
             ...(data.discount?.type && {
               discount: {
@@ -268,7 +274,10 @@ export function CreateFeeModal({
         applicableTo: data.applicableTo,
         category: data.category,
         classes: data.classes,
-        students: data.applicableTo === "INDIVIDUAL_SELECTION" ? data.students : undefined,
+        students:
+          data.applicableTo === "INDIVIDUAL_SELECTION"
+            ? data.students
+            : undefined,
         description: data.description || "",
         dueDate: new Date(data.dueDate).toISOString(),
         name: data.name,
@@ -528,17 +537,25 @@ export function CreateFeeModal({
                           key={student._id}
                           type="button"
                           onClick={() => {
-                            const isSelected = selectedStudents.includes(student._id);
+                            const isSelected = selectedStudents.includes(
+                              student._id,
+                            );
                             if (isSelected) {
                               setValue(
                                 "students",
-                                selectedStudents.filter((id) => id !== student._id),
+                                selectedStudents.filter(
+                                  (id) => id !== student._id,
+                                ),
                                 { shouldValidate: true },
                               );
                             } else {
-                              setValue("students", [...selectedStudents, student._id], {
-                                shouldValidate: true,
-                              });
+                              setValue(
+                                "students",
+                                [...selectedStudents, student._id],
+                                {
+                                  shouldValidate: true,
+                                },
+                              );
                             }
                             setStudentSearchQuery("");
                           }}

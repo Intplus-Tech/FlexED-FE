@@ -12,6 +12,7 @@ import { Student } from "@/@types/student";
 import { ClassItem } from "@/@types/class";
 import { useGetStudentByIdQuery } from "@/redux/api/student";
 import { useGetStudentFeeProfileQuery } from "@/redux/api/transaction";
+import { StudentDiscountModal } from "../student-discount-modal";
 
 interface StudentProfileModalProps {
   isOpen: boolean;
@@ -29,6 +30,7 @@ export function StudentProfileModal({
   const [activeTab, setActiveTab] = useState<"parent" | "fees" | "payment">(
     "parent",
   );
+  const [isDiscountModalOpen, setIsDiscountModalOpen] = useState(false);
 
   const { data: studentData, isLoading: isStudentLoading } = useGetStudentByIdQuery(student?._id || "", {
     skip: !isOpen || !student?._id,
@@ -191,12 +193,6 @@ export function StudentProfileModal({
 
               {/* Fee Summary Cards */}
               <div className="flex flex-col sm:flex-row gap-4 w-full lg:w-auto flex-1">
-                <div className="bg-purple-50 border border-purple-100 rounded-xl p-4 flex-1 lg:w-44">
-                  <p className="text-xs text-purple-600 font-semibold mb-1 uppercase tracking-wider">Total Owed</p>
-                  <p className="text-2xl font-bold text-purple-800">
-                    ₦{(feeProfileResponse?.data?.paymentItem?.reduce((sum, item) => sum + item.totalAmount, 0) || 0).toLocaleString()}
-                  </p>
-                </div>
                 <div className="bg-green-50 border border-green-100 rounded-xl p-4 flex-1 lg:w-44">
                   <p className="text-xs text-green-600 font-semibold mb-1 uppercase tracking-wider">Total Paid</p>
                   <p className="text-2xl font-bold text-green-800">
@@ -253,7 +249,7 @@ export function StudentProfileModal({
               {activeTab === "parent" && (
                 <div className="space-y-6">
                   {activeStudent.parentDetails && activeStudent.parentDetails.length > 0 ? (
-                    activeStudent.parentDetails.map((parent: any, index: number) => (
+                    activeStudent.parentDetails.map((parent, index: number) => (
                       <div
                         key={parent._id || index}
                         className="bg-gray-50 border border-gray-100 rounded-xl p-6 space-y-4"
@@ -286,7 +282,7 @@ export function StudentProfileModal({
                               {(parent.relationship || "PARENT").toLowerCase()}
                             </p>
                           </div>
-                          <div>
+                          {/* <div>
                             <label className="text-xs font-semibold text-gray-400 uppercase tracking-wider">Status</label>
                             <div className="mt-1">
                               {parent.isRegistered ? (
@@ -299,7 +295,7 @@ export function StudentProfileModal({
                                 </span>
                               )}
                             </div>
-                          </div>
+                          </div> */}
                           {parent.address && (
                             <div className="sm:col-span-2 md:col-span-3">
                               <label className="text-xs font-semibold text-gray-400 uppercase tracking-wider">Address</label>
@@ -344,7 +340,15 @@ export function StudentProfileModal({
               {activeTab === "fees" && (
                 <div className="space-y-6">
                   <div>
-                    <h3 className="text-base font-bold text-gray-900 mb-4">Assigned Fee Item Breakdown</h3>
+                    <div className="flex items-center justify-between mb-4">
+                      <h3 className="text-base font-bold text-gray-900">Assigned Fee Item Breakdown</h3>
+                      <button
+                        onClick={() => setIsDiscountModalOpen(true)}
+                        className="text-sm font-semibold text-purple-600 hover:text-purple-700 transition-colors bg-purple-50 px-3 py-1.5 rounded-lg"
+                      >
+                        + Add Discount
+                      </button>
+                    </div>
                     {feeProfileResponse?.data?.paymentItem && feeProfileResponse.data.paymentItem.length > 0 ? (
                       <div className="border border-gray-200 rounded-xl overflow-hidden bg-white shadow-xs">
                         <table className="w-full">
@@ -387,7 +391,15 @@ export function StudentProfileModal({
 
                   {studentData?.discounts && studentData.discounts.length > 0 && (
                     <div className="border-t border-gray-100 pt-6">
-                      <h3 className="text-base font-bold text-gray-900 mb-4 font-semibold">Active Student Discounts</h3>
+                      <div className="flex items-center justify-between mb-4">
+                        <h3 className="text-base font-bold text-gray-900 font-semibold">Active Student Discounts</h3>
+                        <button
+                          onClick={() => setIsDiscountModalOpen(true)}
+                          className="text-sm font-semibold text-purple-600 hover:text-purple-700 transition-colors"
+                        >
+                          Manage Discounts
+                        </button>
+                      </div>
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                         {studentData.discounts.map((discount, idx) => (
                           <div
@@ -463,6 +475,14 @@ export function StudentProfileModal({
           </>
         )}
       </DialogContent>
+
+      <StudentDiscountModal
+        isOpen={isDiscountModalOpen}
+        onClose={() => setIsDiscountModalOpen(false)}
+        studentId={activeStudent?._id || ""}
+        paymentItems={feeProfileResponse?.data?.paymentItem || []}
+        existingDiscounts={studentData?.discounts || []}
+      />
     </Dialog>
   );
 }

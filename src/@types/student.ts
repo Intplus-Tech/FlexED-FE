@@ -59,6 +59,7 @@ export interface Student {
     lastName: string;
     phone: string;
     relationship: string;
+    address?: string;
   }[];
   dateOfBirth: string;
   gender: "MALE" | "FEMALE";

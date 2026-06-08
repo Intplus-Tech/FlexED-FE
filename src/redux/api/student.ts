@@ -131,6 +131,24 @@ export const studentApi = apiSlice.injectEndpoints({
       }),
       invalidatesTags: ["students"],
     }),
+
+    addStudentDiscount: builder.mutation<
+      { success: boolean; message: string; data?: any },
+      {
+        studentId: string;
+        paymentItem: string;
+        type: "PERCENTAGE" | "FLAT";
+        value: number;
+        expiresAt: string;
+      }
+    >({
+      query: ({ studentId, ...body }) => ({
+        url: ApiEndpoints.student.addDiscount(studentId),
+        method: methods.POST,
+        body,
+      }),
+      invalidatesTags: ["students"],
+    }),
   }),
 });
 
@@ -145,4 +163,5 @@ export const {
   useBulkDeleteStudentsMutation,
   useBulkDiscountStudentsMutation,
   useBulkAssignClassMutation,
+  useAddStudentDiscountMutation,
 } = studentApi;

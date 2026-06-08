@@ -86,6 +86,7 @@ export const student = {
   uploadBulkStudent: (id: string) => `/students/bulk/upload/${id}`,
   bulkDelete: "/students/bulk/delete",
   bulkDiscount: "/students/bulk/discounts",
+  addDiscount: (id: string) => `/students/${id}/discounts`,
   assignClass: "/students/assign-class",
 };
 
