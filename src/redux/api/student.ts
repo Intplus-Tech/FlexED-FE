@@ -149,6 +149,41 @@ export const studentApi = apiSlice.injectEndpoints({
       }),
       invalidatesTags: ["students"],
     }),
+
+    addStudentExemption: builder.mutation<
+      { success: boolean; message: string; data?: any },
+      { studentId: string; paymentItem: string; reason?: string }
+    >({
+      query: ({ studentId, ...body }) => ({
+        url: ApiEndpoints.student.addExemption(studentId),
+        method: methods.POST,
+        body,
+      }),
+      invalidatesTags: ["students", "Transaction"],
+    }),
+
+    bulkExemptStudents: builder.mutation<
+      { success: boolean; message: string; data?: { updatedCount: number; successful: string[]; failed: string[] } },
+      { studentIds: string[]; paymentItem: string; reason?: string }
+    >({
+      query: (body) => ({
+        url: ApiEndpoints.student.bulkExemption,
+        method: methods.POST,
+        body,
+      }),
+      invalidatesTags: ["students"],
+    }),
+
+    removeStudentExemption: builder.mutation<
+      { success: boolean; message: string },
+      { studentId: string; paymentItemId: string }
+    >({
+      query: ({ studentId, paymentItemId }) => ({
+        url: ApiEndpoints.student.removeExemption(studentId, paymentItemId),
+        method: methods.DELETE,
+      }),
+      invalidatesTags: ["students", "Transaction"],
+    }),
   }),
 });
 
@@ -164,4 +199,7 @@ export const {
   useBulkDiscountStudentsMutation,
   useBulkAssignClassMutation,
   useAddStudentDiscountMutation,
+  useAddStudentExemptionMutation,
+  useBulkExemptStudentsMutation,
+  useRemoveStudentExemptionMutation,
 } = studentApi;

@@ -19,6 +19,7 @@ import { usePermission } from "@/utils/permissions";
 import { DeleteModal } from "@/components/delete-modal";
 import { BulkAssignClassModal } from "../components/bulk-assign-modal";
 import { BulkDiscountModal } from "../components/bulk-discount-modal";
+import { BulkExemptionModal } from "../components/bulk-exemption-modal";
 import { EditStudentModal } from "../components/edit-student";
 import { useBulkDeleteStudentsMutation } from "@/redux/api/student";
 import { showerror, showsuccess } from "@/utils/toast";
@@ -33,6 +34,7 @@ export default function StudentView() {
   const [selectedStudentIds, setSelectedStudentIds] = useState<string[]>([]);
   const [isAssignModalOpen, setIsAssignModalOpen] = useState(false);
   const [isDiscountModalOpen, setIsDiscountModalOpen] = useState(false);
+  const [isExemptionModalOpen, setIsExemptionModalOpen] = useState(false);
   const [isDeleteConfirmOpen, setIsDeleteConfirmOpen] = useState(false);
   const [editingStudentId, setEditingStudentId] = useState<string | null>(null);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
@@ -239,6 +241,12 @@ export default function StudentView() {
               Give Discount
             </button>
             <button
+              onClick={() => setIsExemptionModalOpen(true)}
+              className="flex-1 sm:flex-none px-4 py-2.5 bg-orange-600 hover:bg-orange-700 text-white rounded-lg text-sm font-semibold shadow-sm transition-all active:scale-95"
+            >
+              Exempt
+            </button>
+            <button
               onClick={() => setIsDeleteConfirmOpen(true)}
               className="flex-1 sm:flex-none px-4 py-2.5 bg-red-600 hover:bg-red-700 text-white rounded-lg text-sm font-semibold shadow-sm transition-all active:scale-95"
             >
@@ -326,6 +334,13 @@ export default function StudentView() {
       <BulkDiscountModal
         open={isDiscountModalOpen}
         onOpenChange={setIsDiscountModalOpen}
+        studentIds={selectedStudentIds}
+        onSuccess={() => setSelectedStudentIds([])}
+      />
+
+      <BulkExemptionModal
+        open={isExemptionModalOpen}
+        onOpenChange={setIsExemptionModalOpen}
         studentIds={selectedStudentIds}
         onSuccess={() => setSelectedStudentIds([])}
       />

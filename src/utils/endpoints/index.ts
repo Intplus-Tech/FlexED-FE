@@ -87,6 +87,9 @@ export const student = {
   bulkDelete: "/students/bulk/delete",
   bulkDiscount: "/students/bulk/discounts",
   addDiscount: (id: string) => `/students/${id}/discounts`,
+  addExemption: (id: string) => `/students/${id}/exemptions`,
+  bulkExemption: "/students/bulk/exemptions",
+  removeExemption: (id: string, paymentItemId: string) => `/students/${id}/exemptions/${paymentItemId}`,
   assignClass: "/students/assign-class",
 };
 
