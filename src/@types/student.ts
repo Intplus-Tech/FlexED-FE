@@ -123,6 +123,8 @@ export interface StudentDetail {
   dateOfBirth: string;
   gender: "MALE" | "FEMALE";
   discounts: StudentDiscount[];
+  exemptions: StudentExemption[];
+  exemptedPayments: ExemptedPayment[];
   parentDetails: ParentDetailResponse[];
   isDeleted: boolean;
   deletedAt?: string | null;
@@ -137,6 +139,22 @@ export interface StudentDiscount {
   type: "PERCENTAGE" | "FLAT";
   value: number;
   expiresAt: string;
+}
+
+export interface StudentExemption {
+  paymentItem: string;
+  reason?: string;
+  exemptedBy?: string;
+  exemptedAt?: string;
+}
+
+export interface ExemptedPayment {
+  paymentItemId: string;
+  name: string;
+  amount: number;
+  category?: string;
+  reason?: string;
+  exemptedAt?: string;
 }
 
 export interface ParentDetailResponse {
