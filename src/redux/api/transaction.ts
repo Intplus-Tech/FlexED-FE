@@ -230,6 +230,7 @@ export const {
   useUpdatePaymentItemMutation,
   useDeletePaymentItemMutation,
   useGetPaymentItemQuery,
+  useLazyGetPaymentItemQuery,
   useGetBanksQuery,
   useValidateAccountMutation,
   useCreateSettlementAccountMutation,
