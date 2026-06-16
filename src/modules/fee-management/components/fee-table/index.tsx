@@ -66,9 +66,11 @@ export function FeeTable({
         classes: data.classes ? (data.classes as any[]).map((c) => c._id) : [],
         amount: data.amount,
         applicableTo: data.applicableTo,
-        students: data.students || [],
+        students: data.individuals || data.students || [],
         category:
-          typeof data.category === "object" ? data.category?._id : data.category,
+          typeof data.category === "object"
+            ? data.category?._id
+            : data.category,
         academicPeriod:
           typeof data.academicPeriod === "object"
             ? (data.academicPeriod as any)._id
@@ -209,7 +211,6 @@ export function FeeTable({
                       {fee?.period?.replace(/_/g, " ")}
                     </td>
 
-                    {/* Action Column */}
                     <td className="px-6 py-4 text-center relative">
                       <button
                         onClick={() => toggleDropdown(fee._id)}
@@ -218,7 +219,6 @@ export function FeeTable({
                         <MoreVertical className="w-5 h-5" />
                       </button>
 
-                      {/* Dropdown Menu */}
                       {activeDropdown === fee._id && (
                         <>
                           <div
@@ -239,7 +239,9 @@ export function FeeTable({
                               className="w-full flex items-center px-4 py-2.5 text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-700 transition-colors disabled:opacity-50"
                             >
                               <Pencil className="w-4 h-4 mr-3" />
-                              {isFetchingPaymentItem ? "Loading..." : "Edit Fee"}
+                              {isFetchingPaymentItem
+                                ? "Loading..."
+                                : "Edit Fee"}
                             </button>
                             <div className="h-px bg-gray-100 my-1 w-full" />
                             <button
@@ -261,7 +263,6 @@ export function FeeTable({
         </div>
       </div>
 
-      {/* Edit Form Modal (Reused) */}
       {isEditModalOpen && editFeeData && (
         <CreateFeeModal
           open={isEditModalOpen}
@@ -272,11 +273,9 @@ export function FeeTable({
         />
       )}
 
-      {/* View Details Modal */}
       {isViewModalOpen && viewFeeData && (
         <Dialog open={isViewModalOpen} onOpenChange={setIsViewModalOpen}>
           <DialogContent className="max-w-lg rounded-2xl p-0 overflow-hidden bg-white border-none shadow-2xl">
-            {/* Modal Header Banner */}
             <div className="bg-linear-to-br from-purple-600 to-indigo-700 p-8 text-white relative">
               <button
                 onClick={() => setIsViewModalOpen(false)}
@@ -369,7 +368,6 @@ export function FeeTable({
         </Dialog>
       )}
 
-      {/* Delete Confirmation Modal */}
       {isDeleteModalOpen && deleteFeeData && (
         <Dialog open={isDeleteModalOpen} onOpenChange={setIsDeleteModalOpen}>
           <DialogContent className="max-w-md rounded-2xl">

@@ -239,6 +239,7 @@ export interface CreatePaymentItemRequest {
   dueDate: string;
   discount?: Discount;
   students?: string[];
+  individuals?: string[];
 }
 
 export interface UpdatePaymentItemRequest {
@@ -251,6 +252,7 @@ export interface UpdatePaymentItemRequest {
   dueDate: string;
   discount?: Discount | null;
   students?: string[];
+  individuals?: string[];
 }
 
 export interface Discount {
@@ -288,6 +290,7 @@ export interface PaymentItem {
   status: PaymentStatus;
   isSmsTopup: boolean;
   students?: string[];
+  individuals?: string[];
   createdAt: string;
   updatedAt: string;
 }

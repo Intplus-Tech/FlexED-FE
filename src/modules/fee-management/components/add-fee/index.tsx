@@ -250,7 +250,7 @@ export function CreateFeeModal({
             description: data.description || "",
             classes: isIndividual ? [] : data.classes ?? [],
             applicableTo: data.applicableTo,
-            students:
+            individuals:
               data.applicableTo === "INDIVIDUAL_SELECTION"
                 ? data.students
                 : undefined,
@@ -284,7 +284,7 @@ export function CreateFeeModal({
         applicableTo: data.applicableTo,
         category: data.category,
         classes: isIndividual ? [] : data.classes ?? [],
-        students:
+        individuals:
           data.applicableTo === "INDIVIDUAL_SELECTION"
             ? data.students
             : undefined,
