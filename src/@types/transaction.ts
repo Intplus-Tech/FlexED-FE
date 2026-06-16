@@ -261,6 +261,20 @@ export interface Discount {
   value?: number;
 }
 
+export interface IndividualStudent {
+  _id: string;
+  id: string;
+  firstName: string;
+  lastName: string;
+  admissionNumber: string;
+  school: string;
+  class: string;
+  gender: string;
+  isDeleted: boolean;
+  createdAt: string;
+  updatedAt: string;
+}
+
 export type DiscountType = "PERCENTAGE" | "FLAT";
 
 export interface GetPaymentItemsResponse {
@@ -290,7 +304,7 @@ export interface PaymentItem {
   status: PaymentStatus;
   isSmsTopup: boolean;
   students?: string[];
-  individuals?: string[];
+  individuals?: IndividualStudent[] | string[];
   createdAt: string;
   updatedAt: string;
 }

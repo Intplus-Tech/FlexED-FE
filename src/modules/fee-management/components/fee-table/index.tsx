@@ -66,7 +66,11 @@ export function FeeTable({
         classes: data.classes ? (data.classes as any[]).map((c) => c._id) : [],
         amount: data.amount,
         applicableTo: data.applicableTo,
-        students: data.individuals || data.students || [],
+        students: data.individuals
+          ? (data.individuals as any[]).map((i) =>
+              typeof i === "string" ? i : i._id,
+            )
+          : data.students || [],
         category:
           typeof data.category === "object"
             ? data.category?._id
