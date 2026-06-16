@@ -13,6 +13,7 @@ import { ClassItem } from "@/@types/class";
 import {
   useGetStudentByIdQuery,
   useRemoveStudentExemptionMutation,
+  useRemoveStudentDiscountMutation,
 } from "@/redux/api/student";
 import { useGetStudentFeeProfileQuery } from "@/redux/api/transaction";
 import { StudentDiscountModal } from "../student-discount-modal";
@@ -208,6 +209,7 @@ interface FeesTabProps {
   exemptedPayments: ExemptedPayment[];
   selectedFeeItemIds: string[];
   removingExemptionId: string | null;
+  removingDiscountId: string | null;
   onToggleFeeItem: (id: string, checked: boolean) => void;
   onToggleAllFeeItems: (checked: boolean) => void;
   onExemptSingle: (paymentItemId: string) => void;
@@ -215,6 +217,7 @@ interface FeesTabProps {
   onAddDiscount: () => void;
   onManageDiscounts: () => void;
   onRemoveExemption: (paymentItemId: string) => void;
+  onRemoveDiscount: (paymentItemId: string) => void;
 }
 
 function FeesTab({
@@ -223,6 +226,7 @@ function FeesTab({
   exemptedPayments,
   selectedFeeItemIds,
   removingExemptionId,
+  removingDiscountId,
   onToggleFeeItem,
   onToggleAllFeeItems,
   onExemptSingle,
@@ -230,6 +234,7 @@ function FeesTab({
   onAddDiscount,
   onManageDiscounts,
   onRemoveExemption,
+  onRemoveDiscount,
 }: FeesTabProps) {
   const allChecked =
     paymentItems.length > 0 &&
@@ -348,9 +353,9 @@ function FeesTab({
             {discounts.map((discount, idx) => (
               <div
                 key={discount.paymentItem || idx}
-                className="bg-emerald-50 border border-emerald-100 rounded-xl p-4 flex items-center justify-between"
+                className="bg-emerald-50 border border-emerald-100 rounded-xl p-4 flex items-start justify-between gap-3"
               >
-                <div>
+                <div className="min-w-0">
                   <p className="text-sm font-bold text-emerald-800">
                     {discount.type === "PERCENTAGE"
                       ? `${discount.value}% Discount`
@@ -361,9 +366,18 @@ function FeesTab({
                     {formatDate(discount.expiresAt, { year: "numeric", month: "long", day: "numeric" })}
                   </p>
                 </div>
-                <span className="px-2.5 py-1 text-[10px] font-bold uppercase rounded-full bg-emerald-100 text-emerald-800">
-                  Active
-                </span>
+                <div className="flex items-center gap-2 shrink-0">
+                  <span className="px-2.5 py-1 text-[10px] font-bold uppercase rounded-full bg-emerald-100 text-emerald-800">
+                    Active
+                  </span>
+                  <button
+                    disabled={removingDiscountId === discount.paymentItem}
+                    onClick={() => onRemoveDiscount(discount.paymentItem)}
+                    className="text-xs font-semibold text-red-500 hover:text-red-700 transition-colors disabled:opacity-50 whitespace-nowrap"
+                  >
+                    {removingDiscountId === discount.paymentItem ? "Removing..." : "Remove"}
+                  </button>
+                </div>
               </div>
             ))}
           </div>
@@ -486,8 +500,10 @@ export function StudentProfileModal({
   const [exemptingPaymentItemId, setExemptingPaymentItemId] = useState<string | undefined>(undefined);
   const [selectedFeeItemIds, setSelectedFeeItemIds] = useState<string[]>([]);
   const [removingExemptionId, setRemovingExemptionId] = useState<string | null>(null);
+  const [removingDiscountId, setRemovingDiscountId] = useState<string | null>(null);
 
   const [removeExemption] = useRemoveStudentExemptionMutation();
+  const [removeDiscount] = useRemoveStudentDiscountMutation();
 
   const { data: studentData, isLoading: isStudentLoading } = useGetStudentByIdQuery(
     student?._id || "",
@@ -525,6 +541,17 @@ export function StudentProfileModal({
       // error handling delegated to RTK middleware
     } finally {
       setRemovingExemptionId(null);
+    }
+  };
+
+  const handleRemoveDiscount = async (paymentItem: string) => {
+    setRemovingDiscountId(paymentItem);
+    try {
+      await removeDiscount({ studentId: activeStudent._id, paymentItem }).unwrap();
+    } catch {
+      // error handling delegated to RTK middleware
+    } finally {
+      setRemovingDiscountId(null);
     }
   };
 
@@ -640,6 +667,7 @@ export function StudentProfileModal({
                   exemptedPayments={exemptedPayments}
                   selectedFeeItemIds={selectedFeeItemIds}
                   removingExemptionId={removingExemptionId}
+                  removingDiscountId={removingDiscountId}
                   onToggleFeeItem={(id, checked) =>
                     setSelectedFeeItemIds((prev) =>
                       checked ? [...prev, id] : prev.filter((x) => x !== id),
@@ -653,6 +681,7 @@ export function StudentProfileModal({
                   onAddDiscount={() => setIsDiscountModalOpen(true)}
                   onManageDiscounts={() => setIsDiscountModalOpen(true)}
                   onRemoveExemption={handleRemoveExemption}
+                  onRemoveDiscount={handleRemoveDiscount}
                 />
               )}
               {activeTab === "payment" && <PaymentTab paymentItems={paymentItems} />}
