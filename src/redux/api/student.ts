@@ -184,6 +184,18 @@ export const studentApi = apiSlice.injectEndpoints({
       }),
       invalidatesTags: ["students", "Transaction"],
     }),
+
+    removeStudentDiscount: builder.mutation<
+      { success: boolean; message: string },
+      { studentId: string; paymentItem: string }
+    >({
+      query: ({ studentId, paymentItem }) => ({
+        url: ApiEndpoints.student.removeDiscount(studentId),
+        method: methods.DELETE,
+        body: { paymentItem },
+      }),
+      invalidatesTags: ["students"],
+    }),
   }),
 });
 
@@ -202,4 +214,5 @@ export const {
   useAddStudentExemptionMutation,
   useBulkExemptStudentsMutation,
   useRemoveStudentExemptionMutation,
+  useRemoveStudentDiscountMutation,
 } = studentApi;

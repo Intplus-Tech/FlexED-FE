@@ -239,6 +239,7 @@ export interface CreatePaymentItemRequest {
   dueDate: string;
   discount?: Discount;
   students?: string[];
+  individuals?: string[];
 }
 
 export interface UpdatePaymentItemRequest {
@@ -251,12 +252,27 @@ export interface UpdatePaymentItemRequest {
   dueDate: string;
   discount?: Discount | null;
   students?: string[];
+  individuals?: string[];
 }
 
 export interface Discount {
   type?: string;
   expiresAt?: string;
   value?: number;
+}
+
+export interface IndividualStudent {
+  _id: string;
+  id: string;
+  firstName: string;
+  lastName: string;
+  admissionNumber: string;
+  school: string;
+  class: string;
+  gender: string;
+  isDeleted: boolean;
+  createdAt: string;
+  updatedAt: string;
 }
 
 export type DiscountType = "PERCENTAGE" | "FLAT";
@@ -288,6 +304,7 @@ export interface PaymentItem {
   status: PaymentStatus;
   isSmsTopup: boolean;
   students?: string[];
+  individuals?: IndividualStudent[] | string[];
   createdAt: string;
   updatedAt: string;
 }

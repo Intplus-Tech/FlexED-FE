@@ -5,7 +5,10 @@ import FeeTableLoader from "../../loader/fee-table-loader";
 import { PaymentItem } from "@/@types/transaction";
 import { MoreVertical, Pencil, Trash2, Eye, X } from "lucide-react";
 import { CreateFeeModal } from "../add-fee";
-import { useDeletePaymentItemMutation } from "@/redux/api/transaction";
+import {
+  useDeletePaymentItemMutation,
+  useLazyGetPaymentItemQuery,
+} from "@/redux/api/transaction";
 import { showerror, showsuccess } from "@/utils/toast";
 import {
   Dialog,
@@ -29,21 +32,19 @@ export function FeeTable({
   // Action Modals State
   const [activeDropdown, setActiveDropdown] = useState<string | null>(null);
 
-  // View Modal State
   const [viewFeeData, setViewFeeData] = useState<PaymentItem | null>(null);
   const [isViewModalOpen, setIsViewModalOpen] = useState(false);
 
-  // Edit Modal State
   const [editFeeData, setEditFeeData] = useState<any | null>(null);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
 
-  // Delete Modal State
   const [deleteFeeData, setDeleteFeeData] = useState<PaymentItem | null>(null);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
 
   const [deletePaymentItem] = useDeletePaymentItemMutation();
+  const [fetchPaymentItem, { isFetching: isFetchingPaymentItem }] =
+    useLazyGetPaymentItemQuery();
 
-  // Toggle Dropdown
   const toggleDropdown = (id: string) => {
     setActiveDropdown((prev) => (prev === id ? null : id));
   };
@@ -55,37 +56,48 @@ export function FeeTable({
     setActiveDropdown(null);
   };
 
-  const handleEditClick = (fee: PaymentItem) => {
-    // Map data correctly for the CreateFeeModal default values
-    const mappedData = {
-      name: fee.name,
-      classes: fee.classes ? (fee.classes as any[]).map((c) => c._id) : [],
-      amount: fee.amount,
-      applicableTo: fee.applicableTo,
-      category:
-        typeof fee.category === "object" ? fee.category?._id : fee.category,
-      academicPeriod:
-        typeof fee.academicPeriod === "object"
-          ? (fee.academicPeriod as any)._id
-          : fee.academicPeriod,
-      period: fee.period,
-      description: fee.description || "",
-      dueDate: fee.dueDate
-        ? new Date(fee.dueDate).toISOString().split("T")[0]
-        : "",
-      discount: fee.discount
-        ? {
-            ...fee.discount,
-            expiresAt: fee.discount.expiresAt
-              ? new Date(fee.discount.expiresAt).toISOString().split("T")[0]
-              : "",
-          }
-        : { type: "", value: "" },
-    };
-
-    setEditFeeData(mappedData);
-    setIsEditModalOpen(true);
+  const handleEditClick = async (fee: PaymentItem) => {
     setActiveDropdown(null);
+    try {
+      const result = await fetchPaymentItem(fee._id).unwrap();
+      const data = result.data;
+      const mappedData = {
+        name: data.name,
+        classes: data.classes ? (data.classes as any[]).map((c) => c._id) : [],
+        amount: data.amount,
+        applicableTo: data.applicableTo,
+        students: data.individuals
+          ? (data.individuals as any[]).map((i) =>
+              typeof i === "string" ? i : i._id,
+            )
+          : data.students || [],
+        category:
+          typeof data.category === "object"
+            ? data.category?._id
+            : data.category,
+        academicPeriod:
+          typeof data.academicPeriod === "object"
+            ? (data.academicPeriod as any)._id
+            : data.academicPeriod,
+        period: data.period,
+        description: data.description || "",
+        dueDate: data.dueDate
+          ? new Date(data.dueDate).toISOString().split("T")[0]
+          : "",
+        discount: data.discount
+          ? {
+              ...data.discount,
+              expiresAt: data.discount.expiresAt
+                ? new Date(data.discount.expiresAt).toISOString().split("T")[0]
+                : "",
+            }
+          : { type: "", value: "" },
+      };
+      setEditFeeData({ ...mappedData, _id: fee._id });
+      setIsEditModalOpen(true);
+    } catch {
+      showerror("Failed to load fee details");
+    }
   };
 
   const handleDeleteClick = (fee: PaymentItem) => {
@@ -203,7 +215,6 @@ export function FeeTable({
                       {fee?.period?.replace(/_/g, " ")}
                     </td>
 
-                    {/* Action Column */}
                     <td className="px-6 py-4 text-center relative">
                       <button
                         onClick={() => toggleDropdown(fee._id)}
@@ -212,7 +223,6 @@ export function FeeTable({
                         <MoreVertical className="w-5 h-5" />
                       </button>
 
-                      {/* Dropdown Menu */}
                       {activeDropdown === fee._id && (
                         <>
                           <div
@@ -229,10 +239,13 @@ export function FeeTable({
                             </button>
                             <button
                               onClick={() => handleEditClick(fee)}
-                              className="w-full flex items-center px-4 py-2.5 text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-700 transition-colors"
+                              disabled={isFetchingPaymentItem}
+                              className="w-full flex items-center px-4 py-2.5 text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-700 transition-colors disabled:opacity-50"
                             >
                               <Pencil className="w-4 h-4 mr-3" />
-                              Edit Fee
+                              {isFetchingPaymentItem
+                                ? "Loading..."
+                                : "Edit Fee"}
                             </button>
                             <div className="h-px bg-gray-100 my-1 w-full" />
                             <button
@@ -254,22 +267,19 @@ export function FeeTable({
         </div>
       </div>
 
-      {/* Edit Form Modal (Reused) */}
       {isEditModalOpen && editFeeData && (
         <CreateFeeModal
           open={isEditModalOpen}
           onOpenChange={setIsEditModalOpen}
           isEdit={true}
           initialData={editFeeData}
-          paymentItemId={fees.find(f => f.name === editFeeData.name)?._id} // Find the ID back from the fees list
+          paymentItemId={editFeeData._id}
         />
       )}
 
-      {/* View Details Modal */}
       {isViewModalOpen && viewFeeData && (
         <Dialog open={isViewModalOpen} onOpenChange={setIsViewModalOpen}>
           <DialogContent className="max-w-lg rounded-2xl p-0 overflow-hidden bg-white border-none shadow-2xl">
-            {/* Modal Header Banner */}
             <div className="bg-linear-to-br from-purple-600 to-indigo-700 p-8 text-white relative">
               <button
                 onClick={() => setIsViewModalOpen(false)}
@@ -349,7 +359,7 @@ export function FeeTable({
                 <button
                   onClick={() => {
                     setIsViewModalOpen(false);
-                    setTimeout(() => handleEditClick(viewFeeData), 150);
+                    handleEditClick(viewFeeData);
                   }}
                   className="w-full flex items-center justify-center py-3 bg-purple-500 text-white rounded-xl font-medium hover:bg-purple-800 transition-all shadow-md hover:shadow-lg active:scale-[0.98]"
                 >
@@ -362,7 +372,6 @@ export function FeeTable({
         </Dialog>
       )}
 
-      {/* Delete Confirmation Modal */}
       {isDeleteModalOpen && deleteFeeData && (
         <Dialog open={isDeleteModalOpen} onOpenChange={setIsDeleteModalOpen}>
           <DialogContent className="max-w-md rounded-2xl">
