@@ -65,7 +65,7 @@ export const studentApi = apiSlice.injectEndpoints({
       query: (id) => ApiEndpoints.student.getStudentById(id),
       transformResponse: (response: { success: boolean; message: string; data: GetStudentByIdResponse }) =>
         response.data,
-      providesTags: ["students"],
+      providesTags: (result, error, id) => [{ type: "students", id }, "students"],
     }),
 
     dowloadStudentCSVFormat: builder.mutation<Blob, void>({
@@ -147,7 +147,10 @@ export const studentApi = apiSlice.injectEndpoints({
         method: methods.POST,
         body,
       }),
-      invalidatesTags: ["students"],
+      invalidatesTags: (result, error, { studentId }) => [
+        { type: "students", id: studentId },
+        "students",
+      ],
     }),
 
     addStudentExemption: builder.mutation<
@@ -194,7 +197,10 @@ export const studentApi = apiSlice.injectEndpoints({
         method: methods.DELETE,
         body: { paymentItem },
       }),
-      invalidatesTags: ["students"],
+      invalidatesTags: (result, error, { studentId }) => [
+        { type: "students", id: studentId },
+        "students",
+      ],
     }),
   }),
 });
