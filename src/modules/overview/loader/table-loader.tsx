@@ -1,4 +1,5 @@
 import React from "react";
+import { LogoLoader } from "@/components/ui/logo-loader";
 
 const TableLoader = () => {
   return (
@@ -36,34 +37,13 @@ const TableLoader = () => {
             </tr>
           </thead>
           <tbody className="divide-y divide-gray-200">
-            {[...Array(3)].map((_, index) => (
-              <tr key={index} className="animate-pulse">
-                <td className="px-6 py-4">
-                  <div className="flex items-center gap-3">
-                    <div className="w-4 h-4 bg-gray-200 rounded"></div>
-                    <div className="h-4 w-20 bg-gray-200 rounded"></div>
-                  </div>
-                </td>
-                <td className="px-6 py-4">
-                  <div className="h-4 w-24 bg-gray-200 rounded"></div>
-                </td>
-                <td className="px-6 py-4">
-                  <div className="h-4 w-32 bg-gray-200 rounded"></div>
-                </td>
-                <td className="px-6 py-4">
-                  <div className="h-4 w-16 bg-gray-200 rounded"></div>
-                </td>
-                <td className="px-6 py-4">
-                  <div className="h-4 w-24 bg-gray-200 rounded"></div>
-                </td>
-                <td className="px-6 py-4">
-                  <div className="h-4 w-12 bg-gray-200 rounded"></div>
-                </td>
-                <td className="px-6 py-4">
-                  <div className="h-6 w-20 bg-gray-200 rounded-full"></div>
-                </td>
-              </tr>
-            ))}
+            <tr>
+              <td colSpan={7} className="px-6 py-12">
+                <div className="flex justify-center">
+                  <LogoLoader size={56} />
+                </div>
+              </td>
+            </tr>
           </tbody>
         </table>
       </div>

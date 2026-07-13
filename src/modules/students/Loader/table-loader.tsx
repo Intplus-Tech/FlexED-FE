@@ -1,4 +1,5 @@
 import React from "react";
+import { LogoLoader } from "@/components/ui/logo-loader";
 
 const StudentTableLoader = () => {
   return (
@@ -36,37 +37,13 @@ const StudentTableLoader = () => {
             </tr>
           </thead>
           <tbody className="divide-y divide-gray-200">
-            {[...Array(10)].map((_, index) => (
-              <tr key={index} className="animate-pulse">
-                <td className="px-6 py-4">
-                  <div className="flex items-center gap-3">
-                    <div className="w-4 h-4 bg-gray-200 rounded"></div>
-                    <div className="h-4 w-16 bg-gray-200 rounded"></div>
-                  </div>
-                </td>
-                <td className="px-6 py-4">
-                  <div className="h-4 w-32 bg-gray-200 rounded"></div>
-                </td>
-                <td className="px-6 py-4">
-                  <div className="h-4 w-16 bg-gray-200 rounded"></div>
-                </td>
-                <td className="px-6 py-4">
-                  <div className="h-4 w-24 bg-gray-200 rounded"></div>
-                </td>
-                <td className="px-6 py-4">
-                  <div className="h-4 w-24 bg-gray-200 rounded"></div>
-                </td>
-                <td className="px-6 py-4">
-                  <div className="h-4 w-24 bg-gray-200 rounded"></div>
-                </td>
-                <td className="px-6 py-4">
-                  <div className="flex gap-2">
-                    <div className="h-4 w-12 bg-gray-200 rounded"></div>
-                    <div className="h-4 w-12 bg-gray-200 rounded"></div>
-                  </div>
-                </td>
-              </tr>
-            ))}
+            <tr>
+              <td colSpan={7} className="px-6 py-12">
+                <div className="flex justify-center">
+                  <LogoLoader size={56} />
+                </div>
+              </td>
+            </tr>
           </tbody>
         </table>
       </div>

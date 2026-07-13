@@ -5,9 +5,10 @@ import {
   DialogTitle,
   DialogClose,
 } from "@/components/ui/dialog";
-import { Loader, CheckCircle2, XCircle, Clock, Check, Copy } from "lucide-react";
+import { CheckCircle2, XCircle, Clock, Check, Copy } from "lucide-react";
 import { useState } from "react";
 import { useGetPayoutByIdQuery } from "@/redux/api/payout";
+import { LogoLoader } from "@/components/ui/logo-loader";
 
 interface SettlementDetailModalProps {
   payoutId: string | null;
@@ -54,8 +55,8 @@ export function SettlementDetailModal({
 
         {isFetching ? (
           <div className="flex flex-col items-center justify-center py-12">
-            <Loader className="w-8 h-8 text-purple-600 animate-spin mb-3" />
-            <span className="text-sm font-semibold text-gray-500">
+            <LogoLoader size={56} />
+            <span className="text-sm font-semibold text-gray-500 mt-3">
               Loading payout details...
             </span>
           </div>

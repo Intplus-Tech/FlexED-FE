@@ -9,6 +9,7 @@ import { useResetPasswordMutation } from "@/redux/api/auth";
 import { showerror, showsuccess } from "@/utils/toast";
 import { LockIcon } from "@/icon/dashbaord";
 import { Eye, EyeOff, Loader, CheckCircle, Circle } from "lucide-react";
+import { LogoLoader } from "@/components/ui/logo-loader";
 
 // ─── Step 1 schema ───────────────────────────────────────────────────────────
 const otpSchema = z.object({
@@ -354,7 +355,7 @@ export default function ResetPasswordView() {
     <Suspense
       fallback={
         <div className="h-screen flex items-center justify-center">
-          <Loader className="animate-spin" />
+          <LogoLoader size={80} />
         </div>
       }
     >

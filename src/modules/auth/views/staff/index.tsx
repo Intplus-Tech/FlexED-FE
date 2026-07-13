@@ -6,6 +6,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { useGetInviteDetailsQuery, useAcceptInviteMutation } from "@/redux/api/school";
 import { User, Building2, Eye, EyeOff } from "lucide-react";
 import { showerror, showsuccess } from "@/utils/toast";
+import { LogoLoader } from "@/components/ui/logo-loader";
 
 function StaffInviteContent() {
   const router = useRouter();
@@ -64,7 +65,7 @@ function StaffInviteContent() {
   if (isLoading) {
     return (
       <div className="flex flex-col items-center justify-center space-y-4 py-12">
-        <div className="w-8 h-8 border-4 border-indigo-200 border-t-indigo-600 rounded-full animate-spin" />
+        <LogoLoader size={56} />
         <p className="text-gray-500 font-medium">Verifying invitation...</p>
       </div>
     );
@@ -194,7 +195,7 @@ function StaffInviteContent() {
 
 export default function StaffInviteView() {
   return (
-    <Suspense fallback={<div className="text-center py-12"><div className="w-8 h-8 border-4 border-indigo-200 border-t-indigo-600 rounded-full animate-spin mx-auto" /></div>}>
+    <Suspense fallback={<div className="flex items-center justify-center py-12"><LogoLoader size={56} /></div>}>
       <StaffInviteContent />
     </Suspense>
   );

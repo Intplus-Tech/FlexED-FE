@@ -15,6 +15,7 @@ import { useGetStudentByIdQuery, useUpdateStudentMutation } from "@/redux/api/st
 import { AddStudentFormData, addStudentSchema } from "@/lib/validations";
 import { showerror, showsuccess } from "@/utils/toast";
 import { toISOStringSafe } from "@/utils/functions";
+import { LogoLoader } from "@/components/ui/logo-loader";
 import {
   Loader,
   User,
@@ -252,8 +253,8 @@ export function EditStudentModal({
 
             {isFetchingStudent ? (
               <div className="flex-1 flex flex-col items-center justify-center p-12">
-                <Loader className="w-8 h-8 text-purple-600 animate-spin mb-3" />
-                <span className="text-sm font-semibold text-gray-600">Retrieving student profile...</span>
+                <LogoLoader size={56} />
+                <span className="text-sm font-semibold text-gray-600 mt-3">Retrieving student profile...</span>
               </div>
             ) : (
               <div className="flex-1 overflow-y-auto p-8">
