@@ -22,13 +22,13 @@ import {
   Calendar,
   CheckCircle2,
   AlertCircle,
-  ChevronDown,
 } from "lucide-react";
 import { showsuccess, showerror } from "@/utils/toast";
 import { ManualAllocationRequest } from "@/@types/transaction";
 import { useMemo, useState, useRef, useEffect } from "react";
 import { cn } from "@/lib/utils";
 import { formatNaira } from "@/utils/functions";
+import { LogoLoader } from "@/components/ui/logo-loader";
 
 interface ManualPaymentModalProps {
   isOpen: boolean;
@@ -72,6 +72,7 @@ export function ManualPaymentModal({
 
   const [allocations, setAllocations] = useState<Record<string, number>>({});
   const [manualTotalAmount, setManualTotalAmount] = useState<number>(0);
+  const [autoDistribute, setAutoDistribute] = useState(false);
 
   const { register, handleSubmit, reset, setValue, watch } = useForm({
     defaultValues: {
@@ -80,12 +81,24 @@ export function ManualPaymentModal({
     },
   });
 
-  // Prefill total amount when profile is fetched
+  // When "Automatically apply this amount to outstanding fees" is checked,
+  // spread the entered Amount across outstanding fees in order, filling each
+  // one's balance before moving to the next, until the amount runs out.
   useEffect(() => {
-    if (profileResponse?.data?.totalExpectedBalance !== undefined) {
-      setManualTotalAmount(profileResponse.data.totalExpectedBalance);
+    if (autoDistribute && profileResponse?.data?.paymentItem) {
+      let remaining = manualTotalAmount;
+      const newAllocations: Record<string, number> = {};
+      profileResponse.data.paymentItem.forEach((item) => {
+        if (item.status === "COMPLETED" || remaining <= 0) return;
+        const amountForItem = Math.min(item.currentBalance, remaining);
+        if (amountForItem > 0) {
+          newAllocations[item.paymentItemId] = amountForItem;
+          remaining -= amountForItem;
+        }
+      });
+      setAllocations(newAllocations);
     }
-  }, [profileResponse]);
+  }, [autoDistribute, manualTotalAmount, profileResponse]);
 
   const totalAllocated = useMemo(() => {
     return Object.values(allocations).reduce((sum, val) => sum + val, 0);
@@ -143,7 +156,18 @@ export function ManualPaymentModal({
 
   const onSubmit = async (data: any) => {
     if (!selectedStudentId) return showerror("Please select a student");
+    if (!data.referenceNumber?.trim())
+      return showerror("Please enter the teller / reference number");
+    if (!manualTotalAmount || manualTotalAmount <= 0)
+      return showerror("Please enter the expected amount");
     if (totalAllocated <= 0) return showerror("Please enter allocation amounts");
+    const overAllocatedItem = profileResponse?.data?.paymentItem?.find(
+      (item) => (allocations[item.paymentItemId] || 0) > item.currentBalance,
+    );
+    if (overAllocatedItem)
+      return showerror(
+        `Amount for ${overAllocatedItem.name} exceeds its outstanding balance`,
+      );
 
     try {
       const payload: ManualAllocationRequest = {
@@ -164,6 +188,7 @@ export function ManualPaymentModal({
       setAllocations({});
       setSelectedStudentId(null);
       setManualTotalAmount(0);
+      setAutoDistribute(false);
       reset();
       onClose();
     } catch (error: any) {
@@ -224,6 +249,8 @@ export function ManualPaymentModal({
                             setStudentSearchQuery("");
                             setIsStudentDropdownOpen(false);
                             setAllocations({});
+                            setManualTotalAmount(0);
+                            setAutoDistribute(false);
                           }}
                           className="w-full p-4 text-left hover:bg-gray-50 flex items-center justify-between border-b last:border-0 border-gray-100 transition-colors"
                         >
@@ -263,6 +290,7 @@ export function ManualPaymentModal({
                       setSelectedStudentId(null);
                       setAllocations({});
                       setManualTotalAmount(0);
+                      setAutoDistribute(false);
                     }}
                     className="absolute right-4 top-4 text-gray-400 hover:text-red-500 hover:bg-red-50 p-1 rounded-full transition-colors"
                   >
@@ -319,10 +347,11 @@ export function ManualPaymentModal({
 
                 <div className="space-y-2">
                   <label className="text-sm font-medium text-gray-400">
-                    Teller / Reference no.
+                    Teller / Reference no. <span className="text-red-500">*</span>
                   </label>
                   <input
                     type="text"
+                    required
                     placeholder="727292101"
                     {...register("referenceNumber")}
                     className="w-full px-4 py-3 bg-white border border-gray-200 rounded-xl focus:ring-2 focus:ring-purple-500/20 focus:border-purple-500 outline-none transition-all"
@@ -332,7 +361,7 @@ export function ManualPaymentModal({
 
               <div className="space-y-2">
                 <label className="text-sm font-medium text-gray-400">
-                  Amount
+                  Amount <span className="text-red-500">*</span>
                 </label>
                 <div className="relative">
                   <span className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-900 font-medium">
@@ -340,7 +369,9 @@ export function ManualPaymentModal({
                   </span>
                   <input
                     type="text"
-                    value={manualTotalAmount.toLocaleString()}
+                    required
+                    placeholder="0"
+                    value={manualTotalAmount ? manualTotalAmount.toLocaleString() : ""}
                     onChange={(e) => {
                       const val = parseFloat(e.target.value.replace(/[^0-9.]/g, "")) || 0;
                       setManualTotalAmount(val);
@@ -360,65 +391,129 @@ export function ManualPaymentModal({
                 <div className="h-[1px] bg-gray-100 w-full" />
               </div>
 
+              <label className="flex items-start gap-2.5 cursor-pointer select-none p-3 rounded-xl border border-purple-100 bg-purple-50/50">
+                <input
+                  type="checkbox"
+                  checked={autoDistribute}
+                  disabled={!profileResponse?.data?.paymentItem?.length}
+                  onChange={(e) => setAutoDistribute(e.target.checked)}
+                  className="size-4 mt-0.5 rounded border-gray-300 text-purple-600 focus:ring-purple-500/20 disabled:opacity-50"
+                />
+                <span className="flex flex-col">
+                  <span className="text-sm font-bold text-gray-900">
+                    Automatically apply this amount to outstanding fees
+                  </span>
+                  <p className="text-xs text-gray-500 mt-0.5">
+                    Useful when a parent pays a lump sum without saying which
+                    fee it&apos;s for. Enter the total in the Amount field
+                    below, and tick this box to have it applied to each
+                    outstanding fee in order, fully covering one before
+                    moving to the next. If the amount runs out before every
+                    fee is covered, the fees still owing will be clearly
+                    marked below. Untick to enter each fee&apos;s amount
+                    yourself.
+                  </p>
+                </span>
+              </label>
+
               <div className="space-y-2">
                 {isLoadingProfile ? (
                   <div className="flex flex-col items-center justify-center py-12 space-y-3">
-                    <Loader2 className="animate-spin text-purple-600" size={32} />
+                    <LogoLoader size={56} />
                     <p className="text-sm text-gray-500">Fetching fee profile...</p>
                   </div>
                 ) : profileResponse?.data?.paymentItem?.length ? (
                   <div className="space-y-4">
-                    {profileResponse.data.paymentItem.map((item) => (
-                      <div
-                        key={item.paymentItemId}
-                        className="flex items-center gap-6 group min-h-[50px]"
-                      >
-                        {/* Status Dropdown-style Button */}
+                    {profileResponse.data.paymentItem.map((item) => {
+                      const enteredAmount =
+                        allocations[item.paymentItemId] || 0;
+                      const exceedsBalance =
+                        enteredAmount > item.currentBalance;
+                      const notCovered =
+                        autoDistribute &&
+                        item.status !== "COMPLETED" &&
+                        item.currentBalance - enteredAmount > 0;
+
+                      return (
                         <div
-                          className={cn(
-                            "min-w-[140px] px-3 py-2.5 rounded-xl border text-sm font-medium flex items-center justify-between transition-all",
-                            getStatusColor(item.status),
-                          )}
+                          key={item.paymentItemId}
+                          className="flex flex-col gap-1"
                         >
-                          {item.status.charAt(0).toUpperCase() + item.status.slice(1).toLowerCase().replace("_", " ")}
-                          <ChevronDown size={16} className="text-gray-400" />
-                        </div>
-
-                        {/* Divider */}
-                        <div className="w-[2px] h-6 bg-gray-200" />
-
-                        {/* Fee Info */}
-                        <div className="flex-1 flex items-center gap-4">
-                          <span className="text-sm font-medium text-gray-400 flex-1">
-                            {item.name}
-                          </span>
-                          <span className="text-sm font-bold text-gray-900">
-                            {formatNaira(item.totalAmount)}
-                          </span>
-                        </div>
-
-                        {/* Right Section Divider and Input */}
-                        {item.status !== "COMPLETED" && (
-                          <>
-                            <div className="w-[2px] h-6 bg-gray-200" />
-                            <div className="relative w-48 group/input border border-gray-200 rounded-xl bg-gray-50/30 transition-all focus-within:ring-2 focus-within:ring-purple-500/20 focus-within:border-purple-400 focus-within:bg-white overflow-hidden">
-                              <input
-                                type="text"
-                                placeholder="Amount Paid ₦0"
-                                value={allocations[item.paymentItemId] ? `₦${allocations[item.paymentItemId].toLocaleString()}` : ""}
-                                onChange={(e) =>
-                                  handleAllocationChange(
-                                    item.paymentItemId,
-                                    e.target.value,
-                                  )
-                                }
-                                className="w-full px-3 py-2.5 bg-transparent text-sm font-medium text-gray-900 text-right outline-none placeholder:text-gray-400 placeholder:text-[11px]"
-                              />
+                          <div className="flex items-center gap-6 group min-h-[50px]">
+                            {/* Status Badge */}
+                            <div
+                              className={cn(
+                                "min-w-[140px] px-3 py-2.5 rounded-xl border text-sm font-medium flex items-center justify-center transition-all",
+                                getStatusColor(item.status),
+                              )}
+                            >
+                              {item.status.charAt(0).toUpperCase() + item.status.slice(1).toLowerCase().replace("_", " ")}
                             </div>
-                          </>
-                        )}
-                      </div>
-                    ))}
+
+                            {/* Divider */}
+                            <div className="w-[2px] h-6 bg-gray-200" />
+
+                            {/* Fee Info */}
+                            <div className="flex-1 flex items-center gap-4">
+                              <span className="text-sm font-medium text-gray-400 flex-1">
+                                {item.name}
+                              </span>
+                              <span className="text-sm font-bold text-gray-900">
+                                {formatNaira(item.totalAmount)}
+                                {item.status !== "COMPLETED" && (
+                                  <span className="text-xs font-medium text-gray-400">
+                                    {" "}
+                                    (Bal= {formatNaira(item.currentBalance)})
+                                  </span>
+                                )}
+                              </span>
+                            </div>
+
+                            {/* Right Section Divider and Input */}
+                            {item.status !== "COMPLETED" && (
+                              <>
+                                <div className="w-[2px] h-6 bg-gray-200" />
+                                <div
+                                  className={cn(
+                                    "relative w-48 group/input border rounded-xl bg-gray-50/30 transition-all focus-within:ring-2 focus-within:ring-purple-500/20 overflow-hidden",
+                                    exceedsBalance
+                                      ? "border-red-400 focus-within:border-red-400"
+                                      : "border-gray-200 focus-within:border-purple-400 focus-within:bg-white",
+                                  )}
+                                >
+                                  <input
+                                    type="text"
+                                    placeholder="Amount Paid ₦0"
+                                    value={allocations[item.paymentItemId] ? `₦${allocations[item.paymentItemId].toLocaleString()}` : ""}
+                                    onChange={(e) =>
+                                      handleAllocationChange(
+                                        item.paymentItemId,
+                                        e.target.value,
+                                      )
+                                    }
+                                    className="w-full px-3 py-2.5 bg-transparent text-sm font-medium text-gray-900 text-left outline-none placeholder:text-gray-400 placeholder:text-[11px]"
+                                  />
+                                </div>
+                              </>
+                            )}
+                          </div>
+
+                          {exceedsBalance && (
+                            <p className="text-xs text-red-500 text-right">
+                              Amount cannot exceed the outstanding balance of{" "}
+                              {formatNaira(item.currentBalance)}
+                            </p>
+                          )}
+
+                          {!exceedsBalance && notCovered && (
+                            <p className="text-xs text-orange-500 text-right">
+                              Not fully covered by this payment — still owing{" "}
+                              {formatNaira(item.currentBalance - enteredAmount)}
+                            </p>
+                          )}
+                        </div>
+                      );
+                    })}
                   </div>
                 ) : selectedStudentId ? (
                   <div className="text-center py-12 bg-gray-50 rounded-2xl border border-dashed border-gray-200">

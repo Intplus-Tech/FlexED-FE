@@ -18,6 +18,7 @@ import { UpdateSchoolRequest } from "@/@types/school";
 import { usePermission } from "@/utils/permissions";
 import { cn } from "@/lib/utils";
 import { Loader } from "lucide-react";
+import { LogoLoader } from "@/components/ui/logo-loader";
 
 export function SchoolInformationTab() {
   const { isStaff } = usePermission();
@@ -138,7 +139,7 @@ export function SchoolInformationTab() {
   if (isFetchingSchoolProfile) {
     return (
       <div className="flex items-center justify-center p-12">
-        <Loader className="w-8 h-8 animate-spin text-purple-600" />
+        <LogoLoader size={64} />
       </div>
     );
   }

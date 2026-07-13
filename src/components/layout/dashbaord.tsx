@@ -3,7 +3,7 @@ import { SignInResponse } from "@/@types/auth";
 import DashboardSidebar from "@/components/dashboard-sidebar";
 import { setAuth } from "@/redux/slice/auth";
 import { RootState } from "@/redux/store";
-import { Loader } from "lucide-react";
+import { LogoLoader } from "@/components/ui/logo-loader";
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import { useEffect } from "react";
@@ -44,7 +44,7 @@ export default function DashboardLayout({
   if (status === "loading" || !currentUser) {
     return (
       <div className="h-screen flex items-center justify-center">
-        <Loader className="animate-spin" />
+        <LogoLoader size={80} />
       </div>
     );
   }
