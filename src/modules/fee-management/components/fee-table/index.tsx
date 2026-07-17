@@ -8,6 +8,7 @@ import { CreateFeeModal } from "../add-fee";
 import {
   useDeletePaymentItemMutation,
   useLazyGetPaymentItemQuery,
+  useBulkDeletePaymentItemsMutation,
 } from "@/redux/api/transaction";
 import { showerror, showsuccess } from "@/utils/toast";
 import {
@@ -41,9 +42,39 @@ export function FeeTable({
   const [deleteFeeData, setDeleteFeeData] = useState<PaymentItem | null>(null);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
 
+  const [selectedIds, setSelectedIds] = useState<string[]>([]);
+  const [isBulkDeleteModalOpen, setIsBulkDeleteModalOpen] = useState(false);
+
   const [deletePaymentItem] = useDeletePaymentItemMutation();
+  const [bulkDeletePaymentItems, { isLoading: isBulkDeleting }] =
+    useBulkDeletePaymentItemsMutation();
   const [fetchPaymentItem, { isFetching: isFetchingPaymentItem }] =
     useLazyGetPaymentItemQuery();
+
+  const allSelected = fees.length > 0 && selectedIds.length === fees.length;
+
+  const toggleSelectAll = () => {
+    setSelectedIds(allSelected ? [] : fees.map((fee) => fee._id));
+  };
+
+  const toggleSelectRow = (id: string) => {
+    setSelectedIds((prev) =>
+      prev.includes(id) ? prev.filter((rowId) => rowId !== id) : [...prev, id],
+    );
+  };
+
+  const confirmBulkDelete = async () => {
+    try {
+      const res = await bulkDeletePaymentItems({
+        paymentItemIds: selectedIds,
+      }).unwrap();
+      showsuccess(res?.message || "Selected fees deleted successfully");
+      setSelectedIds([]);
+      setIsBulkDeleteModalOpen(false);
+    } catch (error: any) {
+      showerror(error?.data?.message || "Failed to delete selected fees");
+    }
+  };
 
   const toggleDropdown = (id: string) => {
     setActiveDropdown((prev) => (prev === id ? null : id));
@@ -111,6 +142,7 @@ export function FeeTable({
     try {
       const res = await deletePaymentItem(deleteFeeData._id).unwrap();
       showsuccess(res?.message || "Fee deleted successfully");
+      setSelectedIds((prev) => prev.filter((id) => id !== deleteFeeData._id));
       setIsDeleteModalOpen(false);
       setDeleteFeeData(null);
     } catch (error: any) {
@@ -124,6 +156,29 @@ export function FeeTable({
 
   return (
     <>
+      {selectedIds.length > 0 && (
+        <div className="flex items-center justify-between bg-purple-50 border border-purple-100 rounded-xl px-6 py-3 mb-4">
+          <p className="text-sm font-medium text-purple-700">
+            {selectedIds.length} fee{selectedIds.length > 1 ? "s" : ""} selected
+          </p>
+          <div className="flex items-center gap-3">
+            <button
+              onClick={() => setSelectedIds([])}
+              className="text-sm font-medium text-gray-500 hover:text-gray-700 transition-colors"
+            >
+              Clear
+            </button>
+            <button
+              onClick={() => setIsBulkDeleteModalOpen(true)}
+              className="flex items-center gap-2 px-4 py-2 bg-red-600 text-white text-sm font-medium rounded-lg hover:bg-red-700 transition-colors"
+            >
+              <Trash2 className="w-4 h-4" />
+              Delete Selected
+            </button>
+          </div>
+        </div>
+      )}
+
       <div className="bg-white rounded-xl border border-gray-200 overflow-visible relative">
         <div className="overflow-x-auto overflow-y-visible min-h-[300px]">
           <table className="w-full">
@@ -132,7 +187,10 @@ export function FeeTable({
                 <th className="px-6 py-4 text-left">
                   <input
                     type="checkbox"
-                    className="w-4 h-4 rounded border-gray-300"
+                    checked={allSelected}
+                    onChange={toggleSelectAll}
+                    disabled={fees.length === 0}
+                    className="w-4 h-4 rounded border-gray-300 cursor-pointer disabled:cursor-not-allowed"
                   />
                 </th>
                 <th className="px-6 py-4 text-left text-sm font-medium text-gray-600">
@@ -177,7 +235,9 @@ export function FeeTable({
                     <td className="px-6 py-4">
                       <input
                         type="checkbox"
-                        className="w-4 h-4 rounded border-gray-300"
+                        checked={selectedIds.includes(fee._id)}
+                        onChange={() => toggleSelectRow(fee._id)}
+                        className="w-4 h-4 rounded border-gray-300 cursor-pointer"
                       />
                     </td>
                     <td className="px-6 py-4 text-sm text-gray-900 whitespace-nowrap">
@@ -402,6 +462,44 @@ export function FeeTable({
                 className="flex-1 px-4 py-2.5 bg-red-600 text-white rounded-xl font-medium hover:bg-red-700 transition-colors shadow-sm"
               >
                 Delete Fee
+              </button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+      )}
+
+      {isBulkDeleteModalOpen && (
+        <Dialog open={isBulkDeleteModalOpen} onOpenChange={setIsBulkDeleteModalOpen}>
+          <DialogContent className="max-w-md rounded-2xl">
+            <DialogHeader className="mb-4">
+              <div className="mx-auto w-12 h-12 bg-red-100 rounded-full flex items-center justify-center mb-4">
+                <Trash2 className="w-6 h-6 text-red-600" />
+              </div>
+              <DialogTitle className="text-xl font-bold text-center text-gray-900">
+                Delete {selectedIds.length} Fee Item{selectedIds.length > 1 ? "s" : ""}?
+              </DialogTitle>
+            </DialogHeader>
+            <div className="text-center text-gray-600 mb-8">
+              Are you sure you want to delete the{" "}
+              <span className="font-semibold text-gray-900">
+                {selectedIds.length} selected fee{selectedIds.length > 1 ? "s" : ""}
+              </span>
+              ? This action cannot be undone.
+            </div>
+            <DialogFooter className="flex gap-3 sm:justify-center w-full">
+              <button
+                onClick={() => setIsBulkDeleteModalOpen(false)}
+                disabled={isBulkDeleting}
+                className="flex-1 px-4 py-2.5 bg-white border border-gray-300 text-gray-700 rounded-xl font-medium hover:bg-gray-50 transition-colors disabled:opacity-50"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={confirmBulkDelete}
+                disabled={isBulkDeleting}
+                className="flex-1 px-4 py-2.5 bg-red-600 text-white rounded-xl font-medium hover:bg-red-700 transition-colors shadow-sm disabled:opacity-50"
+              >
+                {isBulkDeleting ? "Deleting..." : "Delete Selected"}
               </button>
             </DialogFooter>
           </DialogContent>
