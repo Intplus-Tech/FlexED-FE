@@ -1,6 +1,7 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import StudentTableLoader from "../../Loader/table-loader";
 import { StudentProfileModal } from "../student-profile";
 import { GetStudentsResponse, Student } from "@/@types/student";
@@ -8,7 +9,11 @@ import { ClassItem } from "@/@types/class";
 import { useDeleteStudentMutation } from "@/redux/api/student";
 import { DeleteModal } from "@/components/delete-modal";
 import { showerror, showsuccess } from "@/utils/toast";
-import { Eye, Trash2, Pencil } from "lucide-react";
+import { Eye, Trash2, Pencil, GraduationCap, MoreVertical, Download } from "lucide-react";
+import { PromoteStudentModal } from "../promote-student-modal";
+import { StudentReceiptButton } from "../student-receipt";
+
+const MENU_WIDTH = 208;
 
 interface StudentTableProps {
   students: GetStudentsResponse;
@@ -31,9 +36,44 @@ export function StudentTable({
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [studentToDelete, setStudentToDelete] = useState<Student | null>(null);
+  const [isPromoteModalOpen, setIsPromoteModalOpen] = useState(false);
+  const [studentToPromote, setStudentToPromote] = useState<Student | null>(null);
+  const [openMenuFor, setOpenMenuFor] = useState<Student | null>(null);
+  const [menuPosition, setMenuPosition] = useState<{ top: number; left: number } | null>(null);
+  const menuRef = useRef<HTMLDivElement | null>(null);
+  const [receiptRequest, setReceiptRequest] = useState<{ studentId: string; nonce: number } | null>(null);
 
   const [deleteStudent, { isLoading: isDeleteLoading }] =
     useDeleteStudentMutation();
+
+  const closeMenu = () => {
+    setOpenMenuFor(null);
+    setMenuPosition(null);
+  };
+
+  const toggleMenu = (student: Student, e: React.MouseEvent<HTMLButtonElement>) => {
+    if (openMenuFor?._id === student._id) {
+      closeMenu();
+      return;
+    }
+    const rect = e.currentTarget.getBoundingClientRect();
+    setMenuPosition({ top: rect.bottom + 6, left: rect.right - MENU_WIDTH });
+    setOpenMenuFor(student);
+  };
+
+  useEffect(() => {
+    if (!openMenuFor) return;
+    const handleOutsideClick = (e: MouseEvent) => {
+      if (menuRef.current && !menuRef.current.contains(e.target as Node)) closeMenu();
+    };
+    const handleScroll = () => closeMenu();
+    document.addEventListener("mousedown", handleOutsideClick);
+    window.addEventListener("scroll", handleScroll, true);
+    return () => {
+      document.removeEventListener("mousedown", handleOutsideClick);
+      window.removeEventListener("scroll", handleScroll, true);
+    };
+  }, [openMenuFor]);
 
   const handleViewStudent = (student: Student) => {
     setSelectedStudent(student);
@@ -59,6 +99,11 @@ export function StudentTable({
   const handleDeleteStudent = (student: Student) => {
     setStudentToDelete(student);
     setIsDeleteModalOpen(true);
+  };
+
+  const handlePromoteStudent = (student: Student) => {
+    setStudentToPromote(student);
+    setIsPromoteModalOpen(true);
   };
 
   const handleDeleteConfirm = async () => {
@@ -195,34 +240,14 @@ export function StudentTable({
                       {"-"}
                     </td> */}
                     <td className="px-6 py-4">
-                      <div className="flex items-center gap-3">
-                        <button
-                          disabled={selectedStudentIds.length > 0}
-                          onClick={() => handleViewStudent(student)}
-                          className="text-sm text-gray-700 hover:text-gray-900 underline disabled:opacity-50 disabled:cursor-not-allowed"
-                          title="View Student"
-                        >
-                          <Eye size={18} />
-                        </button>
-                        <span className="text-gray-300">|</span>
-                        <button
-                          disabled={selectedStudentIds.length > 0}
-                          onClick={() => onEditStudent(student._id)}
-                          className="text-sm text-gray-700 hover:text-purple-600 underline disabled:opacity-50 disabled:cursor-not-allowed"
-                          title="Edit Student"
-                        >
-                          <Pencil size={18} />
-                        </button>
-                        <span className="text-gray-300">|</span>
-                        <button
-                          disabled={selectedStudentIds.length > 0}
-                          onClick={() => handleDeleteStudent(student)}
-                          className="text-sm text-gray-700 hover:text-red-600 underline disabled:opacity-50 disabled:cursor-not-allowed"
-                          title="Delete Student"
-                        >
-                          <Trash2 size={18} />
-                        </button>
-                      </div>
+                      <button
+                        disabled={selectedStudentIds.length > 0}
+                        onClick={(e) => toggleMenu(student, e)}
+                        className="p-1.5 rounded-lg text-gray-500 hover:text-gray-900 hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                        title="More actions"
+                      >
+                        <MoreVertical size={18} />
+                      </button>
                     </td>
                   </tr>
                 );
@@ -231,6 +256,70 @@ export function StudentTable({
           </tbody>
         </table>
       </div>
+
+      {openMenuFor &&
+        menuPosition &&
+        createPortal(
+          <div
+            ref={menuRef}
+            style={{ position: "fixed", top: menuPosition.top, left: menuPosition.left, width: MENU_WIDTH }}
+            className="bg-white border border-gray-200 rounded-lg shadow-lg py-1.5 z-50"
+          >
+            <button
+              onClick={() => {
+                handleViewStudent(openMenuFor);
+                closeMenu();
+              }}
+              className="w-full flex items-center gap-2.5 px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 text-left transition-colors"
+            >
+              <Eye size={15} />
+              View Student
+            </button>
+            <button
+              onClick={() => {
+                onEditStudent(openMenuFor._id);
+                closeMenu();
+              }}
+              className="w-full flex items-center gap-2.5 px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 text-left transition-colors"
+            >
+              <Pencil size={15} />
+              Edit Student
+            </button>
+            <button
+              onClick={() => {
+                setReceiptRequest({ studentId: openMenuFor._id, nonce: Date.now() });
+                closeMenu();
+              }}
+              className="w-full flex items-center gap-2.5 px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 text-left transition-colors"
+            >
+              <Download size={15} />
+              Download Receipt
+            </button>
+            <button
+              onClick={() => {
+                handlePromoteStudent(openMenuFor);
+                closeMenu();
+              }}
+              className="w-full flex items-center gap-2.5 px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 text-left transition-colors"
+            >
+              <GraduationCap size={15} />
+              Promote Student
+            </button>
+            <div className="my-1 border-t border-gray-100" />
+            <button
+              onClick={() => {
+                handleDeleteStudent(openMenuFor);
+                closeMenu();
+              }}
+              className="w-full flex items-center gap-2.5 px-4 py-2.5 text-sm text-red-600 hover:bg-red-50 text-left transition-colors"
+            >
+              <Trash2 size={15} />
+              Delete Student
+            </button>
+          </div>,
+          document.body,
+        )}
+
       <StudentProfileModal
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
@@ -246,6 +335,23 @@ export function StudentTable({
         description="Are you sure you want to delete "
         itemName={`${studentToDelete?.firstName} ${studentToDelete?.lastName}?`}
       />
+      <PromoteStudentModal
+        open={isPromoteModalOpen}
+        onOpenChange={(open) => {
+          setIsPromoteModalOpen(open);
+          if (!open) setStudentToPromote(null);
+        }}
+        classItems={classItems}
+        student={studentToPromote}
+      />
+
+      {receiptRequest && (
+        <StudentReceiptButton
+          studentId={receiptRequest.studentId}
+          variant="hidden"
+          trigger={receiptRequest.nonce}
+        />
+      )}
     </div>
   );
 }

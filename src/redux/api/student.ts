@@ -7,6 +7,8 @@ import {
   CreateStudentRequest,
   GetStudentsResponse,
   GetStudentByIdResponse,
+  PromoteStudentsRequest,
+  PromoteStudentsResponse,
 } from "@/@types/student";
 import { request } from "http";
 import { QueryHelper } from "@/utils/functions";
@@ -188,6 +190,18 @@ export const studentApi = apiSlice.injectEndpoints({
       invalidatesTags: ["students", "Transaction"],
     }),
 
+    promoteStudents: builder.mutation<
+      PromoteStudentsResponse,
+      PromoteStudentsRequest
+    >({
+      query: (body) => ({
+        url: ApiEndpoints.student.promoteStudents,
+        method: methods.POST,
+        body,
+      }),
+      invalidatesTags: ["students"],
+    }),
+
     removeStudentDiscount: builder.mutation<
       { success: boolean; message: string },
       { studentId: string; paymentItem: string }
@@ -221,4 +235,5 @@ export const {
   useBulkExemptStudentsMutation,
   useRemoveStudentExemptionMutation,
   useRemoveStudentDiscountMutation,
+  usePromoteStudentsMutation,
 } = studentApi;

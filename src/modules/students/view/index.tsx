@@ -23,6 +23,7 @@ import { BulkExemptionModal } from "../components/bulk-exemption-modal";
 import { EditStudentModal } from "../components/edit-student";
 import { useBulkDeleteStudentsMutation } from "@/redux/api/student";
 import { showerror, showsuccess } from "@/utils/toast";
+import { PromoteStudentModal } from "../components/promote-student-modal";
 
 export default function StudentView() {
   const [searchQuery, setSearchQuery] = useState("");
@@ -38,6 +39,7 @@ export default function StudentView() {
   const [isDeleteConfirmOpen, setIsDeleteConfirmOpen] = useState(false);
   const [editingStudentId, setEditingStudentId] = useState<string | null>(null);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [isPromoteModalOpen, setIsPromoteModalOpen] = useState(false);
   
   const [bulkDeleteStudents, { isLoading: isBulkDeleting }] = useBulkDeleteStudentsMutation();
   const itemsPerPage = 10;
@@ -146,13 +148,21 @@ export default function StudentView() {
         </div>
       )}
       <div className="flex flex-col md:flex-row gap-4 items-start md:items-center justify-between">
-        <div className="relative">
+        <div className="relative flex flex-wrap gap-3">
           <button
             disabled={selectedStudentIds.length > 0}
             onClick={() => !isModalOpen && setIsModalOpen(!isModalOpen)}
             className="flex items-center gap-2 px-6 py-3 bg-gray-900 text-white font-medium rounded-lg hover:bg-gray-800 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
           >
             Add Student
+          </button>
+
+          <button
+            disabled={selectedStudentIds.length > 0}
+            onClick={() => setIsPromoteModalOpen(true)}
+            className="flex items-center gap-2 px-6 py-3 bg-purple-600 text-white font-medium rounded-lg hover:bg-purple-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            Promote Students
           </button>
 
           {isModalOpen && (
@@ -343,6 +353,12 @@ export default function StudentView() {
         onOpenChange={setIsExemptionModalOpen}
         studentIds={selectedStudentIds}
         onSuccess={() => setSelectedStudentIds([])}
+      />
+
+      <PromoteStudentModal
+        open={isPromoteModalOpen}
+        onOpenChange={setIsPromoteModalOpen}
+        classItems={classes?.data ?? []}
       />
 
       <EditStudentModal

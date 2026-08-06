@@ -93,6 +93,7 @@ export const student = {
   bulkExemption: "/students/bulk/exemptions",
   removeExemption: (id: string, paymentItemId: string) => `/students/${id}/exemptions/${paymentItemId}`,
   assignClass: "/students/assign-class",
+  promoteStudents: "/students/promote",
 };
 
 export const classes = {

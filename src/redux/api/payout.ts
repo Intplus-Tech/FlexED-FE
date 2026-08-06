@@ -41,6 +41,7 @@ export const payoutApi = apiSlice.injectEndpoints({
     getSettlementAccounts: builder.query<SettlementAccount[], string>({
       query: (schoolId) => ApiEndpoints.settlementAccount.getSchoolAccounts(schoolId),
       transformResponse: (response: GetSettlementAccountsResponse) => response.data,
+      providesTags: ["SettlementAccount"],
     }),
 
     createPayout: builder.mutation<any, CreatePayoutRequest>({

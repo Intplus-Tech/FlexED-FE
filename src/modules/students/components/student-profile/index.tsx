@@ -18,6 +18,9 @@ import {
 import { useGetStudentFeeProfileQuery } from "@/redux/api/transaction";
 import { StudentDiscountModal } from "../student-discount-modal";
 import { StudentExemptionModal } from "../student-exemption-modal";
+import { PromoteStudentModal } from "../promote-student-modal";
+import { StudentReceiptButton } from "../student-receipt";
+import { GraduationCap } from "lucide-react";
 
 // ---------------------------------------------------------------------------
 // Local types
@@ -497,6 +500,7 @@ export function StudentProfileModal({
   const [activeTab, setActiveTab] = useState<TabId>("parent");
   const [isDiscountModalOpen, setIsDiscountModalOpen] = useState(false);
   const [isExemptionModalOpen, setIsExemptionModalOpen] = useState(false);
+  const [isPromoteModalOpen, setIsPromoteModalOpen] = useState(false);
   const [exemptingPaymentItemId, setExemptingPaymentItemId] = useState<string | undefined>(undefined);
   const [selectedFeeItemIds, setSelectedFeeItemIds] = useState<string[]>([]);
   const [removingExemptionId, setRemovingExemptionId] = useState<string | null>(null);
@@ -613,6 +617,16 @@ export function StudentProfileModal({
                       {activeStudent.gender?.toLowerCase() || "N/A"}
                     </span>
                   </p>
+                  <div className="mt-3 flex items-center gap-2">
+                    <button
+                      onClick={() => setIsPromoteModalOpen(true)}
+                      className="flex items-center gap-1.5 text-sm font-semibold text-white bg-purple-600 hover:bg-purple-700 px-3 py-1.5 rounded-lg transition-colors"
+                    >
+                      <GraduationCap size={16} />
+                      Promote Student
+                    </button>
+                    <StudentReceiptButton studentId={activeStudent._id} variant="button" />
+                  </div>
                 </div>
               </div>
 
@@ -709,6 +723,13 @@ export function StudentProfileModal({
         preSelectedPaymentItemIds={
           selectedFeeItemIds.length > 0 ? selectedFeeItemIds : undefined
         }
+      />
+
+      <PromoteStudentModal
+        open={isPromoteModalOpen}
+        onOpenChange={setIsPromoteModalOpen}
+        classItems={classItems}
+        student={activeStudent}
       />
     </Dialog>
   );

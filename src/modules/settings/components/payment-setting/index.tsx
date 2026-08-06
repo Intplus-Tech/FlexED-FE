@@ -14,6 +14,7 @@ import {
   useCreateSettlementAccountMutation,
 } from "@/redux/api/transaction";
 import { useGetShoolProfileQuery } from "@/redux/api/school";
+import { useGetSettlementAccountsQuery } from "@/redux/api/payout";
 import { useEffect } from "react";
 import { toast } from "sonner";
 import { useDebounce } from "@/hooks/use-debounce";
@@ -40,10 +41,32 @@ export function PaymentSettingsTab() {
   });
 
   const { data: schoolProfile } = useGetShoolProfileQuery();
+  const { data: settlementAccounts } = useGetSettlementAccountsQuery(
+    schoolProfile?.data?._id as string,
+    { skip: !schoolProfile?.data?._id },
+  );
   const [banksData, setBanksData] = useState<{ data: { name: string; code: string }[] } | null>(null);
   const [isLoadingBanks, setIsLoadingBanks] = useState(false);
   const [isValidating, setIsValidating] = useState(false);
   const [createSettlementAccount] = useCreateSettlementAccountMutation();
+
+  const hasHydratedRef = useRef(false);
+  // Starts true so first-time setup still auto-validates as the user types;
+  // flips false only while we're programmatically filling in a saved account.
+  const userEditedRef = useRef(true);
+
+  useEffect(() => {
+    if (!settlementAccounts?.length || hasHydratedRef.current) return;
+    const primary = settlementAccounts.find((acc) => acc.isPrimary) ?? settlementAccounts[0];
+    userEditedRef.current = false;
+    reset({
+      bankCode: primary.bankCode,
+      bankName: primary.bankName,
+      accountNumber: primary.accountNumber,
+      accountName: primary.accountName,
+    });
+    hasHydratedRef.current = true;
+  }, [settlementAccounts, reset]);
 
   useEffect(() => {
     const fetchBanks = async () => {
@@ -92,6 +115,7 @@ export function PaymentSettingsTab() {
   }, [banksData, setValue]);
 
   useEffect(() => {
+    if (!userEditedRef.current) return;
     if (watchBankCode && debouncedAccountNumber?.length === 10) {
       validateBankAccount(watchBankCode, debouncedAccountNumber);
     } else if (debouncedAccountNumber?.length !== 10) {
@@ -123,7 +147,9 @@ export function PaymentSettingsTab() {
         isPrimary: true,
       }).unwrap();
       toast.success(res.message);
-      reset();
+      // Keep the just-saved values on screen instead of clearing back to blank.
+      userEditedRef.current = false;
+      reset(data);
     } catch (error: any) {
       toast.error(error.message);
       console.error(error);
@@ -201,7 +227,11 @@ export function PaymentSettingsTab() {
                     Bank Name
                   </label>
                   <select
-                    {...register("bankCode")}
+                    {...register("bankCode", {
+                      onChange: () => {
+                        userEditedRef.current = true;
+                      },
+                    })}
                     id="bankCode"
                     className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent bg-white"
                   >
@@ -227,7 +257,11 @@ export function PaymentSettingsTab() {
                     Account Number
                   </label>
                   <input
-                    {...register("accountNumber")}
+                    {...register("accountNumber", {
+                      onChange: () => {
+                        userEditedRef.current = true;
+                      },
+                    })}
                     type="text"
                     id="accountNumber"
                     inputMode="numeric"
