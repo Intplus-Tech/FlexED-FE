@@ -75,6 +75,7 @@ export const {
   useGetSchoolMetricsQuery,
   useGetAllStaffQuery,
   useGetShoolProfileQuery,
+  useLazyGetShoolProfileQuery,
   useUpdateSchoolMutation,
   useInviteStaffMutation,
   useUpdateStaffMutation,

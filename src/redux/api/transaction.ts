@@ -205,7 +205,7 @@ export const transactionApi = apiSlice.injectEndpoints({
         method: methods.POST,
         body: request,
       }),
-      invalidatesTags: ["Transaction"],
+      invalidatesTags: ["Transaction", "SettlementAccount"],
     }),
 
     getStudentFeeProfile: builder.query<StudentFeeProfileResponse, string>({
@@ -246,6 +246,8 @@ export const {
   useValidateAccountMutation,
   useCreateSettlementAccountMutation,
   useGetStudentFeeProfileQuery,
+  useLazyGetStudentFeeProfileQuery,
+  useLazyGetTransactionsQuery,
   useAllocateManualPaymentMutation,
   useBulkDeleteTransactionsMutation,
   useBulkDeletePaymentItemsMutation,
