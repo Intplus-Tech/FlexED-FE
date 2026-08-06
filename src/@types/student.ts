@@ -157,6 +157,28 @@ export interface ExemptedPayment {
   exemptedAt?: string;
 }
 
+export interface ClassMapping {
+  fromClassId: string;
+  toClassId: string;
+}
+
+export interface PromoteStudentsRequest {
+  excludeStudentIds: string[];
+  classMappings: ClassMapping[];
+  dryRun: boolean;
+}
+
+export interface PromoteStudentsResponse {
+  success: boolean;
+  message: string;
+  data?: {
+    promotedCount?: number;
+    excludedCount?: number;
+    promoted?: string[];
+    excluded?: string[];
+  };
+}
+
 export interface ParentDetailResponse {
   _id: string;
   firstName: string;
