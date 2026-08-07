@@ -62,6 +62,7 @@ export const academicSessionApi = apiSlice.injectEndpoints({
 
 export const {
   useGetAllAcademicSessionQuery,
+  useLazyGetAllAcademicSessionQuery,
   useCreateAcademicSessionMutation,
   useUpdateAcademicSessionStatusMutation,
   useUpdateAcademicSessionMutation,

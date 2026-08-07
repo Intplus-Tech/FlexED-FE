@@ -9,9 +9,10 @@ import { ClassItem } from "@/@types/class";
 import { useDeleteStudentMutation } from "@/redux/api/student";
 import { DeleteModal } from "@/components/delete-modal";
 import { showerror, showsuccess } from "@/utils/toast";
-import { Eye, Trash2, Pencil, GraduationCap, MoreVertical, Download } from "lucide-react";
+import { Eye, Trash2, Pencil, GraduationCap, MoreVertical, Download, FileText } from "lucide-react";
 import { PromoteStudentModal } from "../promote-student-modal";
 import { StudentReceiptButton } from "../student-receipt";
+import { StudentInvoiceButton } from "../student-invoice";
 
 const MENU_WIDTH = 208;
 
@@ -42,6 +43,7 @@ export function StudentTable({
   const [menuPosition, setMenuPosition] = useState<{ top: number; left: number } | null>(null);
   const menuRef = useRef<HTMLDivElement | null>(null);
   const [receiptRequest, setReceiptRequest] = useState<{ studentId: string; nonce: number } | null>(null);
+  const [invoiceRequest, setInvoiceRequest] = useState<{ studentId: string; nonce: number } | null>(null);
 
   const [deleteStudent, { isLoading: isDeleteLoading }] =
     useDeleteStudentMutation();
@@ -146,9 +148,6 @@ export function StudentTable({
                     }}
                     className="w-4 h-4 border-2 border-gray-300 rounded cursor-pointer accent-purple-500 focus:ring-purple-500 text-purple-600"
                   />
-                  <span className="text-sm font-medium text-gray-600">
-                    Student ID
-                  </span>
                 </div>
               </th>
               <th className="px-6 py-4 text-left text-sm font-medium text-gray-600 whitespace-nowrap">
@@ -211,9 +210,6 @@ export function StudentTable({
                           }}
                           className="w-4 h-4 border-2 border-gray-300 rounded cursor-pointer accent-purple-500 focus:ring-purple-500 text-purple-600"
                         />
-                        <span className="text-sm text-gray-900">
-                          {student._id}
-                        </span>
                       </div>
                     </td>
                     <td className="px-6 py-4 text-sm text-gray-900">
@@ -297,6 +293,16 @@ export function StudentTable({
             </button>
             <button
               onClick={() => {
+                setInvoiceRequest({ studentId: openMenuFor._id, nonce: Date.now() });
+                closeMenu();
+              }}
+              className="w-full flex items-center gap-2.5 px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 text-left transition-colors"
+            >
+              <FileText size={15} />
+              Download Invoice
+            </button>
+            <button
+              onClick={() => {
                 handlePromoteStudent(openMenuFor);
                 closeMenu();
               }}
@@ -350,6 +356,13 @@ export function StudentTable({
           studentId={receiptRequest.studentId}
           variant="hidden"
           trigger={receiptRequest.nonce}
+        />
+      )}
+      {invoiceRequest && (
+        <StudentInvoiceButton
+          studentId={invoiceRequest.studentId}
+          variant="hidden"
+          trigger={invoiceRequest.nonce}
         />
       )}
     </div>

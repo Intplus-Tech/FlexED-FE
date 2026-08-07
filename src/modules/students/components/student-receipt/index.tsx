@@ -13,6 +13,7 @@ import {
   useLazyGetTransactionsQuery,
 } from "@/redux/api/transaction";
 import { useLazyGetShoolProfileQuery } from "@/redux/api/school";
+import { useLazyGetAllAcademicSessionQuery } from "@/redux/api/academicSession";
 import { showerror, showsuccess } from "@/utils/toast";
 import { cn } from "@/lib/utils";
 import { downloadNodeAsPdf, waitForImagesToLoad } from "@/utils/pdf";
@@ -24,6 +25,7 @@ interface ReceiptPayload {
   paidDatesByItemId: Record<string, string | undefined>;
   generatedAt: string;
   receiptNumber: string;
+  termLabel?: string;
 }
 
 interface StudentReceiptButtonProps {
@@ -55,6 +57,7 @@ export function StudentReceiptButton({
   const [triggerFeeProfile] = useLazyGetStudentFeeProfileQuery();
   const [triggerSchool] = useLazyGetShoolProfileQuery();
   const [triggerTransactions] = useLazyGetTransactionsQuery();
+  const [triggerAcademicPeriods] = useLazyGetAllAcademicSessionQuery();
 
   useEffect(() => {
     if (!receiptPayload) return;
@@ -116,7 +119,14 @@ export function StudentReceiptButton({
             (t) => t.paymentItem?._id === item.paymentItemId,
           );
           if (matches.length > 0) {
-            const latest = matches.reduce((a, b) =>
+            // Prefer transactions that actually settled the item — a PAID
+            // transaction with closesPaymentItem: false (an underpaid
+            // transfer, or a partial wallet redemption) isn't the item's
+            // real settlement date. closesPaymentItem may be absent on
+            // older records, so treat undefined as "assume it settled."
+            const settlingMatches = matches.filter((t) => t.closesPaymentItem !== false);
+            const candidates = settlingMatches.length > 0 ? settlingMatches : matches;
+            const latest = candidates.reduce((a, b) =>
               new Date(a.createdAt) > new Date(b.createdAt) ? a : b,
             );
             paidDatesByItemId[item.paymentItemId] = latest.createdAt;
@@ -126,12 +136,25 @@ export function StudentReceiptButton({
         // Payment-date enrichment is best-effort; the receipt still renders without it.
       }
 
+      let termLabel: string | undefined;
+      try {
+        const periodsRes = await triggerAcademicPeriods().unwrap();
+        termLabel =
+          periodsRes.data?.items
+            ?.filter((p) => p.isActive)
+            .map((p) => p.name)
+            .join(" · ") || undefined;
+      } catch {
+        // Term label is best-effort; the receipt still renders without it.
+      }
+
       setReceiptPayload({
         school,
         feeProfile,
         paidDatesByItemId,
         generatedAt: new Date().toISOString(),
         receiptNumber: `RCPT-${feeProfile.admissionNumber}-${dayjs().format("YYYYMMDDHHmmss")}`,
+        termLabel,
       });
     } catch (error: any) {
       showerror(error?.data?.message || "Failed to load receipt data");
@@ -200,6 +223,7 @@ export function StudentReceiptButton({
               paidDatesByItemId={receiptPayload.paidDatesByItemId}
               generatedAt={receiptPayload.generatedAt}
               receiptNumber={receiptPayload.receiptNumber}
+              termLabel={receiptPayload.termLabel}
             />
           </div>,
           document.body,

@@ -20,7 +20,10 @@ import { StudentDiscountModal } from "../student-discount-modal";
 import { StudentExemptionModal } from "../student-exemption-modal";
 import { PromoteStudentModal } from "../promote-student-modal";
 import { StudentReceiptButton } from "../student-receipt";
-import { GraduationCap } from "lucide-react";
+import { StudentInvoiceButton } from "../student-invoice";
+import { ParentWalletModal } from "../parent-wallet-modal";
+import { usePermission } from "@/utils/permissions";
+import { GraduationCap, Wallet } from "lucide-react";
 
 // ---------------------------------------------------------------------------
 // Local types
@@ -142,9 +145,17 @@ interface ParentTabProps {
   parentDetails: ParentEntry[];
   enrollmentDate?: string;
   classLabel: string;
+  canViewWallet: boolean;
+  onViewWallet: (parent: ParentEntry) => void;
 }
 
-function ParentTab({ parentDetails, enrollmentDate, classLabel }: ParentTabProps) {
+function ParentTab({
+  parentDetails,
+  enrollmentDate,
+  classLabel,
+  canViewWallet,
+  onViewWallet,
+}: ParentTabProps) {
   return (
     <div className="space-y-6">
       {parentDetails.length > 0 ? (
@@ -153,9 +164,20 @@ function ParentTab({ parentDetails, enrollmentDate, classLabel }: ParentTabProps
             key={parent._id || index}
             className="bg-gray-50 border border-gray-100 rounded-xl p-6 space-y-4"
           >
-            <h4 className="text-sm font-bold text-purple-600 uppercase tracking-wider">
-              {parent.relationship || "Guardian"} Details
-            </h4>
+            <div className="flex items-center justify-between">
+              <h4 className="text-sm font-bold text-purple-600 uppercase tracking-wider">
+                {parent.relationship || "Guardian"} Details
+              </h4>
+              {canViewWallet && parent._id && (
+                <button
+                  onClick={() => onViewWallet(parent)}
+                  className="flex items-center gap-1.5 text-xs font-semibold text-purple-600 hover:text-purple-700 bg-purple-50 px-2.5 py-1.5 rounded-lg transition-colors"
+                >
+                  <Wallet size={13} />
+                  View Wallet
+                </button>
+              )}
+            </div>
             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
               <InfoField label="Name">{`${parent.firstName} ${parent.lastName}`}</InfoField>
               <div>
@@ -501,6 +523,8 @@ export function StudentProfileModal({
   const [isDiscountModalOpen, setIsDiscountModalOpen] = useState(false);
   const [isExemptionModalOpen, setIsExemptionModalOpen] = useState(false);
   const [isPromoteModalOpen, setIsPromoteModalOpen] = useState(false);
+  const [walletParent, setWalletParent] = useState<ParentEntry | null>(null);
+  const { isAdmin } = usePermission();
   const [exemptingPaymentItemId, setExemptingPaymentItemId] = useState<string | undefined>(undefined);
   const [selectedFeeItemIds, setSelectedFeeItemIds] = useState<string[]>([]);
   const [removingExemptionId, setRemovingExemptionId] = useState<string | null>(null);
@@ -626,6 +650,7 @@ export function StudentProfileModal({
                       Promote Student
                     </button>
                     <StudentReceiptButton studentId={activeStudent._id} variant="button" />
+                    <StudentInvoiceButton studentId={activeStudent._id} variant="button" />
                   </div>
                 </div>
               </div>
@@ -672,6 +697,8 @@ export function StudentProfileModal({
                   parentDetails={activeStudent.parentDetails as ParentEntry[]}
                   enrollmentDate={activeStudent.createdAt}
                   classLabel={getClassLabel(activeStudent.class)}
+                  canViewWallet={isAdmin}
+                  onViewWallet={setWalletParent}
                 />
               )}
               {activeTab === "fees" && (
@@ -730,6 +757,13 @@ export function StudentProfileModal({
         onOpenChange={setIsPromoteModalOpen}
         classItems={classItems}
         student={activeStudent}
+      />
+
+      <ParentWalletModal
+        isOpen={walletParent !== null}
+        onClose={() => setWalletParent(null)}
+        parentId={walletParent?._id ?? null}
+        parentName={walletParent ? `${walletParent.firstName} ${walletParent.lastName}` : undefined}
       />
     </Dialog>
   );

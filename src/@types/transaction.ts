@@ -3,14 +3,27 @@ export interface Transaction {
   reference: string;
   groupReference: string;
   student: Student;
+  parent?: string | null;
   paymentItem: PaymentItems;
   school: string;
   amount: number;
   status: "PENDING" | "PAID" | "FAILED";
   type: "DEBIT" | "CREDIT";
   walletCredited: boolean;
-  provider: "SQUAD";
+  provider: "SQUAD" | "PAYSTACK" | "FLUTTERWAVE" | "MANUAL" | "WALLET";
   providerReference: string;
+  /** Paid above what this fee required. 0 for ordinary payments. */
+  surplusAmount?: number;
+  /** Whether surplusAmount has already reached the parent's wallet. */
+  surplusCredited?: boolean;
+  /**
+   * Whether this transaction fully settled the fee item. Not present on
+   * older records / not guaranteed by the API schema — treat undefined as
+   * "unknown", not as false. A PAID transaction with closesPaymentItem
+   * false (e.g. an underpaid transfer, or a partial wallet redemption)
+   * does NOT mean the fee item is fully paid.
+   */
+  closesPaymentItem?: boolean;
   meta: SquadMeta;
   createdAt: string;
   updatedAt: string;
@@ -103,6 +116,10 @@ export interface ManualPaymentItem {
   paymentItemId: string;
   receiptNumber: string;
   dateOfPayment: string;
+  /** Cash actually collected. Defaults to the amount due; anything above it
+   * is credited to the parent's wallet. Must not be below the amount due —
+   * use manual-allocations for part payments. */
+  amountPaid?: number;
 }
 
 export interface CollectManualPaymentRequest {
@@ -110,6 +127,20 @@ export interface CollectManualPaymentRequest {
   paidAllTogether: boolean;
   groupRef: string;
   payments: ManualPaymentItem[];
+}
+
+export interface CollectManualPaymentResponse {
+  success: boolean;
+  message: string;
+  statusCode: number;
+  data: {
+    groupRef: string | null;
+    paidAllTogether: boolean;
+    count: number;
+    transactions: Transaction[];
+    /** Total collected above the items' fees, credited to the parent's wallet. */
+    surplusCredited: number;
+  };
 }
 
 export interface StudentFeeProfilePaymentItem {
@@ -154,6 +185,21 @@ export interface ManualAllocationRequest {
   dateOfPayment: string;
   totalAmountPaid: number;
   allocations: ManualAllocationItem[];
+}
+
+export interface ManualAllocationResponse {
+  success: boolean;
+  message: string;
+  statusCode: number;
+  data: {
+    referenceNumber: string;
+    studentId: string;
+    totalAmountPaid: number;
+    count: number;
+    transactions: Transaction[];
+    /** Amount allocated beyond what the items owed, credited to the parent's wallet. */
+    surplusCredited: number;
+  };
 }
 
 export interface GetPaymentMetricsResponse {

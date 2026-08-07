@@ -5,6 +5,7 @@ import { useState } from "react";
 import { TableSkeleton } from "../../Loader/table-loader";
 import { ClassItem } from "@/@types/class";
 import { TransactionsItems } from "@/@types/transaction";
+import { getPaymentStatusBadge } from "@/utils/transaction-status";
 
 import { Trash2 } from "lucide-react";
 
@@ -86,9 +87,6 @@ export function PaymentTable({
                 </div>
               </th>
               <th className="px-6 py-4 text-left text-sm font-medium text-gray-600">
-                Transaction ID
-              </th>
-              <th className="px-6 py-4 text-left text-sm font-medium text-gray-600">
                 Student Name
               </th>
               <th className="px-6 py-4 text-left text-sm font-medium text-gray-600">
@@ -112,7 +110,7 @@ export function PaymentTable({
             ) : data?.items?.length === 0 ? (
               <tr>
                 <td
-                  colSpan={8}
+                  colSpan={7}
                   className="px-6 py-12 text-center text-gray-500"
                 >
                   No payment records found
@@ -137,9 +135,6 @@ export function PaymentTable({
                       </span>
                     </div>
                   </td>
-                  <td className="px-6 py-4 text-sm text-gray-600">
-                    {payment?.groupReference}
-                  </td>
                   <td className="px-6 py-4 text-sm text-gray-900">
                     {payment?.student?.firstName +
                       " " +
@@ -155,17 +150,19 @@ export function PaymentTable({
                     })}
                   </td>
                   <td className="px-6 py-4">
-                    <span
-                      className={`inline-flex px-3 py-1 text-sm font-medium rounded-full ${
-                        payment.status === "PAID"
-                          ? "text-green-700 bg-green-50"
-                          : payment.status === "PENDING"
-                            ? "text-yellow-600 bg-yellow-50"
-                            : "text-red-700 bg-red-50"
-                      }`}
-                    >
-                      {payment.status}
-                    </span>
+                    {(() => {
+                      const badge = getPaymentStatusBadge(
+                        payment.status,
+                        payment.closesPaymentItem,
+                      );
+                      return (
+                        <span
+                          className={`inline-flex px-3 py-1 text-sm font-medium rounded-full ${badge.className}`}
+                        >
+                          {badge.label}
+                        </span>
+                      );
+                    })()}
                   </td>
                   <td className="px-6 py-4">
                     <button

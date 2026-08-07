@@ -96,6 +96,13 @@ export const student = {
   promoteStudents: "/students/promote",
 };
 
+export const parentWallet = {
+  getWallet: (parentId: string) => `/parent-wallets/${parentId}`,
+  getWalletLedger: (parentId: string) => `/parent-wallets/${parentId}/ledger`,
+  topUp: (parentId: string) => `/parent-wallets/${parentId}/top-up`,
+  topUpBulk: "/parent-wallets/top-up/bulk",
+};
+
 export const classes = {
   getAllClasses: "/classes",
   createClass: "/classes",
@@ -134,4 +141,5 @@ export const ApiEndpoints = {
   file,
   payout,
   settlementAccount,
+  parentWallet,
 };
