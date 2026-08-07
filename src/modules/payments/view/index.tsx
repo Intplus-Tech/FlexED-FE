@@ -2,7 +2,7 @@
 
 import { MetricCard } from "@/components/metric-card";
 import { Pagination } from "@/components/pagination";
-import { useState, useMemo } from "react";
+import { useState, useMemo, useRef, useEffect } from "react";
 import { PaymentTable } from "../components/payment-table";
 import { SearchInput } from "@/components/search-input";
 import {
@@ -55,6 +55,18 @@ export default function PaymentView() {
   const { data: academicSessions } = useGetAllAcademicSessionQuery();
   const { data: categories } = useGetPaymentCategoriesQuery();
   const { data: classItems } = useGetAllClassesQuery();
+
+  // Default the Academic Period filter to whichever session is currently
+  // active, once — a user's own selection afterward should stick.
+  const hasSetDefaultPeriodRef = useRef(false);
+  useEffect(() => {
+    if (hasSetDefaultPeriodRef.current) return;
+    const activeSession = academicSessions?.data?.items?.find((s) => s.isActive);
+    if (activeSession) {
+      setFilters((prev) => ({ ...prev, academicPeriod: activeSession._id }));
+      hasSetDefaultPeriodRef.current = true;
+    }
+  }, [academicSessions]);
 
   const { data, isFetching, isLoading } = useGetTransactionsQuery(
     {

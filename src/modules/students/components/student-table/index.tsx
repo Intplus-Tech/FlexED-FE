@@ -146,9 +146,6 @@ export function StudentTable({
                     }}
                     className="w-4 h-4 border-2 border-gray-300 rounded cursor-pointer accent-purple-500 focus:ring-purple-500 text-purple-600"
                   />
-                  <span className="text-sm font-medium text-gray-600">
-                    Student ID
-                  </span>
                 </div>
               </th>
               <th className="px-6 py-4 text-left text-sm font-medium text-gray-600 whitespace-nowrap">
@@ -211,9 +208,6 @@ export function StudentTable({
                           }}
                           className="w-4 h-4 border-2 border-gray-300 rounded cursor-pointer accent-purple-500 focus:ring-purple-500 text-purple-600"
                         />
-                        <span className="text-sm text-gray-900">
-                          {student._id}
-                        </span>
                       </div>
                     </td>
                     <td className="px-6 py-4 text-sm text-gray-900">
