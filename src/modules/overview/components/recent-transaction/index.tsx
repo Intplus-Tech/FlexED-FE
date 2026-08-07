@@ -1,6 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { RecentTransactionsProps } from "../../@types";
 import TableLoader from "../../loader/table-loader";
+import { getPaymentStatusBadge } from "@/utils/transaction-status";
 
 export function RecentTransactions({
   transactions,
@@ -98,16 +99,19 @@ export function RecentTransactions({
                     })}
                   </td>
                   <td className="px-6 py-4">
-                    <span
-                      className={`inline-flex px-3 py-1 text-sm font-medium rounded-full ${transaction.status === "PAID"
-                        ? "text-green-700 bg-green-50"
-                        : transaction.status === "PENDING"
-                          ? "text-yellow-600 bg-yellow-50"
-                          : "text-red-700 bg-red-50"
-                        }`}
-                    >
-                      {transaction.status}
-                    </span>
+                    {(() => {
+                      const badge = getPaymentStatusBadge(
+                        transaction.status,
+                        transaction.closesPaymentItem,
+                      );
+                      return (
+                        <span
+                          className={`inline-flex px-3 py-1 text-sm font-medium rounded-full ${badge.className}`}
+                        >
+                          {badge.label}
+                        </span>
+                      );
+                    })()}
                   </td>
                 </tr>
               ))

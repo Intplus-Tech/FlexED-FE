@@ -20,6 +20,8 @@ import {
   CreateSettlementAccountResponse,
   StudentFeeProfileResponse,
   ManualAllocationRequest,
+  ManualAllocationResponse,
+  CollectManualPaymentResponse,
 } from "@/@types/transaction";
 import { methods } from "@/utils/methods";
 import { GetCollectionsTotalsResponse } from "@/@types/dashboard";
@@ -95,7 +97,7 @@ export const transactionApi = apiSlice.injectEndpoints({
     }),
 
     collectManualPayment: builder.mutation<
-      GetTransactionsResponse,
+      CollectManualPaymentResponse,
       CollectManualPaymentRequest
     >({
       query: (request) => ({
@@ -214,7 +216,7 @@ export const transactionApi = apiSlice.injectEndpoints({
     }),
 
     allocateManualPayment: builder.mutation<
-      { success: boolean; message: string },
+      ManualAllocationResponse,
       ManualAllocationRequest
     >({
       query: (request) => ({

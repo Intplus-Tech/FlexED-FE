@@ -116,7 +116,14 @@ export function StudentReceiptButton({
             (t) => t.paymentItem?._id === item.paymentItemId,
           );
           if (matches.length > 0) {
-            const latest = matches.reduce((a, b) =>
+            // Prefer transactions that actually settled the item — a PAID
+            // transaction with closesPaymentItem: false (an underpaid
+            // transfer, or a partial wallet redemption) isn't the item's
+            // real settlement date. closesPaymentItem may be absent on
+            // older records, so treat undefined as "assume it settled."
+            const settlingMatches = matches.filter((t) => t.closesPaymentItem !== false);
+            const candidates = settlingMatches.length > 0 ? settlingMatches : matches;
+            const latest = candidates.reduce((a, b) =>
               new Date(a.createdAt) > new Date(b.createdAt) ? a : b,
             );
             paidDatesByItemId[item.paymentItemId] = latest.createdAt;
