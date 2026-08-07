@@ -20,6 +20,7 @@ import { StudentDiscountModal } from "../student-discount-modal";
 import { StudentExemptionModal } from "../student-exemption-modal";
 import { PromoteStudentModal } from "../promote-student-modal";
 import { StudentReceiptButton } from "../student-receipt";
+import { StudentInvoiceButton } from "../student-invoice";
 import { ParentWalletModal } from "../parent-wallet-modal";
 import { usePermission } from "@/utils/permissions";
 import { GraduationCap, Wallet } from "lucide-react";
@@ -649,6 +650,7 @@ export function StudentProfileModal({
                       Promote Student
                     </button>
                     <StudentReceiptButton studentId={activeStudent._id} variant="button" />
+                    <StudentInvoiceButton studentId={activeStudent._id} variant="button" />
                   </div>
                 </div>
               </div>
