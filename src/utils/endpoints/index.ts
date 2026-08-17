@@ -96,6 +96,10 @@ export const student = {
   promoteStudents: "/students/promote",
 };
 
+export const parent = {
+  resendInvite: "/parents/invite/resend",
+};
+
 export const parentWallet = {
   getWallet: (parentId: string) => `/parent-wallets/${parentId}`,
   getWalletLedger: (parentId: string) => `/parent-wallets/${parentId}/ledger`,
@@ -142,4 +146,5 @@ export const ApiEndpoints = {
   payout,
   settlementAccount,
   parentWallet,
+  parent,
 };

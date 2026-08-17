@@ -9,10 +9,11 @@ import { ClassItem } from "@/@types/class";
 import { useDeleteStudentMutation } from "@/redux/api/student";
 import { DeleteModal } from "@/components/delete-modal";
 import { showerror, showsuccess } from "@/utils/toast";
-import { Eye, Trash2, Pencil, GraduationCap, MoreVertical, Download, FileText } from "lucide-react";
+import { Eye, Trash2, Pencil, GraduationCap, MoreVertical, Download, FileText, Mail } from "lucide-react";
 import { PromoteStudentModal } from "../promote-student-modal";
 import { StudentReceiptButton } from "../student-receipt";
 import { StudentInvoiceButton } from "../student-invoice";
+import { ResendInviteModal } from "../resend-invite-modal";
 
 const MENU_WIDTH = 208;
 
@@ -44,6 +45,7 @@ export function StudentTable({
   const menuRef = useRef<HTMLDivElement | null>(null);
   const [receiptRequest, setReceiptRequest] = useState<{ studentId: string; nonce: number } | null>(null);
   const [invoiceRequest, setInvoiceRequest] = useState<{ studentId: string; nonce: number } | null>(null);
+  const [studentForInvite, setStudentForInvite] = useState<Student | null>(null);
 
   const [deleteStudent, { isLoading: isDeleteLoading }] =
     useDeleteStudentMutation();
@@ -303,6 +305,16 @@ export function StudentTable({
             </button>
             <button
               onClick={() => {
+                setStudentForInvite(openMenuFor);
+                closeMenu();
+              }}
+              className="w-full flex items-center gap-2.5 px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 text-left transition-colors"
+            >
+              <Mail size={15} />
+              Resend Invite
+            </button>
+            <button
+              onClick={() => {
                 handlePromoteStudent(openMenuFor);
                 closeMenu();
               }}
@@ -349,6 +361,11 @@ export function StudentTable({
         }}
         classItems={classItems}
         student={studentToPromote}
+      />
+      <ResendInviteModal
+        isOpen={studentForInvite !== null}
+        onClose={() => setStudentForInvite(null)}
+        student={studentForInvite}
       />
 
       {receiptRequest && (

@@ -22,6 +22,7 @@ import { PromoteStudentModal } from "../promote-student-modal";
 import { StudentReceiptButton } from "../student-receipt";
 import { StudentInvoiceButton } from "../student-invoice";
 import { ParentWalletModal } from "../parent-wallet-modal";
+import { ResendInviteButton } from "../resend-invite-modal/resend-invite-button";
 import { usePermission } from "@/utils/permissions";
 import { GraduationCap, Wallet } from "lucide-react";
 
@@ -47,6 +48,7 @@ interface ParentEntry {
   phone?: string;
   relationship?: string;
   address?: string;
+  isRegistered?: boolean;
 }
 
 // ---------------------------------------------------------------------------
@@ -168,14 +170,16 @@ function ParentTab({
               <h4 className="text-sm font-bold text-purple-600 uppercase tracking-wider">
                 {parent.relationship || "Guardian"} Details
               </h4>
-              {canViewWallet && parent._id && (
-                <button
-                  onClick={() => onViewWallet(parent)}
-                  className="flex items-center gap-1.5 text-xs font-semibold text-purple-600 hover:text-purple-700 bg-purple-50 px-2.5 py-1.5 rounded-lg transition-colors"
+              {parent.email && (
+                <span
+                  className={`text-[10px] font-bold uppercase tracking-wide px-2 py-1 rounded-full ${
+                    parent.isRegistered
+                      ? "bg-green-100 text-green-700"
+                      : "bg-amber-100 text-amber-700"
+                  }`}
                 >
-                  <Wallet size={13} />
-                  View Wallet
-                </button>
+                  {parent.isRegistered ? "Registered" : "Invite Pending"}
+                </span>
               )}
             </div>
             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
@@ -204,6 +208,26 @@ function ParentTab({
                 </div>
               )}
             </div>
+
+            {(parent.email || (canViewWallet && parent._id)) && (
+              <div className="flex flex-wrap items-center gap-3 pt-4 border-t border-gray-200">
+                {parent.email && (
+                  <ResendInviteButton
+                    email={parent.email}
+                    isRegistered={parent.isRegistered}
+                  />
+                )}
+                {canViewWallet && parent._id && (
+                  <button
+                    onClick={() => onViewWallet(parent)}
+                    className="flex items-center justify-center gap-2 text-sm font-semibold px-4 py-2.5 rounded-lg bg-white text-purple-700 border-2 border-purple-200 hover:bg-purple-50 hover:border-purple-300 transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-1 focus-visible:ring-purple-500"
+                  >
+                    <Wallet size={16} />
+                    View Wallet
+                  </button>
+                )}
+              </div>
+            )}
           </div>
         ))
       ) : (
