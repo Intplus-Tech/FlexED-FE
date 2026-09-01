@@ -70,23 +70,21 @@ export function StudentGroupTable({
           <thead className="bg-gray-50 border-b border-gray-200">
             <tr>
               <th className="px-6 py-4 text-left text-sm font-medium text-gray-600 w-10" />
-              <th className="px-6 py-4 text-left text-sm font-medium text-gray-600 w-12">
-                S/N
+              <th className="px-6 py-4 text-left text-sm font-medium text-gray-600 w-12" />
+              <th className="px-6 py-4 text-left text-sm font-medium text-gray-600">
+                STUDENT NAMES
               </th>
               <th className="px-6 py-4 text-left text-sm font-medium text-gray-600">
-                Student Names
-              </th>
-              <th className="px-6 py-4 text-left text-sm font-medium text-gray-600">
-                Class
+                CLASS
               </th>
               <th className="px-6 py-4 text-right text-sm font-medium text-gray-600">
-                Total Bill
+                TOTAL BILL
               </th>
               <th className="px-6 py-4 text-right text-sm font-medium text-gray-600">
-                Amount Paid
+                AMOUNT PAID
               </th>
               <th className="px-6 py-4 text-right text-sm font-medium text-gray-600">
-                Balance Owing
+                BALANCE OWING
               </th>
             </tr>
           </thead>

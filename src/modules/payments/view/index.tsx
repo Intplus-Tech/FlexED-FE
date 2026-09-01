@@ -126,14 +126,15 @@ export default function PaymentView() {
   };
 
   // Export: the class fee register — one row per student (main table rows
-  // only, not the expanded per-payment sub-rows). Balance Owing is signed:
-  // negative means the student has overpaid / is in credit.
+  // only, not the expanded per-payment sub-rows), same columns/headers as the
+  // on-screen table. The serial-number column has a blank header to mirror the
+  // register. Balance Owing is signed: negative means overpaid / in credit.
   const exportData = useMemo(() => {
     return studentGroups.map((group, index) => {
       const totalBill = group.totalBilled ?? group.totalOwed ?? 0;
       const amountPaid = group.totalAmountPaid ?? group.totalPaid ?? 0;
       return {
-        "S/N": rowOffset + index + 1,
+        " ": rowOffset + index + 1,
         "STUDENT NAMES": `${group.student?.firstName ?? ""} ${
           group.student?.lastName ?? ""
         }`.trim(),
