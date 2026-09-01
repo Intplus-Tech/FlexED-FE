@@ -118,32 +118,33 @@ export default function PaymentView() {
     [data],
   );
   const totalPages = data?.data?.meta?.totalPages ?? 1;
+  const rowOffset = (currentPage - 1) * ITEMS_PER_PAGE;
 
   const handleFilterChange = (name: string, value: string) => {
     setFilters((prev) => ({ ...prev, [name]: value }));
     setCurrentPage(1);
   };
 
-  // Export: one row per student — mirrors the main table rows only, not the
-  // expanded per-payment sub-rows.
+  // Export: the class fee register — one row per student (main table rows
+  // only, not the expanded per-payment sub-rows), same columns/headers as the
+  // on-screen table. The serial-number column has a blank header to mirror the
+  // register. Balance Owing is signed: negative means overpaid / in credit.
   const exportData = useMemo(() => {
-    return studentGroups.map((group) => ({
-      "Student Name": `${group.student?.firstName ?? ""} ${
-        group.student?.lastName ?? ""
-      }`.trim(),
-      "Admission No": group.student?.admissionNumber ?? "",
-      Class: resolveClassName(group.student?.class, classItems?.data ?? []),
-      "Total Billed": group.totalBilled ?? group.totalOwed ?? 0,
-      "Total Paid": group.totalAmountPaid ?? group.totalPaid ?? 0,
-      Overpaid: group.overpaid ?? 0,
-      "Total Outstanding": group.totalOutstanding ?? group.outstanding ?? 0,
-      "Fee Status": group.status,
-      Payments: group.paymentCount ?? 0,
-      "Last Transaction": group.lastTransactionAt
-        ? new Date(group.lastTransactionAt).toLocaleDateString()
-        : "",
-    }));
-  }, [studentGroups, classItems]);
+    return studentGroups.map((group, index) => {
+      const totalBill = group.totalBilled ?? group.totalOwed ?? 0;
+      const amountPaid = group.totalAmountPaid ?? group.totalPaid ?? 0;
+      return {
+        " ": rowOffset + index + 1,
+        "STUDENT NAMES": `${group.student?.firstName ?? ""} ${
+          group.student?.lastName ?? ""
+        }`.trim(),
+        CLASS: resolveClassName(group.student?.class, classItems?.data ?? []),
+        "TOTAL BILL": totalBill,
+        "AMOUNT PAID": amountPaid,
+        "BALANCE OWING": totalBill - amountPaid,
+      };
+    });
+  }, [studentGroups, classItems, rowOffset]);
 
   const handleSearch = (query: string) => {
     setSearchQuery(query);
@@ -319,6 +320,7 @@ export default function PaymentView() {
           classItems={classItems?.data ?? []}
           selectedPaymentIds={selectedPaymentIds}
           setSelectedPaymentIds={setSelectedPaymentIds}
+          startIndex={rowOffset}
         />
 
         {totalPages > 1 && (

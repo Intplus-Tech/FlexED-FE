@@ -15,13 +15,9 @@ interface StudentGroupTableProps {
   classItems: ClassItem[];
   selectedPaymentIds: string[];
   setSelectedPaymentIds: React.Dispatch<React.SetStateAction<string[]>>;
+  /** Serial-number offset so the S/N column stays continuous across pages. */
+  startIndex?: number;
 }
-
-const FEE_STATUS_BADGE: Record<string, { label: string; className: string }> = {
-  COMPLETED: { label: "Completed", className: "text-green-700 bg-green-50" },
-  PART_PAYMENT: { label: "Part Payment", className: "text-amber-700 bg-amber-50" },
-  OUTSTANDING: { label: "Outstanding", className: "text-red-700 bg-red-50" },
-};
 
 export function resolveClassName(
   cls: unknown,
@@ -42,6 +38,7 @@ export function StudentGroupTable({
   classItems = [],
   selectedPaymentIds,
   setSelectedPaymentIds,
+  startIndex = 0,
 }: StudentGroupTableProps) {
   const [expanded, setExpanded] = useState<Record<string, boolean>>({});
 
@@ -60,6 +57,12 @@ export function StudentGroupTable({
         : [...new Set([...prev, ...paymentIds])],
     );
 
+  const balanceClass = (balance: number) => {
+    if (balance > 0) return "text-red-600";
+    if (balance < 0) return "text-green-600";
+    return "text-gray-500";
+  };
+
   return (
     <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
       <div className="overflow-x-auto">
@@ -67,23 +70,21 @@ export function StudentGroupTable({
           <thead className="bg-gray-50 border-b border-gray-200">
             <tr>
               <th className="px-6 py-4 text-left text-sm font-medium text-gray-600 w-10" />
+              <th className="px-6 py-4 text-left text-sm font-medium text-gray-600 w-12" />
               <th className="px-6 py-4 text-left text-sm font-medium text-gray-600">
-                Student Name
+                STUDENT NAMES
               </th>
               <th className="px-6 py-4 text-left text-sm font-medium text-gray-600">
-                Class
+                CLASS
               </th>
-              <th className="px-6 py-4 text-left text-sm font-medium text-gray-600">
-                Total Paid
+              <th className="px-6 py-4 text-right text-sm font-medium text-gray-600">
+                TOTAL BILL
               </th>
-              <th className="px-6 py-4 text-left text-sm font-medium text-gray-600">
-                Outstanding
+              <th className="px-6 py-4 text-right text-sm font-medium text-gray-600">
+                AMOUNT PAID
               </th>
-              <th className="px-6 py-4 text-left text-sm font-medium text-gray-600">
-                Fee Status
-              </th>
-              <th className="px-6 py-4 text-left text-sm font-medium text-gray-600">
-                Payments
+              <th className="px-6 py-4 text-right text-sm font-medium text-gray-600">
+                BALANCE OWING
               </th>
             </tr>
           </thead>
@@ -97,17 +98,16 @@ export function StudentGroupTable({
                 </td>
               </tr>
             ) : (
-              items.map((group) => {
+              items.map((group, index) => {
                 const studentId = group.student?._id ?? group.student?.id ?? "";
                 const isOpen = !!expanded[studentId];
-                const feeBadge =
-                  FEE_STATUS_BADGE[group.status] ?? {
-                    label: group.status,
-                    className: "text-gray-700 bg-gray-100",
-                  };
                 const studentName = `${group.student?.firstName ?? ""} ${
                   group.student?.lastName ?? ""
                 }`.trim();
+                const totalBill = group.totalBilled ?? group.totalOwed ?? 0;
+                const amountPaid =
+                  group.totalAmountPaid ?? group.totalPaid ?? 0;
+                const balanceOwing = totalBill - amountPaid;
                 const paymentIds = (group.payments ?? []).map((p) => p._id);
                 const allSelected =
                   paymentIds.length > 0 &&
@@ -138,6 +138,9 @@ export function StudentGroupTable({
                           className="w-4 h-4 border-2 border-gray-300 rounded cursor-pointer disabled:cursor-not-allowed disabled:opacity-40"
                         />
                       </td>
+                      <td className="px-6 py-4 text-sm text-gray-500">
+                        {startIndex + index + 1}
+                      </td>
                       <td className="px-6 py-4">
                         <div className="flex items-center gap-2">
                           <span className="text-gray-400">
@@ -162,28 +165,18 @@ export function StudentGroupTable({
                       <td className="px-6 py-4 text-sm text-gray-600">
                         {resolveClassName(group.student?.class, classItems)}
                       </td>
-                      <td className="px-6 py-4 text-sm font-medium text-gray-900">
-                        {formatNaira(group.totalAmountPaid ?? group.totalPaid ?? 0)}
-                        {group.overpaid > 0 && (
-                          <span className="ml-1 text-xs font-medium text-green-600">
-                            (+{formatNaira(group.overpaid)})
-                          </span>
-                        )}
+                      <td className="px-6 py-4 text-sm text-gray-900 text-right tabular-nums">
+                        {formatNaira(totalBill)}
                       </td>
-                      <td className="px-6 py-4 text-sm font-medium text-gray-900">
-                        {formatNaira(
-                          group.totalOutstanding ?? group.outstanding ?? 0,
-                        )}
+                      <td className="px-6 py-4 text-sm text-gray-900 text-right tabular-nums">
+                        {formatNaira(amountPaid)}
                       </td>
-                      <td className="px-6 py-4">
-                        <span
-                          className={`inline-flex px-3 py-1 text-sm font-medium rounded-full ${feeBadge.className}`}
-                        >
-                          {feeBadge.label}
-                        </span>
-                      </td>
-                      <td className="px-6 py-4 text-sm text-gray-600">
-                        {group.paymentCount}
+                      <td
+                        className={`px-6 py-4 text-sm font-semibold text-right tabular-nums ${balanceClass(
+                          balanceOwing,
+                        )}`}
+                      >
+                        {formatNaira(balanceOwing)}
                       </td>
                     </tr>
 
@@ -268,15 +261,19 @@ export function StudentGroupTable({
                               </table>
                               <div className="flex justify-end gap-6 px-4 py-2 text-xs text-gray-500 bg-gray-50 border-t border-gray-200">
                                 <span>
-                                  Billed:{" "}
+                                  Total Bill:{" "}
                                   <span className="font-medium text-gray-700">
-                                    {formatNaira(
-                                      group.totalBilled ?? group.totalOwed ?? 0,
-                                    )}
+                                    {formatNaira(totalBill)}
                                   </span>
                                 </span>
                                 <span>
-                                  Shown here:{" "}
+                                  Amount Paid:{" "}
+                                  <span className="font-medium text-gray-700">
+                                    {formatNaira(amountPaid)}
+                                  </span>
+                                </span>
+                                <span>
+                                  Payments shown:{" "}
                                   <span className="font-medium text-gray-700">
                                     {formatNaira(group.paymentsTotalAmount ?? 0)}
                                   </span>
