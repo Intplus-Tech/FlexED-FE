@@ -105,6 +105,62 @@ export interface Meta {
     "hasNextPage": boolean,
     "hasPrevPage": boolean
 }
+
+/** Student shape returned inside a by-student group: `class` is populated to `{ _id, name }`. */
+export type GroupedStudent = Omit<Student, "class"> & {
+  class?: { _id: string; name: string } | string | null;
+};
+
+/**
+ * One row from `GET /payments/transactions/by-student` — the student's fee
+ * position for the academic period plus the transactions that matched the
+ * current search/filters.
+ *
+ * The `total*` figures describe the student's whole fee position for the
+ * period and are NOT narrowed by the `status`/`category` filters, so
+ * filtering to PENDING does not zero out what the student has already paid.
+ * `paymentsTotalAmount` is the sum of the returned `payments` array only.
+ */
+export interface StudentTransactionGroup {
+  student: GroupedStudent;
+  /** Total the student has paid across all applicable fees in the period. */
+  totalAmountPaid: number;
+  /** Alias of `totalAmountPaid`. */
+  totalPaid: number;
+  /** What the student still owes (never negative — overpayment is reported separately). */
+  totalOutstanding: number;
+  /** Alias of `totalOutstanding`. */
+  outstanding: number;
+  /** Total billed to the student for the period, after discounts and exemptions. */
+  totalBilled: number;
+  /** Alias of `totalBilled`. */
+  totalOwed: number;
+  /** Amount paid above what was billed, if any. */
+  overpaid: number;
+  status: "COMPLETED" | "PART_PAYMENT" | "OUTSTANDING";
+  /** Number of entries in `payments`. */
+  paymentCount: number;
+  /** Sum of the `amount` of every entry in `payments`. */
+  paymentsTotalAmount: number;
+  /** Timestamp of the student's most recent matching transaction; the sort key. */
+  lastTransactionAt: string;
+  /** The student's matching transactions, newest first, each with `paymentItem` populated. */
+  payments: Transaction[];
+}
+
+export interface TransactionsByStudentItems {
+  items: StudentTransactionGroup[];
+  /** `meta.total` is the number of matching students, not transactions. */
+  meta: Meta;
+  search?: string;
+}
+
+export interface GetTransactionsByStudentResponse {
+  success: boolean;
+  message: string;
+  data: TransactionsByStudentItems;
+  statusCode: number;
+}
 export interface MakePaymentRequest {
   studentId: string;
   paymentItemId: string;

@@ -42,6 +42,7 @@ export const payment = {
   getStudentPayments: (paymentItemId: string) =>
     `/payments/items/${paymentItemId}/students`,
   getPaymentTransactions: "/payments/transactions",
+  getPaymentTransactionsByStudent: "/payments/transactions/by-student",
   getPaymentMetrics: "/payments/collections-totals",
   makePayment: `/payments/initiate-student-payment`,
   collectManualPayment: "/payments/manual",

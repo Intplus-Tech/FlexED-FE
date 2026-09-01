@@ -9,6 +9,7 @@ import {
   GetPaymentItemsResponse,
   GetTransactionChartDataResponse,
   GetTransactionsResponse,
+  GetTransactionsByStudentResponse,
   MakePaymentRequest,
   CollectManualPaymentRequest,
   UpdatePaymentItemRequest,
@@ -45,6 +46,30 @@ export const transactionApi = apiSlice.injectEndpoints({
     >({
       query: (request) =>
         QueryHelper(ApiEndpoints.payment.getPaymentTransactions, request),
+      providesTags: ["Transaction"],
+    }),
+
+    getTransactionsByStudent: builder.query<
+      GetTransactionsByStudentResponse,
+      {
+        /** Optional — only honoured as an override for SUPER_ADMIN; school is otherwise resolved from the token. */
+        schoolId?: string;
+        /** Page of students (a student's payments are never split across pages). */
+        page?: number;
+        /** Number of students per page (max 100). */
+        limit?: number;
+        search?: string;
+        academicPeriod?: string;
+        classId?: string;
+        status?: string;
+        category?: string;
+      }
+    >({
+      query: (request) =>
+        QueryHelper(
+          ApiEndpoints.payment.getPaymentTransactionsByStudent,
+          request,
+        ),
       providesTags: ["Transaction"],
     }),
 
@@ -250,6 +275,8 @@ export const {
   useGetStudentFeeProfileQuery,
   useLazyGetStudentFeeProfileQuery,
   useLazyGetTransactionsQuery,
+  useGetTransactionsByStudentQuery,
+  useLazyGetTransactionsByStudentQuery,
   useAllocateManualPaymentMutation,
   useBulkDeleteTransactionsMutation,
   useBulkDeletePaymentItemsMutation,
