@@ -3,24 +3,25 @@
 import { MetricCard } from "@/components/metric-card";
 import { Pagination } from "@/components/pagination";
 import { useState, useMemo, useRef, useEffect } from "react";
-import { PaymentTable } from "../components/payment-table";
+import {
+  StudentGroupTable,
+  resolveClassName,
+} from "../components/student-group-table";
 import { SearchInput } from "@/components/search-input";
 import {
   PaymentStatus,
   PaymentStatusModal,
 } from "../components/payment-status-modal";
 import {
-  useGetPaymentMetricsQuery,
-  useGetTransactionsQuery,
+  useGetTransactionsByStudentQuery,
   useGetPaymentCategoriesQuery,
-  useDeletePaymentItemMutation,
   useBulkDeleteTransactionsMutation,
 } from "@/redux/api/transaction";
 import { useSelector } from "react-redux";
 import { RootState } from "@/redux/store";
 import { formatNaira } from "@/utils/functions";
 import { useGetSchoolMetricsQuery } from "@/redux/api/school";
-import { CardSim, Currency } from "lucide-react";
+import { CardSim } from "lucide-react";
 import { useGetAllClassesQuery } from "@/redux/api/class";
 import { ManualPaymentModal } from "../components/ManualPaymentModal";
 import { ExportButton } from "@/components/export-button";
@@ -48,7 +49,6 @@ export default function PaymentView() {
   const [isManualModalOpen, setIsManualModalOpen] = useState(false);
   const [selectedPaymentIds, setSelectedPaymentIds] = useState<string[]>([]);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
-  const [paymentToDelete, setPaymentToDelete] = useState<string | null>(null);
 
   const authstate = useSelector((state: RootState) => state.authState);
 
@@ -68,7 +68,7 @@ export default function PaymentView() {
     }
   }, [academicSessions]);
 
-  const { data, isFetching, isLoading } = useGetTransactionsQuery(
+  const { data, isFetching, isLoading } = useGetTransactionsByStudentQuery(
     {
       schoolId: String(authstate.currentUser?.schoolId),
       page: currentPage,
@@ -80,8 +80,8 @@ export default function PaymentView() {
   );
 
   const { isStaff } = usePermission();
-  const [deletePaymentItem, { isLoading: isDeleting }] = useDeletePaymentItemMutation();
-  const [bulkDeleteTransactions, { isLoading: isBulkDeleting }] = useBulkDeleteTransactionsMutation();
+  const [bulkDeleteTransactions, { isLoading: isBulkDeleting }] =
+    useBulkDeleteTransactionsMutation();
 
   const { data: schoolMetrics } = useGetSchoolMetricsQuery(
     {
@@ -113,6 +113,10 @@ export default function PaymentView() {
         | "yellow",
     })) ?? [];
 
+  const studentGroups = useMemo(
+    () => data?.data?.items ?? [],
+    [data],
+  );
   const totalPages = data?.data?.meta?.totalPages ?? 1;
 
   const handleFilterChange = (name: string, value: string) => {
@@ -120,21 +124,26 @@ export default function PaymentView() {
     setCurrentPage(1);
   };
 
+  // Export: one row per student — mirrors the main table rows only, not the
+  // expanded per-payment sub-rows.
   const exportData = useMemo(() => {
-    return (
-      data?.data?.items?.map((payment: any) => ({
-        Date: new Date(payment?.createdAt).toLocaleDateString(),
-        "Transaction ID": payment?.groupReference,
-        "Student Name":
-          payment?.student?.firstName + " " + payment?.student?.lastName,
-        Class:
-          classItems?.data?.find((c: any) => c._id === payment?.student?.class)
-            ?.name || payment?.student?.class,
-        "Amount Paid": payment.amount,
-        Status: payment.status,
-      })) || []
-    );
-  }, [data, classItems]);
+    return studentGroups.map((group) => ({
+      "Student Name": `${group.student?.firstName ?? ""} ${
+        group.student?.lastName ?? ""
+      }`.trim(),
+      "Admission No": group.student?.admissionNumber ?? "",
+      Class: resolveClassName(group.student?.class, classItems?.data ?? []),
+      "Total Billed": group.totalBilled ?? group.totalOwed ?? 0,
+      "Total Paid": group.totalAmountPaid ?? group.totalPaid ?? 0,
+      Overpaid: group.overpaid ?? 0,
+      "Total Outstanding": group.totalOutstanding ?? group.outstanding ?? 0,
+      "Fee Status": group.status,
+      Payments: group.paymentCount ?? 0,
+      "Last Transaction": group.lastTransactionAt
+        ? new Date(group.lastTransactionAt).toLocaleDateString()
+        : "",
+    }));
+  }, [studentGroups, classItems]);
 
   const handleSearch = (query: string) => {
     setSearchQuery(query);
@@ -146,28 +155,13 @@ export default function PaymentView() {
     setModalOpen(true);
   };
 
-  const handleDeleteClick = (id: string) => {
-    setPaymentToDelete(id);
-    setIsDeleteModalOpen(true);
-  };
-
-  const handleBulkDeleteClick = () => {
-    setPaymentToDelete(null); // null means bulk delete
-    setIsDeleteModalOpen(true);
-  };
-
   const handleConfirmDelete = async () => {
     try {
-      if (paymentToDelete) {
-        // Single delete
-        const res = await deletePaymentItem(paymentToDelete).unwrap();
-        showsuccess(res.message || "Payment deleted successfully");
-      } else {
-        // Bulk delete
-        const res = await bulkDeleteTransactions({ transactionIds: selectedPaymentIds }).unwrap();
-        showsuccess(res.message || "Payments deleted successfully");
-        setSelectedPaymentIds([]);
-      }
+      const res = await bulkDeleteTransactions({
+        transactionIds: selectedPaymentIds,
+      }).unwrap();
+      showsuccess(res.message || "Payments deleted successfully");
+      setSelectedPaymentIds([]);
       setIsDeleteModalOpen(false);
     } catch (error: any) {
       showerror(error?.data?.message || "Failed to delete payment(s)");
@@ -209,8 +203,9 @@ export default function PaymentView() {
           </div>
           <ExportButton
             data={exportData}
-            filename="Payments_Transactions"
-            sheetName="Transactions"
+            disabled={exportData.length === 0}
+            filename="Payments_By_Student"
+            sheetName="By Student"
           />
         </div>
 
@@ -226,7 +221,7 @@ export default function PaymentView() {
             </div>
             <div className="flex flex-wrap items-center gap-3 w-full sm:w-auto">
               <button
-                onClick={handleBulkDeleteClick}
+                onClick={() => setIsDeleteModalOpen(true)}
                 className="flex-1 sm:flex-none px-4 py-2.5 bg-red-600 hover:bg-red-700 text-white rounded-lg text-sm font-semibold shadow-sm transition-all active:scale-95"
               >
                 Delete Selected
@@ -318,13 +313,12 @@ export default function PaymentView() {
           </div>
         </div>
 
-        <PaymentTable
-          data={data?.data}
+        <StudentGroupTable
+          items={studentGroups}
           isLoading={isFetching || isLoading}
           classItems={classItems?.data ?? []}
           selectedPaymentIds={selectedPaymentIds}
           setSelectedPaymentIds={setSelectedPaymentIds}
-          onDelete={handleDeleteClick}
         />
 
         {totalPages > 1 && (
@@ -349,11 +343,11 @@ export default function PaymentView() {
         isOpen={isDeleteModalOpen}
         onClose={() => setIsDeleteModalOpen(false)}
         onConfirm={handleConfirmDelete}
-        title={paymentToDelete ? "Delete Payment" : "Delete Selected Payments"}
-        description={`Are you sure you want to delete ${
-          paymentToDelete ? "this payment" : `these ${selectedPaymentIds.length} payments`
+        title="Delete Selected Payments"
+        description={`Are you sure you want to delete these ${selectedPaymentIds.length} payment${
+          selectedPaymentIds.length > 1 ? "s" : ""
         }? This action cannot be undone.`}
-        isLoading={isDeleting || isBulkDeleting}
+        isLoading={isBulkDeleting}
       />
     </div>
   );
