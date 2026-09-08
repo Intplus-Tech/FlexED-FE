@@ -125,6 +125,16 @@ export default function DashboardView() {
               ? chartData.data
               : chartData?.data?.days ?? []
           }
+          periodName={
+            Array.isArray(chartData?.data)
+              ? undefined
+              : chartData?.data?.period?.name
+          }
+          weekStart={
+            Array.isArray(chartData?.data)
+              ? undefined
+              : chartData?.data?.weekStart
+          }
           totalAmount=""
         />
         <CollectionByClass
