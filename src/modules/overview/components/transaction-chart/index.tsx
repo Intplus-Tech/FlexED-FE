@@ -22,13 +22,32 @@ interface TransactionData {
 interface TransactionsChartProps {
   data: TransactionData[];
   totalAmount: string;
+  /**
+   * Context the weekly-summary endpoint scopes the figures to. The endpoint
+   * itself accepts no filters — it is always the current week and the
+   * school's active academic period — so this is display-only.
+   */
+  periodName?: string | null;
+  weekStart?: string;
 }
 
 export function TransactionsChart({
   data,
   totalAmount,
+  periodName,
+  weekStart,
 }: TransactionsChartProps) {
-  // const [period, setPeriod] = useState("Week");
+  const scopeLabel = [
+    weekStart
+      ? `Week of ${new Date(weekStart).toLocaleDateString(undefined, {
+          month: "short",
+          day: "numeric",
+        })}`
+      : "This week",
+    periodName || null,
+  ]
+    .filter(Boolean)
+    .join(" · ");
 
   return (
     <div className="bg-white border border-gray-200 rounded-xl p-6 col-span-2 ">
@@ -37,13 +56,11 @@ export function TransactionsChart({
           <h3 className="text-lg font-semibold text-gray-900 mb-1">
             Transactions
           </h3>
-          <p className="text-3xl font-bold text-gray-900">{totalAmount}</p>
+          {totalAmount && (
+            <p className="text-3xl font-bold text-gray-900">{totalAmount}</p>
+          )}
+          <p className="text-xs text-gray-500 mt-1">{scopeLabel}</p>
         </div>
-
-        {/* <button className="flex items-center gap-2 px-4 py-2 border border-gray-300 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors">
-          {period}
-          <ChevronDownIcon />
-        </button> */}
       </div>
 
       <ResponsiveContainer width="100%" height={300}>
