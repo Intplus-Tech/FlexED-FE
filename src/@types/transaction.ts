@@ -473,7 +473,23 @@ export interface ClassCollectionItem {
 
 export interface GetTransactionChartDataResponse {
   success: boolean;
-  data: ChartData[];
+  /**
+   * Current-week PAID transactions bucketed by day of week. The backend
+   * moved from returning a bare `ChartData[]` to this object (the day
+   * buckets are now under `days`, scoped to the current week and the
+   * school's active academic period).
+   */
+  data: TransactionWeeklySummary;
+}
+
+export interface TransactionWeeklySummary {
+  /** Academic period the figures are scoped to; null when the school has none. */
+  period: { id: string; name: string } | null;
+  /** Sunday 00:00 of the week covered. */
+  weekStart: string;
+  /** Exclusive end of the week covered. */
+  weekEnd: string;
+  days: ChartData[];
 }
 
 export interface ChartData {

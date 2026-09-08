@@ -119,7 +119,14 @@ export default function DashboardView() {
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <TransactionsChart data={chartData?.data ?? []} totalAmount="" />
+        <TransactionsChart
+          data={
+            Array.isArray(chartData?.data)
+              ? chartData.data
+              : chartData?.data?.days ?? []
+          }
+          totalAmount=""
+        />
         <CollectionByClass
           totalStudents={collection?.data?.totalPaid ?? 0}
           data={collection?.data?.items ?? []}
