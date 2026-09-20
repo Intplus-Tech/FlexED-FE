@@ -88,6 +88,37 @@ export interface TopUpParentWalletResponse {
   data: ParentWalletTopUpResult;
 }
 
+/** Deducting only ever corrects a balance or records an offline refund. */
+export type DeductReason = "ADJUSTMENT" | "REFUND";
+
+export interface DeductParentWalletRequest {
+  /** Naira, at most 2 decimal places. */
+  amount: number;
+  reason?: DeductReason;
+  /** The school's own receipt number — makes the call replay-safe. */
+  reference?: string;
+  note?: string;
+}
+
+export interface ParentWalletDeductResult {
+  parentId: string;
+  parentName?: string | null;
+  amount: number;
+  reason: DeductReason;
+  reference: string;
+  duplicate: boolean;
+  ledgerEntryId?: string;
+  balance: number;
+  externalBalance: number;
+}
+
+export interface DeductParentWalletResponse {
+  success: boolean;
+  message: string;
+  statusCode: number;
+  data: ParentWalletDeductResult;
+}
+
 export interface BulkTopUpEntry {
   parentId: string;
   amount: number;

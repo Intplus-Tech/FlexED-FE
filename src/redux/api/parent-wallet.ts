@@ -16,6 +16,9 @@ import {
   BulkTopUpResult,
   WalletLedgerType,
   WalletLedgerReason,
+  DeductParentWalletRequest,
+  DeductParentWalletResponse,
+  ParentWalletDeductResult,
 } from "@/@types/parent-wallet";
 
 export const parentWalletApi = apiSlice.injectEndpoints({
@@ -57,6 +60,19 @@ export const parentWalletApi = apiSlice.injectEndpoints({
       invalidatesTags: ["ParentWallet"],
     }),
 
+    deductParentWallet: builder.mutation<
+      ParentWalletDeductResult,
+      { parentId: string } & DeductParentWalletRequest
+    >({
+      query: ({ parentId, ...body }) => ({
+        url: ApiEndpoints.parentWallet.deduct(parentId),
+        method: methods.POST,
+        body,
+      }),
+      transformResponse: (response: DeductParentWalletResponse) => response.data,
+      invalidatesTags: ["ParentWallet"],
+    }),
+
     bulkTopUpParentWallets: builder.mutation<BulkTopUpResult, BulkTopUpRequest>({
       query: (body) => ({
         url: ApiEndpoints.parentWallet.topUpBulk,
@@ -73,5 +89,6 @@ export const {
   useGetParentWalletQuery,
   useGetParentWalletLedgerQuery,
   useTopUpParentWalletMutation,
+  useDeductParentWalletMutation,
   useBulkTopUpParentWalletsMutation,
 } = parentWalletApi;
