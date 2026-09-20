@@ -21,6 +21,24 @@ export const formatNaira = (amount: number | string): string => {
   }).format(value);
 };
 
+/**
+ * The wallet, payout and wallet-ledger endpoints return amounts in kobo, while
+ * the fee and transaction endpoints return plain Naira. These two convert at
+ * that boundary — never render a wallet amount without `koboToNaira`, and never
+ * submit a typed Naira amount to `/payouts` without `nairaToKobo`.
+ */
+export const koboToNaira = (kobo: number): number => (kobo ?? 0) / 100;
+
+export const nairaToKobo = (naira: number): number => Math.round(naira * 100);
+
+/** Formats a kobo amount as Naira, e.g. 250000 -> "₦2,500.00". */
+export const formatKobo = (kobo: number): string =>
+  new Intl.NumberFormat("en-NG", {
+    style: "currency",
+    currency: "NGN",
+    minimumFractionDigits: 2,
+  }).format(koboToNaira(kobo));
+
 import dayjs from "dayjs";
 
 /**

@@ -3,9 +3,7 @@
 import { useState, useMemo } from "react";
 import { StudentMetricCard } from "../components/metric-card";
 import { StudentTable } from "../components/student-table";
-import { Pagination } from "@/components/pagination";
-import { SearchInput } from "@/components/search-input";
-import { ChevronDownIcon, ExportIcon, FilterIcon } from "@/icon/dashbaord";
+import { ChevronDownIcon } from "@/icon/dashbaord";
 import { AddStudentModal } from "../components/add-student";
 import { useGetAllStudentQuery } from "@/redux/api/student";
 import { useSelector } from "react-redux";
@@ -27,7 +25,8 @@ import { PromoteStudentModal } from "../components/promote-student-modal";
 
 export default function StudentView() {
   const [searchQuery, setSearchQuery] = useState("");
-  const [currentPage, setCurrentPage] = useState(1);
+  const [pageIndex, setPageIndex] = useState(0);
+  const [pageSize, setPageSize] = useState(10);
   const [isAddStudentOpen, setIsAddStudentOpen] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isBulkModalOpen, setIsBulkModalOpen] = useState(false);
@@ -42,16 +41,18 @@ export default function StudentView() {
   const [isPromoteModalOpen, setIsPromoteModalOpen] = useState(false);
   
   const [bulkDeleteStudents, { isLoading: isBulkDeleting }] = useBulkDeleteStudentsMutation();
-  const itemsPerPage = 10;
 
   const { currentUser } = useSelector((state: RootState) => state.authState);
   const {
     data: students,
     isFetching: isFetchingStudents,
     isLoading: isLoadingStudents,
+    isError: isStudentsError,
+    error: studentsError,
+    refetch: refetchStudents,
   } = useGetAllStudentQuery({
-    page: currentPage,
-    limit: itemsPerPage,
+    page: pageIndex + 1,
+    limit: pageSize,
     schoolId: currentUser?.schoolId as string,
     search: searchQuery,
     classId: selectedClassId,
@@ -102,18 +103,20 @@ export default function StudentView() {
 
   const handleSearch = (query: string) => {
     setSearchQuery(query);
-    setCurrentPage(1);
+    setPageIndex(0);
     setSelectedStudentIds([]);
   };
 
   const handleClassChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     setSelectedClassId(e.target.value);
-    setCurrentPage(1);
+    setPageIndex(0);
     setSelectedStudentIds([]);
   };
 
+  // Selections are page-scoped: the bulk actions only ever act on ids the user
+  // can currently see, so leaving the page must clear them.
   const handlePageChange = (page: number) => {
-    setCurrentPage(page);
+    setPageIndex(page);
     setSelectedStudentIds([]);
   };
 
@@ -130,7 +133,27 @@ export default function StudentView() {
     }
   };
 
-  const totalPages = students?.data?.meta?.totalPages || 1;
+  const classFilter = (
+    <div className="relative">
+      <select
+        disabled={selectedStudentIds.length > 0}
+        value={selectedClassId}
+        onChange={handleClassChange}
+        aria-label="Filter by class"
+        className="h-10 w-full min-w-40 cursor-pointer appearance-none rounded-lg border border-gray-300 bg-white pr-10 pl-4 text-sm font-medium text-gray-900 shadow-xs transition-all focus:border-purple-500 focus:ring-1 focus:ring-purple-500 focus:outline-none disabled:cursor-not-allowed disabled:opacity-50 md:w-auto"
+      >
+        <option value="">All Classes</option>
+        {classes?.data?.map((classItem) => (
+          <option key={classItem._id} value={classItem._id}>
+            {classItem.name}
+          </option>
+        ))}
+      </select>
+      <div className="pointer-events-none absolute top-1/2 right-3 -translate-y-1/2 text-gray-500">
+        <ChevronDownIcon />
+      </div>
+    </div>
+  );
 
   return (
     <div className=" space-y-6">
@@ -183,48 +206,12 @@ export default function StudentView() {
           )}
         </div>
 
-        <div className="flex flex-col md:flex-row gap-4 items-start md:items-center w-full md:w-auto">
-          <div className="flex flex-col md:flex-row gap-4 w-full md:w-auto">
-            <SearchInput
-              disabled={selectedStudentIds.length > 0}
-              onSearch={handleSearch}
-              placeholder="Search students..."
-            />
-            
-            <div className="relative">
-              <select
-                disabled={selectedStudentIds.length > 0}
-                value={selectedClassId}
-                onChange={handleClassChange}
-                className="w-full md:w-auto pl-4 pr-10 py-3 bg-gray-100 text-gray-900 font-medium rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 focus:bg-white transition-all appearance-none min-w-[160px] cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                <option value="">All Classes</option>
-                {classes?.data?.map((classItem) => (
-                  <option key={classItem._id} value={classItem._id}>
-                    {classItem.name}
-                  </option>
-                ))}
-              </select>
-              <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-gray-500">
-                <ChevronDownIcon />
-              </div>
-            </div>
-          </div>
-
-          <div className="flex gap-3">
-            {/* <button className="flex items-center gap-2 px-4 py-3 border border-gray-300 bg-white text-gray-700 font-medium rounded-lg hover:bg-gray-50 transition-colors">
-              <FilterIcon />
-              Filter
-            </button> */}
-
-            <ExportButton
-              disabled={selectedStudentIds.length > 0}
-              data={exportData}
-              filename="Students_List"
-              sheetName="Students"
-            />
-          </div>
-        </div>
+        <ExportButton
+          disabled={selectedStudentIds.length > 0}
+          data={exportData}
+          filename="Students_List"
+          sheetName="Students"
+        />
       </div>
 
       {selectedStudentIds.length > 0 && (
@@ -271,44 +258,33 @@ export default function StudentView() {
           </div>
         </div>
       )}
-      <div className="space-y-6">
-        <StudentTable
-          students={
-            students ?? {
-              success: true,
-              message: "",
-              statusCode: 200,
-              data: {
-                items: [],
-                meta: {
-                  page: 1,
-                  limit: 10,
-                  total: 0,
-                  totalPages: 0,
-                  hasNextPage: false,
-                  hasPrevPage: false,
-                },
-              },
-            }
-          }
-          isLoading={isFetchingStudents || isLoadingStudents}
-          classItems={classes?.data ?? []}
-          selectedStudentIds={selectedStudentIds}
-          setSelectedStudentIds={setSelectedStudentIds}
-          onEditStudent={(id) => {
-            setEditingStudentId(id);
-            setIsEditModalOpen(true);
-          }}
-        />
-
-        {totalPages > 1 && (
-          <Pagination
-            currentPage={currentPage}
-            totalPages={totalPages}
-            onPageChange={handlePageChange}
-          />
-        )}
-      </div>
+      <StudentTable
+        students={students?.data?.items ?? []}
+        isLoading={isLoadingStudents}
+        isFetching={isFetchingStudents}
+        isError={isStudentsError}
+        error={studentsError}
+        classItems={classes?.data ?? []}
+        selectedStudentIds={selectedStudentIds}
+        setSelectedStudentIds={setSelectedStudentIds}
+        onEditStudent={(id) => {
+          setEditingStudentId(id);
+          setIsEditModalOpen(true);
+        }}
+        totalCount={students?.data?.meta?.total ?? 0}
+        pageIndex={pageIndex}
+        pageSize={pageSize}
+        searchTerm={searchQuery}
+        filterControl={classFilter}
+        onPageChange={handlePageChange}
+        onPageSizeChange={(size) => {
+          setPageSize(size);
+          setPageIndex(0);
+          setSelectedStudentIds([]);
+        }}
+        onSearch={handleSearch}
+        onRefresh={refetchStudents}
+      />
 
       <AddStudentModal
         classItems={classes?.data ?? []}

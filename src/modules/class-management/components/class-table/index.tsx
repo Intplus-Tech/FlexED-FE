@@ -1,144 +1,159 @@
 "use client";
 
-import { useState } from "react";
-import { TableSkeleton } from "../../loader/table-loader";
+import { useMemo, useState } from "react";
+import type { ColumnDef } from "@tanstack/react-table";
+import { Pencil, Trash2 } from "lucide-react";
+
+import { ClassItem } from "@/@types/class";
+import { DeleteModal } from "@/components/delete-modal";
+import { DataTable } from "@/components/ui/data-table";
+import { TableEmptyState } from "@/components/ui/table-empty-state";
+import { ACTIONS_COLUMN_ID } from "@/lib/table-column-prefs";
 import {
   useDeleteClassMutation,
   useGetAllClassesQuery,
 } from "@/redux/api/class";
-import { DeleteModal } from "@/components/delete-modal";
 import { showerror, showsuccess } from "@/utils/toast";
-import { ClassItem } from "@/@types/class";
 
 import { AddClassModal } from "../add-class";
-import { Pencil, Trash2 } from "lucide-react";
 
-const ClassTable = () => {
+const MANIFEST = [
+  { key: "name", label: "Class Name" },
+  { key: "level", label: "Level" },
+  { key: "classType", label: "Class Type" },
+  { key: "subClass", label: "Sub Class" },
+  { key: "description", label: "Description" },
+];
+
+const ClassTable = ({ action }: { action?: React.ReactNode }) => {
   const [isDeleteOpen, setIsDeleteOpen] = useState(false);
   const [isEditOpen, setIsEditOpen] = useState(false);
   const [selectedClass, setSelectedClass] = useState<ClassItem | null>(null);
+  const [search, setSearch] = useState("");
+
   const {
     data: classes,
-    isFetching: isClassesFetching,
-    isLoading: isClassesLoading,
+    isFetching,
+    isLoading,
+    isError,
+    error,
+    refetch,
   } = useGetAllClassesQuery();
 
-  const [deleteClass, { isLoading: isDeleteLoading }] =
-    useDeleteClassMutation();
+  const [deleteClass, { isLoading: isDeleteLoading }] = useDeleteClassMutation();
 
   const handleDeleteConfirm = async () => {
-    if (!selectedClass) {
-      console.error("No class selected for deletion");
-      return;
-    }
+    if (!selectedClass) return;
     try {
-      const res = await deleteClass(selectedClass?._id).unwrap();
+      const res = await deleteClass(selectedClass._id).unwrap();
       showsuccess(res.message);
-      console.log("Class deleted successfully");
+      setIsDeleteOpen(false);
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (error: any) {
-      showerror(error.data.message);
-      console.error("Error deleting class:", error);
+      showerror(error?.data?.message || "Failed to delete class");
     }
   };
 
-  if (isClassesFetching || isClassesLoading) {
-    return <TableSkeleton />;
-  }
+  // The list endpoint returns every class at once, so search filters here
+  // rather than round-tripping — and unlike the old page-level search box, this
+  // one is actually wired to the rows.
+  const rows = useMemo(() => {
+    const all = classes?.data ?? [];
+    const q = search.trim().toLowerCase();
+    if (!q) return all;
+    return all.filter((cls) =>
+      [cls.name, cls.level, cls.classType, cls.subClass]
+        .filter(Boolean)
+        .some((field) => String(field).toLowerCase().includes(q))
+    );
+  }, [classes?.data, search]);
+
+  const columns = useMemo<ColumnDef<ClassItem, unknown>[]>(
+    () => [
+      {
+        id: "name",
+        accessorKey: "name",
+        header: "Class Name",
+        cell: ({ row }) => (
+          <span className="font-medium text-gray-900">{row.original.name}</span>
+        ),
+      },
+      { id: "level", accessorKey: "level", header: "Level" },
+      { id: "classType", accessorKey: "classType", header: "Class Type" },
+      { id: "subClass", accessorKey: "subClass", header: "Sub Class" },
+      {
+        id: "description",
+        accessorKey: "description",
+        header: "Description",
+        cell: ({ row }) => (
+          <span className="text-gray-500">{row.original.description || "—"}</span>
+        ),
+      },
+      {
+        id: ACTIONS_COLUMN_ID,
+        header: "",
+        enableHiding: false,
+        cell: ({ row }) => (
+          <div className="flex items-center justify-center gap-1">
+            <button
+              onClick={() => {
+                setSelectedClass(row.original);
+                setIsEditOpen(true);
+              }}
+              title="Edit class"
+              className="cursor-pointer rounded-lg p-1.5 text-gray-500 transition-colors hover:bg-gray-100 hover:text-gray-900"
+            >
+              <Pencil size={16} />
+            </button>
+            <button
+              onClick={() => {
+                setSelectedClass(row.original);
+                setIsDeleteOpen(true);
+              }}
+              title="Delete class"
+              className="cursor-pointer rounded-lg p-1.5 text-gray-500 transition-colors hover:bg-red-50 hover:text-red-600"
+            >
+              <Trash2 size={16} />
+            </button>
+          </div>
+        ),
+      },
+    ],
+    []
+  );
 
   return (
-    <div className="overflow-x-auto">
-      <table className="w-full">
-        <thead>
-          <tr className="border-b border-gray-200 bg-gray-50">
-            <th className="px-6 py-4 text-left">
-              <input
-                type="checkbox"
-                className="w-5 h-5 rounded border-gray-300 cursor-pointer"
-              />
-            </th>
-            <th className="px-6 py-4 text-left text-sm font-medium text-gray-600 whitespace-nowrap">
-              Class Name
-            </th>
-            <th className="px-6 py-4 text-left text-sm font-medium text-gray-600 whitespace-nowrap">
-              Level
-            </th>
-            <th className="px-6 py-4 text-left text-sm font-medium text-gray-600 whitespace-nowrap">
-              Class Type
-            </th>
-            <th className="px-6 py-4 text-left text-sm font-medium text-gray-600 whitespace-nowrap">
-              Sub Class
-            </th>
-            <th className="px-6 py-4 text-left text-sm font-medium text-gray-600 whitespace-nowrap">
-              Students
-            </th>
-            <th className="px-6 py-4 text-left text-sm font-medium text-gray-600 whitespace-nowrap">
-              Actions
-            </th>
-          </tr>
-        </thead>
-
-        <tbody>
-          {classes?.data?.length === 0 ? (
-            <tr>
-              <td colSpan={8} className="text-center py-4">
-                No classes found
-              </td>
-            </tr>
-          ) : (
-            classes?.data?.map((cls) => (
-              <tr
-                key={cls._id}
-                className="border-b border-gray-200 hover:bg-gray-50 transition-colors"
-              >
-                <td className="px-6 py-4">
-                  <input
-                    type="checkbox"
-                    className="w-5 h-5 rounded border-gray-300 cursor-pointer"
-                  />
-                </td>
-                <td className="px-6 py-4 font-medium text-gray-900">
-                  {cls.name}
-                </td>
-                <td className="px-6 py-4 text-gray-600 whitespace-nowrap">
-                  {cls.level}
-                </td>
-                <td className="px-6 py-4 text-gray-600 whitespace-nowrap">
-                  {cls.classType}
-                </td>
-                <td className="px-6 py-4 text-gray-600 whitespace-nowrap">
-                  {cls.subClass}
-                </td>
-                <td className="px-6 py-4 text-gray-600 whitespace-nowrap">
-                  {""}
-                </td>
-                <td className="px-6 py-4 text-gray-600">
-                  <div className="flex gap-4">
-                    <button
-                      onClick={() => {
-                        setSelectedClass(cls);
-                        setIsEditOpen(true);
-                      }}
-                      className="text-gray-600 hover:text-gray-900 font-medium transition-colors"
-                    >
-                      <Pencil />
-                    </button>
-                    <button
-                      onClick={() => {
-                        setIsDeleteOpen(true);
-                        setSelectedClass(cls);
-                      }}
-                      className="text-gray-600 hover:text-gray-900 font-medium transition-colors"
-                    >
-                      <Trash2 />
-                    </button>
-                  </div>
-                </td>
-              </tr>
-            ))
-          )}
-        </tbody>
-      </table>
+    <>
+      <DataTable
+        title="Classes"
+        action={action}
+        columns={columns}
+        data={rows}
+        isLoading={isLoading}
+        isRefetching={isFetching && !isLoading}
+        isError={isError}
+        error={error}
+        onRefresh={refetch}
+        onSearch={setSearch}
+        searchPlaceholder="Search classes..."
+        pageSize={10}
+        empty={
+          <TableEmptyState
+            title={search ? "No classes match your search" : "No classes yet"}
+            description={
+              search
+                ? "Try a different name, level or class type."
+                : "Add your first class to start organising students."
+            }
+          />
+        }
+        fullView={{
+          columns,
+          manifest: MANIFEST,
+          title: "Classes",
+          tableId: "classes",
+        }}
+      />
 
       <AddClassModal
         open={isEditOpen}
@@ -151,11 +166,11 @@ const ClassTable = () => {
         onClose={() => setIsDeleteOpen(false)}
         onConfirm={handleDeleteConfirm}
         isLoading={isDeleteLoading}
-        title="Delete Account"
+        title="Delete Class"
         description="Are you sure you want to delete this class"
         itemName={selectedClass?.name}
       />
-    </div>
+    </>
   );
 };
 

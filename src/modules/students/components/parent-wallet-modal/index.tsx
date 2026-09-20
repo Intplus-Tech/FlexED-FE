@@ -8,7 +8,15 @@ import {
   DialogTitle,
   DialogClose,
 } from "@/components/ui/dialog";
-import { ArrowDownLeft, ArrowUpRight, ChevronLeft, ChevronRight, Loader2, Plus } from "lucide-react";
+import {
+  ArrowDownLeft,
+  ArrowUpRight,
+  ChevronLeft,
+  ChevronRight,
+  Loader2,
+  Minus,
+  Plus,
+} from "lucide-react";
 import { LogoLoader } from "@/components/ui/logo-loader";
 import { formatNaira, formatDate } from "@/utils/functions";
 import { showerror, showsuccess } from "@/utils/toast";
@@ -16,8 +24,13 @@ import {
   useGetParentWalletQuery,
   useGetParentWalletLedgerQuery,
   useTopUpParentWalletMutation,
+  useDeductParentWalletMutation,
 } from "@/redux/api/parent-wallet";
-import { TopUpReason, WalletLedgerReason } from "@/@types/parent-wallet";
+import {
+  DeductReason,
+  TopUpReason,
+  WalletLedgerReason,
+} from "@/@types/parent-wallet";
 
 const REASON_COPY: Record<WalletLedgerReason, string> = {
   OVERPAYMENT: "Parent paid more than was owed",
@@ -43,9 +56,13 @@ export function ParentWalletModal({
   parentName,
 }: ParentWalletModalProps) {
   const [page, setPage] = useState(1);
-  const [isTopUpOpen, setIsTopUpOpen] = useState(false);
+  // One form serves both directions; `mode` decides which endpoint it posts to
+  // and which reasons the API will accept.
+  const [mode, setMode] = useState<"CREDIT" | "DEDUCT" | null>(null);
   const [amount, setAmount] = useState("");
-  const [reason, setReason] = useState<TopUpReason>("OPENING_BALANCE");
+  const [reason, setReason] = useState<TopUpReason | DeductReason>(
+    "OPENING_BALANCE"
+  );
   const [reference, setReference] = useState("");
   const [note, setNote] = useState("");
 
@@ -61,27 +78,56 @@ export function ParentWalletModal({
 
   const [topUpParentWallet, { isLoading: isSubmittingTopUp }] =
     useTopUpParentWalletMutation();
+  const [deductParentWallet, { isLoading: isSubmittingDeduct }] =
+    useDeductParentWalletMutation();
 
-  const resetTopUpForm = () => {
+  const isSubmitting = isSubmittingTopUp || isSubmittingDeduct;
+  const isDeduct = mode === "DEDUCT";
+  const balance = wallet?.balance ?? 0;
+
+  const closeForm = () => {
     setAmount("");
-    setReason("OPENING_BALANCE");
     setReference("");
     setNote("");
-    setIsTopUpOpen(false);
+    setMode(null);
+  };
+
+  const openForm = (next: "CREDIT" | "DEDUCT") => {
+    if (mode === next) {
+      closeForm();
+      return;
+    }
+    setAmount("");
+    setReference("");
+    setNote("");
+    // The two endpoints accept different reason sets, so the default has to
+    // switch with the mode or the API rejects the body.
+    setReason(next === "CREDIT" ? "OPENING_BALANCE" : "ADJUSTMENT");
+    setMode(next);
   };
 
   const handleClose = () => {
     setPage(1);
-    resetTopUpForm();
+    closeForm();
     onClose();
   };
 
-  const handleTopUp = async (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!parentId) return;
+    if (!parentId || !mode) return;
     const numericAmount = Number(amount);
     if (!numericAmount || numericAmount <= 0) {
       showerror("Enter a valid amount");
+      return;
+    }
+    if (Math.round(numericAmount * 100) !== numericAmount * 100) {
+      showerror("Amount can have at most 2 decimal places");
+      return;
+    }
+    if (isDeduct && numericAmount > balance) {
+      showerror(
+        `That's more than the wallet holds (${formatNaira(balance)})`
+      );
       return;
     }
     if (!reference.trim()) {
@@ -89,22 +135,37 @@ export function ParentWalletModal({
       return;
     }
 
+    const body = {
+      parentId,
+      amount: numericAmount,
+      reference: reference.trim(),
+      note: note.trim() || undefined,
+    };
+
     try {
-      const res = await topUpParentWallet({
-        parentId,
-        amount: numericAmount,
-        reason,
-        reference: reference.trim(),
-        note: note.trim() || undefined,
-      }).unwrap();
+      const res = isDeduct
+        ? await deductParentWallet({
+            ...body,
+            reason: reason as DeductReason,
+          }).unwrap()
+        : await topUpParentWallet({
+            ...body,
+            reason: reason as TopUpReason,
+          }).unwrap();
+
       showsuccess(
         res.duplicate
           ? "This reference was already applied — no money moved"
-          : `${formatNaira(res.amount)} credited to ${parentName || "the parent"}'s wallet`,
+          : `${formatNaira(res.amount)} ${
+              isDeduct ? "deducted from" : "credited to"
+            } ${parentName || "the parent"}'s wallet`,
       );
-      resetTopUpForm();
+      closeForm();
     } catch (error: any) {
-      showerror(error?.data?.message || "Failed to top up wallet");
+      showerror(
+        error?.data?.message ||
+          `Failed to ${isDeduct ? "deduct from" : "top up"} wallet`
+      );
     }
   };
 
@@ -146,23 +207,47 @@ export function ParentWalletModal({
             <div>
               <div className="flex items-center justify-between mb-3">
                 <h3 className="text-sm font-bold text-gray-900">Wallet History</h3>
-                <button
-                  onClick={() => setIsTopUpOpen((v) => !v)}
-                  className="flex items-center gap-1.5 text-sm font-semibold text-purple-600 hover:text-purple-700 bg-purple-50 px-3 py-1.5 rounded-lg transition-colors"
-                >
-                  <Plus size={15} />
-                  Top Up
-                </button>
+                <div className="flex items-center gap-2">
+                  <button
+                    onClick={() => openForm("CREDIT")}
+                    className={`flex items-center gap-1.5 text-sm font-semibold px-3 py-1.5 rounded-lg transition-colors ${
+                      mode === "CREDIT"
+                        ? "bg-purple-600 text-white"
+                        : "bg-purple-50 text-purple-600 hover:text-purple-700"
+                    }`}
+                  >
+                    <Plus size={15} />
+                    Top Up
+                  </button>
+                  <button
+                    onClick={() => openForm("DEDUCT")}
+                    disabled={balance <= 0}
+                    title={
+                      balance <= 0
+                        ? "This wallet has no credit to deduct"
+                        : undefined
+                    }
+                    className={`flex items-center gap-1.5 text-sm font-semibold px-3 py-1.5 rounded-lg transition-colors disabled:opacity-40 disabled:cursor-not-allowed ${
+                      mode === "DEDUCT"
+                        ? "bg-rose-600 text-white"
+                        : "bg-rose-50 text-rose-600 hover:text-rose-700"
+                    }`}
+                  >
+                    <Minus size={15} />
+                    Deduct
+                  </button>
+                </div>
               </div>
 
-              {isTopUpOpen && (
+              {mode && (
                 <form
-                  onSubmit={handleTopUp}
+                  onSubmit={handleSubmit}
                   className="border border-gray-200 rounded-xl p-4 space-y-3 mb-4 bg-gray-50/50"
                 >
                   <p className="text-xs text-gray-500">
-                    Record credit the school already holds for this parent — e.g.
-                    money paid ahead before joining the platform.
+                    {isDeduct
+                      ? "Take credit back off this wallet — a manual correction, or a refund you handed the parent outside the platform."
+                      : "Record credit the school already holds for this parent — e.g. money paid ahead before joining the platform."}
                   </p>
                   <div className="grid grid-cols-2 gap-3">
                     <div>
@@ -172,11 +257,18 @@ export function ParentWalletModal({
                       <input
                         type="number"
                         min={0}
+                        step="0.01"
+                        max={isDeduct ? balance : undefined}
                         value={amount}
                         onChange={(e) => setAmount(e.target.value)}
                         className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-purple-500"
                         placeholder="0.00"
                       />
+                      {isDeduct && (
+                        <p className="text-[11px] text-gray-400 mt-1">
+                          Available: {formatNaira(balance)}
+                        </p>
+                      )}
                     </div>
                     <div>
                       <label className="block text-xs font-medium text-gray-700 mb-1">
@@ -184,11 +276,22 @@ export function ParentWalletModal({
                       </label>
                       <select
                         value={reason}
-                        onChange={(e) => setReason(e.target.value as TopUpReason)}
+                        onChange={(e) =>
+                          setReason(e.target.value as TopUpReason | DeductReason)
+                        }
                         className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm bg-white focus:outline-none focus:ring-2 focus:ring-purple-500"
                       >
-                        <option value="OPENING_BALANCE">Opening Balance</option>
-                        <option value="ADJUSTMENT">Adjustment</option>
+                        {isDeduct ? (
+                          <>
+                            <option value="ADJUSTMENT">Adjustment</option>
+                            <option value="REFUND">Refund</option>
+                          </>
+                        ) : (
+                          <>
+                            <option value="OPENING_BALANCE">Opening Balance</option>
+                            <option value="ADJUSTMENT">Adjustment</option>
+                          </>
+                        )}
                       </select>
                     </div>
                   </div>
@@ -218,18 +321,28 @@ export function ParentWalletModal({
                   <div className="flex justify-end gap-2 pt-1">
                     <button
                       type="button"
-                      onClick={resetTopUpForm}
+                      onClick={closeForm}
                       className="px-3 py-1.5 text-sm text-gray-600 hover:text-gray-800"
                     >
                       Cancel
                     </button>
                     <button
                       type="submit"
-                      disabled={isSubmittingTopUp}
-                      className="flex items-center gap-1.5 px-4 py-1.5 bg-purple-600 text-white text-sm font-medium rounded-lg hover:bg-purple-700 disabled:opacity-50 transition-colors"
+                      disabled={isSubmitting}
+                      className={`flex items-center gap-1.5 px-4 py-1.5 text-white text-sm font-medium rounded-lg disabled:opacity-50 transition-colors ${
+                        isDeduct
+                          ? "bg-rose-600 hover:bg-rose-700"
+                          : "bg-purple-600 hover:bg-purple-700"
+                      }`}
                     >
-                      {isSubmittingTopUp && <Loader2 size={14} className="animate-spin" />}
-                      {isSubmittingTopUp ? "Crediting..." : "Credit Wallet"}
+                      {isSubmitting && <Loader2 size={14} className="animate-spin" />}
+                      {isSubmitting
+                        ? isDeduct
+                          ? "Deducting..."
+                          : "Crediting..."
+                        : isDeduct
+                          ? "Deduct from Wallet"
+                          : "Credit Wallet"}
                     </button>
                   </div>
                 </form>

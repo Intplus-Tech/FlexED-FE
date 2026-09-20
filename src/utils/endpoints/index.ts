@@ -106,6 +106,7 @@ export const parentWallet = {
   getWalletLedger: (parentId: string) => `/parent-wallets/${parentId}/ledger`,
   topUp: (parentId: string) => `/parent-wallets/${parentId}/top-up`,
   topUpBulk: "/parent-wallets/top-up/bulk",
+  deduct: (parentId: string) => `/parent-wallets/${parentId}/deduct`,
 };
 
 export const classes = {
@@ -126,11 +127,15 @@ export const payout = {
   getPayouts: "/payouts",
   getPayoutById: (id: string) => `/payouts/${id}`,
   getWallet: "/wallet",
+  getWalletLedger: "/wallet/ledger",
   createPayout: "/payouts",
 };
 
 export const settlementAccount = {
   getSchoolAccounts: (schoolId: string) => `/settlement-accounts/school/${schoolId}`,
+  getPrimaryAccount: (schoolId: string) =>
+    `/settlement-accounts/school/${schoolId}/primary`,
+  setPrimaryAccount: "/settlement-accounts/primary",
 };
 
 export const ApiEndpoints = {

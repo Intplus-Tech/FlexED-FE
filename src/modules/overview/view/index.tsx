@@ -138,7 +138,10 @@ export default function DashboardView() {
           totalAmount=""
         />
         <CollectionByClass
-          totalStudents={collection?.data?.totalPaid ?? 0}
+          totalStudents={(collection?.data?.items ?? []).reduce(
+            (sum, item) => sum + (item.totalStudents ?? 0),
+            0
+          )}
           data={collection?.data?.items ?? []}
           isLoading={isFetchingCollection || isLoadingCollection}
         />
