@@ -1,38 +1,84 @@
 "use client";
 
-import React, { useEffect, useRef, useState } from "react";
-import { createPortal } from "react-dom";
-import StudentTableLoader from "../../Loader/table-loader";
-import { StudentProfileModal } from "../student-profile";
-import { GetStudentsResponse, Student } from "@/@types/student";
-import { ClassItem } from "@/@types/class";
-import { useDeleteStudentMutation } from "@/redux/api/student";
-import { DeleteModal } from "@/components/delete-modal";
-import { showerror, showsuccess } from "@/utils/toast";
-import { Eye, Trash2, Pencil, GraduationCap, MoreVertical, Download, FileText, Mail } from "lucide-react";
-import { PromoteStudentModal } from "../promote-student-modal";
-import { StudentReceiptButton } from "../student-receipt";
-import { StudentInvoiceButton } from "../student-invoice";
-import { ResendInviteModal } from "../resend-invite-modal";
+import React, { useMemo, useState } from "react";
+import type { ColumnDef } from "@tanstack/react-table";
+import {
+  Download,
+  Eye,
+  FileText,
+  GraduationCap,
+  Mail,
+  MoreVertical,
+  Pencil,
+  Trash2,
+} from "lucide-react";
 
-const MENU_WIDTH = 208;
+import { Student } from "@/@types/student";
+import { ClassItem } from "@/@types/class";
+import { DeleteModal } from "@/components/delete-modal";
+import { DataTable } from "@/components/ui/data-table";
+import { TableEmptyState } from "@/components/ui/table-empty-state";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { ACTIONS_COLUMN_ID, SELECT_COLUMN_ID } from "@/lib/table-column-prefs";
+import { useDeleteStudentMutation } from "@/redux/api/student";
+import { showerror, showsuccess } from "@/utils/toast";
+
+import { PromoteStudentModal } from "../promote-student-modal";
+import { ResendInviteModal } from "../resend-invite-modal";
+import { StudentInvoiceButton } from "../student-invoice";
+import { StudentProfileModal } from "../student-profile";
+import { StudentReceiptButton } from "../student-receipt";
+
+const MANIFEST = [
+  { key: "name", label: "Student Name" },
+  { key: "admissionNumber", label: "Admission Number" },
+  { key: "class", label: "Class" },
+  { key: "gender", label: "Gender" },
+  { key: "dateOfBirth", label: "Date of Birth" },
+];
 
 interface StudentTableProps {
-  students: GetStudentsResponse;
+  students: Student[];
   isLoading?: boolean;
+  isFetching?: boolean;
+  isError?: boolean;
+  error?: unknown;
   classItems: ClassItem[];
   selectedStudentIds: string[];
   setSelectedStudentIds: React.Dispatch<React.SetStateAction<string[]>>;
   onEditStudent: (id: string) => void;
+  totalCount: number;
+  pageIndex: number;
+  pageSize: number;
+  searchTerm?: string;
+  filterControl?: React.ReactNode;
+  action?: React.ReactNode;
+  onPageChange: (pageIndex: number) => void;
+  onPageSizeChange: (pageSize: number) => void;
+  onSearch: (term: string) => void;
+  onRefresh: () => void;
 }
 
 export function StudentTable({
   students,
   isLoading = false,
+  isFetching = false,
+  isError = false,
+  error,
   classItems,
   selectedStudentIds,
   setSelectedStudentIds,
   onEditStudent,
+  totalCount,
+  pageIndex,
+  pageSize,
+  searchTerm,
+  filterControl,
+  action,
+  onPageChange,
+  onPageSizeChange,
+  onSearch,
+  onRefresh,
 }: StudentTableProps) {
   const [selectedStudent, setSelectedStudent] = useState<Student | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -40,54 +86,30 @@ export function StudentTable({
   const [studentToDelete, setStudentToDelete] = useState<Student | null>(null);
   const [isPromoteModalOpen, setIsPromoteModalOpen] = useState(false);
   const [studentToPromote, setStudentToPromote] = useState<Student | null>(null);
-  const [openMenuFor, setOpenMenuFor] = useState<Student | null>(null);
-  const [menuPosition, setMenuPosition] = useState<{ top: number; left: number } | null>(null);
-  const menuRef = useRef<HTMLDivElement | null>(null);
-  const [receiptRequest, setReceiptRequest] = useState<{ studentId: string; nonce: number } | null>(null);
-  const [invoiceRequest, setInvoiceRequest] = useState<{ studentId: string; nonce: number } | null>(null);
+  const [receiptRequest, setReceiptRequest] = useState<{
+    studentId: string;
+    nonce: number;
+  } | null>(null);
+  const [invoiceRequest, setInvoiceRequest] = useState<{
+    studentId: string;
+    nonce: number;
+  } | null>(null);
   const [studentForInvite, setStudentForInvite] = useState<Student | null>(null);
 
   const [deleteStudent, { isLoading: isDeleteLoading }] =
     useDeleteStudentMutation();
 
-  const closeMenu = () => {
-    setOpenMenuFor(null);
-    setMenuPosition(null);
-  };
+  // Soft-deleted students keep their records server-side but must not appear
+  // in the roster.
+  const rows = useMemo(
+    () => students.filter((student) => !student.isDeleted),
+    [students]
+  );
 
-  const toggleMenu = (student: Student, e: React.MouseEvent<HTMLButtonElement>) => {
-    if (openMenuFor?._id === student._id) {
-      closeMenu();
-      return;
-    }
-    const rect = e.currentTarget.getBoundingClientRect();
-    setMenuPosition({ top: rect.bottom + 6, left: rect.right - MENU_WIDTH });
-    setOpenMenuFor(student);
-  };
+  const allSelected =
+    rows.length > 0 && rows.every((s) => selectedStudentIds.includes(s._id));
 
-  useEffect(() => {
-    if (!openMenuFor) return;
-    const handleOutsideClick = (e: MouseEvent) => {
-      if (menuRef.current && !menuRef.current.contains(e.target as Node)) closeMenu();
-    };
-    const handleScroll = () => closeMenu();
-    document.addEventListener("mousedown", handleOutsideClick);
-    window.addEventListener("scroll", handleScroll, true);
-    return () => {
-      document.removeEventListener("mousedown", handleOutsideClick);
-      window.removeEventListener("scroll", handleScroll, true);
-    };
-  }, [openMenuFor]);
-
-  const handleViewStudent = (student: Student) => {
-    setSelectedStudent(student);
-    setIsModalOpen(true);
-  };
-
-  if (isLoading) {
-    return <StudentTableLoader />;
-  }
-
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const getClassById = (classId: string | any) => {
     if (!classId) return "";
     if (typeof classId === "object" && classId.name) return classId.name;
@@ -100,243 +122,216 @@ export function StudentTable({
         : "";
   };
 
-  const handleDeleteStudent = (student: Student) => {
-    setStudentToDelete(student);
-    setIsDeleteModalOpen(true);
-  };
-
-  const handlePromoteStudent = (student: Student) => {
-    setStudentToPromote(student);
-    setIsPromoteModalOpen(true);
-  };
-
   const handleDeleteConfirm = async () => {
     if (!studentToDelete) return;
     try {
       const res = await deleteStudent(studentToDelete._id).unwrap();
       showsuccess(res.message || "Student deleted successfully");
       setIsDeleteModalOpen(false);
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (error: any) {
       showerror(error?.data?.message || "Failed to delete student");
     }
   };
 
-  return (
-    <div className="bg-white border border-gray-200 rounded-xl overflow-hidden">
-      <div className="overflow-x-auto">
-        <table className="w-full">
-          <thead className="bg-gray-50 border-b border-gray-200">
-            <tr>
-              <th className="px-6 py-4 text-left">
-                <div className="flex items-center gap-3">
-                  <input
-                    type="checkbox"
-                    checked={
-                      students?.data?.items?.length > 0 &&
-                      students.data.items.every((student) =>
-                        selectedStudentIds.includes(student._id),
-                      )
-                    }
-                    onChange={(e) => {
-                      if (e.target.checked) {
-                        const allIds =
-                          students?.data?.items?.map(
-                            (student) => student._id,
-                          ) || [];
-                        setSelectedStudentIds(allIds);
-                      } else {
-                        setSelectedStudentIds([]);
-                      }
-                    }}
-                    className="w-4 h-4 border-2 border-gray-300 rounded cursor-pointer accent-purple-500 focus:ring-purple-500 text-purple-600"
-                  />
-                </div>
-              </th>
-              <th className="px-6 py-4 text-left text-sm font-medium text-gray-600 whitespace-nowrap">
-                Student Name
-              </th>
-              <th className="px-6 py-4 text-left text-sm font-medium text-gray-600 whitespace-nowrap">
-                Admission Number
-              </th>
-              <th className="px-6 py-4 text-left text-sm font-medium text-gray-600 whitespace-nowrap">
-                Class
-              </th>
-              <th className="px-6 py-4 text-left text-sm font-medium text-gray-600 whitespace-nowrap">
-                Gender
-              </th>
-              {/* <th className="px-6 py-4 text-left text-sm font-medium text-gray-600 whitespace-nowrap">
-                Amount Fee
-              </th>
-              <th className="px-6 py-4 text-left text-sm font-medium text-gray-600 whitespace-nowrap">
-                Paid TD
-              </th>
-              <th className="px-6 py-4 text-left text-sm font-medium text-gray-600 whitespace-nowrap">
-                Balance
-              </th> */}
-              <th className="px-6 py-4 text-left text-sm font-medium text-gray-600 whitespace-nowrap">
-                Action
-              </th>
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-gray-200">
-            {students?.data?.items?.length === 0 ? (
-              <tr>
-                <td colSpan={7} className="px-6 py-4 text-center h-80">
-                  No data available
-                </td>
-              </tr>
-            ) : (
-              students?.data?.items?.map((student) => {
-                if (student.isDeleted) return;
-                return (
-                  <tr
-                    key={student._id}
-                    className="hover:bg-gray-50 transition-colors"
-                  >
-                    <td className="px-6 py-4">
-                      <div className="flex items-center gap-3">
-                        <input
-                          type="checkbox"
-                          checked={selectedStudentIds.includes(student._id)}
-                          onChange={(e) => {
-                            if (e.target.checked) {
-                              setSelectedStudentIds((prev) => [
-                                ...prev,
-                                student._id,
-                              ]);
-                            } else {
-                              setSelectedStudentIds((prev) =>
-                                prev.filter((id) => id !== student._id),
-                              );
-                            }
-                          }}
-                          className="w-4 h-4 border-2 border-gray-300 rounded cursor-pointer accent-purple-500 focus:ring-purple-500 text-purple-600"
-                        />
-                      </div>
-                    </td>
-                    <td className="px-6 py-4 text-sm text-gray-900">
-                      {`${student.firstName} ${student.lastName}`}
-                    </td>
-
-                    <td className="px-6 py-4 text-sm text-gray-600">
-                      {student.admissionNumber}
-                    </td>
-                    <td className="px-6 py-4 text-sm text-gray-600 whitespace-nowrap">
-                      {getClassById(student.class)}
-                    </td>
-                    <td className="px-6 py-4 text-sm text-gray-600">
-                      {student.gender}
-                    </td>
-
-                    {/* <td className="px-6 py-4 text-sm font-medium text-gray-900"> */}
-                    {/* {"-"}
-                    </td>
-                    <td className="px-6 py-4 text-sm font-medium text-gray-900">
-                      {"-"}
-                    </td>
-                    <td className="px-6 py-4 text-sm font-medium text-gray-900">
-                      {"-"}
-                    </td> */}
-                    <td className="px-6 py-4">
-                      <button
-                        disabled={selectedStudentIds.length > 0}
-                        onClick={(e) => toggleMenu(student, e)}
-                        className="p-1.5 rounded-lg text-gray-500 hover:text-gray-900 hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-                        title="More actions"
-                      >
-                        <MoreVertical size={18} />
-                      </button>
-                    </td>
-                  </tr>
-                );
+  const columns = useMemo<ColumnDef<Student, unknown>[]>(
+    () => [
+      {
+        id: SELECT_COLUMN_ID,
+        enableHiding: false,
+        header: () => (
+          <input
+            type="checkbox"
+            checked={allSelected}
+            disabled={rows.length === 0}
+            onChange={(e) =>
+              setSelectedStudentIds(
+                e.target.checked ? rows.map((student) => student._id) : []
+              )
+            }
+            aria-label="Select all students"
+            className="size-4 cursor-pointer rounded border-2 border-gray-300 accent-purple-500 disabled:cursor-not-allowed"
+          />
+        ),
+        cell: ({ row }) => (
+          <input
+            type="checkbox"
+            checked={selectedStudentIds.includes(row.original._id)}
+            onChange={(e) =>
+              setSelectedStudentIds((prev) =>
+                e.target.checked
+                  ? [...prev, row.original._id]
+                  : prev.filter((id) => id !== row.original._id)
+              )
+            }
+            aria-label={`Select ${row.original.firstName} ${row.original.lastName}`}
+            className="size-4 cursor-pointer rounded border-2 border-gray-300 accent-purple-500"
+          />
+        ),
+      },
+      {
+        id: "name",
+        header: "Student Name",
+        accessorFn: (row) => `${row.firstName} ${row.lastName}`,
+        cell: ({ row }) => (
+          <span className="font-medium text-gray-900">
+            {row.original.firstName} {row.original.lastName}
+          </span>
+        ),
+      },
+      {
+        id: "admissionNumber",
+        accessorKey: "admissionNumber",
+        header: "Admission Number",
+      },
+      {
+        id: "class",
+        accessorKey: "class",
+        header: "Class",
+        cell: ({ row }) => getClassById(row.original.class),
+      },
+      { id: "gender", accessorKey: "gender", header: "Gender" },
+      {
+        id: "dateOfBirth",
+        accessorKey: "dateOfBirth",
+        header: "Date of Birth",
+        cell: ({ row }) =>
+          row.original.dateOfBirth
+            ? new Date(row.original.dateOfBirth).toLocaleDateString(undefined, {
+                year: "numeric",
+                month: "short",
+                day: "numeric",
               })
-            )}
-          </tbody>
-        </table>
-      </div>
+            : "—",
+      },
+      {
+        id: ACTIONS_COLUMN_ID,
+        header: "",
+        enableHiding: false,
+        cell: ({ row }) => {
+          const student = row.original;
+          return (
+            <Popover>
+              <PopoverTrigger asChild>
+                <button
+                  disabled={selectedStudentIds.length > 0}
+                  title="More actions"
+                  aria-label="Student actions"
+                  className="cursor-pointer rounded-lg p-1.5 text-gray-500 transition-colors hover:bg-gray-100 hover:text-gray-900 disabled:cursor-not-allowed disabled:opacity-50"
+                >
+                  <MoreVertical size={18} />
+                </button>
+              </PopoverTrigger>
+              {/* Replaces a hand-positioned portal menu that had to close itself
+                  on every scroll event to stay glued to its row. */}
+              <PopoverContent align="end" className="w-52 py-1.5">
+                <MenuItem
+                  icon={<Eye size={15} />}
+                  label="View Student"
+                  onClick={() => {
+                    setSelectedStudent(student);
+                    setIsModalOpen(true);
+                  }}
+                />
+                <MenuItem
+                  icon={<Pencil size={15} />}
+                  label="Edit Student"
+                  onClick={() => onEditStudent(student._id)}
+                />
+                <MenuItem
+                  icon={<Download size={15} />}
+                  label="Download Receipt"
+                  onClick={() =>
+                    setReceiptRequest({
+                      studentId: student._id,
+                      nonce: Date.now(),
+                    })
+                  }
+                />
+                <MenuItem
+                  icon={<FileText size={15} />}
+                  label="Download Invoice"
+                  onClick={() =>
+                    setInvoiceRequest({
+                      studentId: student._id,
+                      nonce: Date.now(),
+                    })
+                  }
+                />
+                <MenuItem
+                  icon={<Mail size={15} />}
+                  label="Resend Invite"
+                  onClick={() => setStudentForInvite(student)}
+                />
+                <MenuItem
+                  icon={<GraduationCap size={15} />}
+                  label="Promote Student"
+                  onClick={() => {
+                    setStudentToPromote(student);
+                    setIsPromoteModalOpen(true);
+                  }}
+                />
+                <div className="my-1 border-t border-gray-100" />
+                <MenuItem
+                  icon={<Trash2 size={15} />}
+                  label="Delete Student"
+                  destructive
+                  onClick={() => {
+                    setStudentToDelete(student);
+                    setIsDeleteModalOpen(true);
+                  }}
+                />
+              </PopoverContent>
+            </Popover>
+          );
+        },
+      },
+    ],
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [allSelected, rows, selectedStudentIds, classItems, onEditStudent]
+  );
 
-      {openMenuFor &&
-        menuPosition &&
-        createPortal(
-          <div
-            ref={menuRef}
-            style={{ position: "fixed", top: menuPosition.top, left: menuPosition.left, width: MENU_WIDTH }}
-            className="bg-white border border-gray-200 rounded-lg shadow-lg py-1.5 z-50"
-          >
-            <button
-              onClick={() => {
-                handleViewStudent(openMenuFor);
-                closeMenu();
-              }}
-              className="w-full flex items-center gap-2.5 px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 text-left transition-colors"
-            >
-              <Eye size={15} />
-              View Student
-            </button>
-            <button
-              onClick={() => {
-                onEditStudent(openMenuFor._id);
-                closeMenu();
-              }}
-              className="w-full flex items-center gap-2.5 px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 text-left transition-colors"
-            >
-              <Pencil size={15} />
-              Edit Student
-            </button>
-            <button
-              onClick={() => {
-                setReceiptRequest({ studentId: openMenuFor._id, nonce: Date.now() });
-                closeMenu();
-              }}
-              className="w-full flex items-center gap-2.5 px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 text-left transition-colors"
-            >
-              <Download size={15} />
-              Download Receipt
-            </button>
-            <button
-              onClick={() => {
-                setInvoiceRequest({ studentId: openMenuFor._id, nonce: Date.now() });
-                closeMenu();
-              }}
-              className="w-full flex items-center gap-2.5 px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 text-left transition-colors"
-            >
-              <FileText size={15} />
-              Download Invoice
-            </button>
-            <button
-              onClick={() => {
-                setStudentForInvite(openMenuFor);
-                closeMenu();
-              }}
-              className="w-full flex items-center gap-2.5 px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 text-left transition-colors"
-            >
-              <Mail size={15} />
-              Resend Invite
-            </button>
-            <button
-              onClick={() => {
-                handlePromoteStudent(openMenuFor);
-                closeMenu();
-              }}
-              className="w-full flex items-center gap-2.5 px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 text-left transition-colors"
-            >
-              <GraduationCap size={15} />
-              Promote Student
-            </button>
-            <div className="my-1 border-t border-gray-100" />
-            <button
-              onClick={() => {
-                handleDeleteStudent(openMenuFor);
-                closeMenu();
-              }}
-              className="w-full flex items-center gap-2.5 px-4 py-2.5 text-sm text-red-600 hover:bg-red-50 text-left transition-colors"
-            >
-              <Trash2 size={15} />
-              Delete Student
-            </button>
-          </div>,
-          document.body,
-        )}
+  return (
+    <>
+      <DataTable
+        title="Students"
+        action={action}
+        columns={columns}
+        data={rows}
+        isLoading={isLoading}
+        isRefetching={isFetching && !isLoading}
+        isError={isError}
+        error={error}
+        onRefresh={onRefresh}
+        onSearch={onSearch}
+        searchPlaceholder="Search students..."
+        filterControl={filterControl}
+        serverPagination={{
+          totalCount,
+          pageIndex,
+          pageSize,
+          onPageChange,
+          onPageSizeChange,
+        }}
+        empty={
+          <TableEmptyState
+            title={
+              searchTerm ? "No students match your search" : "No students yet"
+            }
+            description={
+              searchTerm
+                ? "Try a different name or admission number, or clear the class filter."
+                : "Add your first student, or bulk-upload your roster to get started."
+            }
+          />
+        }
+        fullView={{
+          columns,
+          manifest: MANIFEST,
+          title: "Students",
+          tableId: "students",
+        }}
+      />
 
       <StudentProfileModal
         isOpen={isModalOpen}
@@ -382,6 +377,32 @@ export function StudentTable({
           trigger={invoiceRequest.nonce}
         />
       )}
-    </div>
+    </>
+  );
+}
+
+function MenuItem({
+  icon,
+  label,
+  onClick,
+  destructive = false,
+}: {
+  icon: React.ReactNode;
+  label: string;
+  onClick: () => void;
+  destructive?: boolean;
+}) {
+  return (
+    <button
+      onClick={onClick}
+      className={`flex w-full cursor-pointer items-center gap-2.5 px-4 py-2.5 text-left text-sm transition-colors ${
+        destructive
+          ? "text-red-600 hover:bg-red-50"
+          : "text-gray-700 hover:bg-gray-50"
+      }`}
+    >
+      {icon}
+      {label}
+    </button>
   );
 }
