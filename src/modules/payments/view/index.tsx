@@ -1,19 +1,18 @@
 "use client";
 
 import { MetricCard } from "@/components/metric-card";
-import { Pagination } from "@/components/pagination";
 import { useState, useMemo, useRef, useEffect } from "react";
 import {
   StudentGroupTable,
   resolveClassName,
 } from "../components/student-group-table";
-import { SearchInput } from "@/components/search-input";
 import {
   PaymentStatus,
   PaymentStatusModal,
 } from "../components/payment-status-modal";
 import {
   useGetTransactionsByStudentQuery,
+  useLazyGetTransactionsByStudentQuery,
   useGetPaymentCategoriesQuery,
   useBulkDeleteTransactionsMutation,
 } from "@/redux/api/transaction";
@@ -25,17 +24,17 @@ import { CardSim } from "lucide-react";
 import { useGetAllClassesQuery } from "@/redux/api/class";
 import { ManualPaymentModal } from "../components/ManualPaymentModal";
 import { ExportButton } from "@/components/export-button";
+import { buildFeeRegister } from "../export-register";
 import { useGetAllAcademicSessionQuery } from "@/redux/api/academicSession";
 
 import { usePermission } from "@/utils/permissions";
 import { DeleteModal } from "@/components/delete-modal";
 import { showerror, showsuccess } from "@/utils/toast";
 
-const ITEMS_PER_PAGE = 10;
-
 export default function PaymentView() {
   const [searchQuery, setSearchQuery] = useState("");
-  const [currentPage, setCurrentPage] = useState(1);
+  const [pageIndex, setPageIndex] = useState(0);
+  const [pageSize, setPageSize] = useState(10);
   const [filters, setFilters] = useState({
     academicPeriod: "",
     classId: "",
@@ -68,16 +67,19 @@ export default function PaymentView() {
     }
   }, [academicSessions]);
 
-  const { data, isFetching, isLoading } = useGetTransactionsByStudentQuery(
-    {
-      schoolId: String(authstate.currentUser?.schoolId),
-      page: currentPage,
-      limit: ITEMS_PER_PAGE,
-      search: searchQuery,
-      ...filters,
-    },
-    { skip: !authstate.currentUser },
-  );
+  const { data, isFetching, isLoading, isError, error, refetch } =
+    useGetTransactionsByStudentQuery(
+      {
+        schoolId: String(authstate.currentUser?.schoolId),
+        page: pageIndex + 1,
+        limit: pageSize,
+        search: searchQuery,
+        ...filters,
+      },
+      { skip: !authstate.currentUser },
+    );
+
+  const [fetchAllStudentGroups] = useLazyGetTransactionsByStudentQuery();
 
   const { isStaff } = usePermission();
   const [bulkDeleteTransactions, { isLoading: isBulkDeleting }] =
@@ -117,38 +119,62 @@ export default function PaymentView() {
     () => data?.data?.items ?? [],
     [data],
   );
-  const totalPages = data?.data?.meta?.totalPages ?? 1;
-  const rowOffset = (currentPage - 1) * ITEMS_PER_PAGE;
+  const totalCount = data?.data?.meta?.total ?? 0;
 
   const handleFilterChange = (name: string, value: string) => {
     setFilters((prev) => ({ ...prev, [name]: value }));
-    setCurrentPage(1);
+    setPageIndex(0);
   };
 
-  // Export: the class fee register — one row per student (main table rows
-  // only, not the expanded per-payment sub-rows), same columns/headers as the
-  // on-screen table. The serial-number column has a blank header to mirror the
-  // register. Balance Owing is signed: negative means overpaid / in credit.
-  const exportData = useMemo(() => {
-    return studentGroups.map((group, index) => {
-      const totalBill = group.totalBilled ?? group.totalOwed ?? 0;
-      const amountPaid = group.totalAmountPaid ?? group.totalPaid ?? 0;
-      return {
-        " ": rowOffset + index + 1,
-        "STUDENT NAMES": `${group.student?.firstName ?? ""} ${
-          group.student?.lastName ?? ""
-        }`.trim(),
-        CLASS: resolveClassName(group.student?.class, classItems?.data ?? []),
-        "TOTAL BILL": totalBill,
-        "AMOUNT PAID": amountPaid,
-        "BALANCE OWING": totalBill - amountPaid,
-      };
-    });
-  }, [studentGroups, classItems, rowOffset]);
+  const toExportRows = (groups: typeof studentGroups) =>
+    buildFeeRegister(groups, (group) =>
+      resolveClassName(group.student?.class, classItems?.data ?? [])
+    );
+
+  // Fallback for the initial render; the click handler below replaces it with
+  // every matching student, not just the page on screen.
+  const exportData = useMemo(
+    () => toExportRows(studentGroups),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [studentGroups, classItems]
+  );
+
+  // The endpoint caps `limit` at 100, so a school with more students than that
+  // needs several passes before the register is complete.
+  const fetchAllForExport = async () => {
+    const EXPORT_PAGE_SIZE = 100;
+    const collected: typeof studentGroups = [];
+    let page = 1;
+    let totalPages = 1;
+    // Period / class / category / search still scope the register, but the
+    // transaction-status filter is dropped: it narrows each student's
+    // `payments` array, and the fee columns count PAID entries only — exporting
+    // under "Pending" would hand back a sheet of zeros.
+    const exportFilters = {
+      academicPeriod: filters.academicPeriod,
+      classId: filters.classId,
+      category: filters.category,
+    };
+
+    do {
+      const result = await fetchAllStudentGroups({
+        schoolId: String(authstate.currentUser?.schoolId),
+        page,
+        limit: EXPORT_PAGE_SIZE,
+        search: searchQuery,
+        ...exportFilters,
+      }).unwrap();
+      collected.push(...(result?.data?.items ?? []));
+      totalPages = result?.data?.meta?.totalPages ?? 1;
+      page += 1;
+    } while (page <= totalPages);
+
+    return toExportRows(collected);
+  };
 
   const handleSearch = (query: string) => {
     setSearchQuery(query);
-    setCurrentPage(1);
+    setPageIndex(0);
   };
 
   const handleViewList = (status: PaymentStatus) => {
@@ -200,11 +226,11 @@ export default function PaymentView() {
               <CardSim />
               Add Payment
             </button>
-            <SearchInput onSearch={handleSearch} placeholder="Search" />
           </div>
           <ExportButton
             data={exportData}
-            disabled={exportData.length === 0}
+            getData={fetchAllForExport}
+            disabled={totalCount === 0}
             filename="Payments_By_Student"
             sheetName="By Student"
           />
@@ -316,20 +342,25 @@ export default function PaymentView() {
 
         <StudentGroupTable
           items={studentGroups}
-          isLoading={isFetching || isLoading}
+          isLoading={isLoading}
+          isFetching={isFetching}
+          isError={isError}
+          error={error}
           classItems={classItems?.data ?? []}
           selectedPaymentIds={selectedPaymentIds}
           setSelectedPaymentIds={setSelectedPaymentIds}
-          startIndex={rowOffset}
+          totalCount={totalCount}
+          pageIndex={pageIndex}
+          pageSize={pageSize}
+          searchTerm={searchQuery}
+          onPageChange={setPageIndex}
+          onPageSizeChange={(size) => {
+            setPageSize(size);
+            setPageIndex(0);
+          }}
+          onSearch={handleSearch}
+          onRefresh={refetch}
         />
-
-        {totalPages > 1 && (
-          <Pagination
-            currentPage={currentPage}
-            totalPages={totalPages}
-            onPageChange={setCurrentPage}
-          />
-        )}
       </div>
       <PaymentStatusModal
         isOpen={modalOpen}

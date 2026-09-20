@@ -10,6 +10,12 @@ interface ExportButtonProps {
   sheetName?: string;
   className?: string;
   disabled?: boolean;
+  /**
+   * Resolves the rows to export at click time, so a server-paginated table can
+   * export every record rather than the page that happens to be on screen.
+   * Falls back to `data` when omitted, or when the fetch fails.
+   */
+  getData?: () => Promise<any[]>;
 }
 
 export function ExportButton({
@@ -18,8 +24,10 @@ export function ExportButton({
   sheetName = "Sheet1",
   className = "",
   disabled = false,
+  getData,
 }: ExportButtonProps) {
   const [isOpen, setIsOpen] = useState(false);
+  const [isPreparing, setIsPreparing] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -36,24 +44,36 @@ export function ExportButton({
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
-  const handleExport = (type: "excel" | "csv") => {
-    if (type === "excel") {
-      exportToExcel(data, filename, sheetName);
-    } else {
-      exportToCSV(data, filename);
-    }
+  const handleExport = async (type: "excel" | "csv") => {
     setIsOpen(false);
+    let rows = data;
+    if (getData) {
+      setIsPreparing(true);
+      try {
+        rows = await getData();
+      } catch {
+        // Fall back to what's already on screen rather than exporting nothing.
+        rows = data;
+      } finally {
+        setIsPreparing(false);
+      }
+    }
+    if (type === "excel") {
+      exportToExcel(rows, filename, sheetName);
+    } else {
+      exportToCSV(rows, filename);
+    }
   };
 
   return (
     <div className={`relative ${className}`} ref={dropdownRef}>
       <button
-        disabled={disabled}
+        disabled={disabled || isPreparing}
         onClick={() => !disabled && setIsOpen(!isOpen)}
         className="flex items-center gap-2 px-4 py-3 bg-gray-900 text-white font-medium rounded-lg hover:bg-gray-800 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
       >
         <ExportIcon />
-        Export
+        {isPreparing ? "Preparing..." : "Export"}
         <span
           className={`transition-transform duration-200 ${isOpen ? "rotate-180" : ""}`}
         >
