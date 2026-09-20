@@ -60,7 +60,7 @@ export function PaymentSettingsTab() {
     const primary = settlementAccounts.find((acc) => acc.isPrimary) ?? settlementAccounts[0];
     userEditedRef.current = false;
     reset({
-      bankCode: primary.bankCode,
+      bankCode: primary.bankCode ?? undefined,
       bankName: primary.bankName,
       accountNumber: primary.accountNumber,
       accountName: primary.accountName,

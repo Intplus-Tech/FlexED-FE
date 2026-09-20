@@ -1,12 +1,24 @@
-import { Wallet, ArrowUpRight } from "lucide-react";
+"use client";
+
+import { AlertCircle, ArrowUpRight, Wallet } from "lucide-react";
+
 import { useGetSchoolWalletQuery } from "@/redux/api/payout";
-import { CheckCircle2, XCircle, Clock } from "lucide-react";
+import { normalizeError } from "@/lib/api-error";
+import { formatKobo } from "@/utils/functions";
+
+import { PayoutStatusBadge } from "./PayoutStatusBadge";
 
 export function SettlementSummary() {
-  const { data: wallet, isLoading, isFetching } = useGetSchoolWalletQuery();
+  const {
+    data: wallet,
+    isLoading,
+    isError,
+    error,
+    refetch,
+  } = useGetSchoolWalletQuery();
 
-  const formatFullDate = (dateStr: string) => {
-    return new Date(dateStr).toLocaleDateString("en-US", {
+  const formatFullDate = (dateStr: string) =>
+    new Date(dateStr).toLocaleDateString("en-US", {
       day: "2-digit",
       month: "short",
       year: "numeric",
@@ -14,45 +26,40 @@ export function SettlementSummary() {
       minute: "2-digit",
       hour12: true,
     });
-  };
 
-  const getStatusBadge = (status: string) => {
-    switch (status) {
-      case "SUCCESS":
-        return (
-          <span className="inline-flex items-center gap-1.5 px-3 py-1 text-xs font-bold rounded-full bg-green-100 text-green-700">
-            <CheckCircle2 size={12} />
-            Successful
-          </span>
-        );
-      case "FAILED":
-        return (
-          <span className="inline-flex items-center gap-1.5 px-3 py-1 text-xs font-bold rounded-full bg-red-100 text-red-700">
-            <XCircle size={12} />
-            Failed
-          </span>
-        );
-      case "PENDING":
-        return (
-          <span className="inline-flex items-center gap-1.5 px-3 py-1 text-xs font-bold rounded-full bg-amber-100 text-amber-700">
-            <Clock size={12} />
-            Pending
-          </span>
-        );
-      default:
-        return (
-          <span className="inline-flex items-center gap-1.5 px-3 py-1 text-xs font-bold rounded-full bg-gray-100 text-gray-700">
-            {status}
-          </span>
-        );
-    }
-  };
-
-  if (isLoading || isFetching) {
+  if (isLoading) {
     return (
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 animate-pulse">
-        <div className="h-36 bg-gray-200 rounded-2xl" />
-        <div className="h-36 bg-gray-200 rounded-2xl" />
+      <div className="grid animate-pulse grid-cols-1 gap-6 md:grid-cols-2">
+        <div className="h-36 rounded-2xl bg-gray-200" />
+        <div className="h-36 rounded-2xl bg-gray-200" />
+      </div>
+    );
+  }
+
+  if (isError) {
+    return (
+      <div
+        role="alert"
+        className="flex items-center justify-between gap-4 rounded-2xl border border-amber-200 bg-amber-50 p-6"
+      >
+        <div className="flex items-center gap-3">
+          <AlertCircle className="size-5 shrink-0 text-amber-600" />
+          <div>
+            <p className="text-sm font-semibold text-gray-900">
+              Couldn&apos;t load your wallet
+            </p>
+            <p className="text-sm text-gray-600">
+              {normalizeError(error).message ||
+                "Your balance is temporarily unavailable."}
+            </p>
+          </div>
+        </div>
+        <button
+          onClick={() => refetch()}
+          className="shrink-0 cursor-pointer rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm font-semibold text-gray-700 transition-colors hover:bg-gray-50"
+        >
+          Try again
+        </button>
       </div>
     );
   }
@@ -60,26 +67,22 @@ export function SettlementSummary() {
   const lastSettlement = wallet?.lastSettlement;
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-      {/* Wallet Balance Card */}
-      <div className="bg-white border border-gray-200 rounded-2xl p-6 shadow-sm">
-        <div className="flex items-center gap-2 mb-4">
+    <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
+      <div className="rounded-2xl border border-gray-200 bg-white p-6 shadow-sm">
+        <div className="mb-4 flex items-center gap-2">
           <Wallet size={16} className="text-gray-400" />
-          <p className="text-sm font-medium text-gray-500">Total Settled</p>
+          <p className="text-sm font-medium text-gray-500">Wallet Balance</p>
         </div>
         <div>
           <p className="text-3xl font-bold tracking-tight text-gray-900">
-            ₦{(wallet?.balance || 0).toLocaleString("en-NG", {
-              minimumFractionDigits: 2,
-            })}
+            {formatKobo(wallet?.balance ?? 0)}
           </p>
-          <p className="text-xs text-gray-500 mt-1">Available for settlement</p>
+          <p className="mt-1 text-xs text-gray-500">Available for withdrawal</p>
         </div>
       </div>
 
-      {/* Last Settlement Card */}
-      <div className="bg-white border border-gray-200 rounded-2xl p-6 shadow-sm">
-        <div className="flex items-center gap-2 mb-4">
+      <div className="rounded-2xl border border-gray-200 bg-white p-6 shadow-sm">
+        <div className="mb-4 flex items-center gap-2">
           <ArrowUpRight size={16} className="text-gray-400" />
           <p className="text-sm font-medium text-gray-500">Last Settlement</p>
         </div>
@@ -88,9 +91,7 @@ export function SettlementSummary() {
             <div className="flex items-center justify-between">
               <span className="text-sm text-gray-500">Amount:</span>
               <span className="text-sm font-bold text-gray-900">
-                ₦{lastSettlement.amount.toLocaleString("en-NG", {
-                  minimumFractionDigits: 2,
-                })}
+                {formatKobo(lastSettlement.amount)}
               </span>
             </div>
             <div className="flex items-center justify-between">
@@ -101,11 +102,11 @@ export function SettlementSummary() {
             </div>
             <div className="flex items-center justify-between">
               <span className="text-sm text-gray-500">Status:</span>
-              {getStatusBadge(lastSettlement.status)}
+              <PayoutStatusBadge status={lastSettlement.status} />
             </div>
           </div>
         ) : (
-          <p className="text-sm text-gray-400 mt-2">No settlements yet</p>
+          <p className="mt-2 text-sm text-gray-400">No settlements yet</p>
         )}
       </div>
     </div>
