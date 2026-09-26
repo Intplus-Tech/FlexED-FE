@@ -58,6 +58,7 @@ const apiSlice = createApi({
     "Payout",
     "SettlementAccount",
     "ParentWallet",
+    "SchoolMetrics",
   ],
   endpoints: () => ({}),
 });

@@ -90,21 +90,27 @@ export default function DashboardView() {
         <div className="lg:col-span-2">
           <FeeMetrics
             feesThisTerm={formatNaira(
-              paymentMetrics?.data?.totalExpectedAll ?? 0,
+              paymentMetrics?.data?.totalExpectedPeriod ?? 0,
             )}
-            feesCollected={formatNaira(paymentMetrics?.data?.totalPaidAll ?? 0)}
+            feesCollected={formatNaira(
+              paymentMetrics?.data?.totalPaidPeriod ?? 0,
+            )}
             totalOutstanding={formatNaira(
-              (paymentMetrics?.data?.totalExpectedAll ?? 0) -
-                (paymentMetrics?.data?.totalPaidAll ?? 0),
+              paymentMetrics?.data?.outstandingPeriod ?? 0,
             )}
             percentageOutstanding={
-              paymentMetrics?.data?.totalExpectedAll
+              paymentMetrics?.data?.totalExpectedPeriod
                 ? (
-                    (paymentMetrics.data.totalPaidAll /
-                      paymentMetrics.data.totalExpectedAll) *
+                    (paymentMetrics.data.totalPaidPeriod /
+                      paymentMetrics.data.totalExpectedPeriod) *
                     100
                   ).toFixed(2)
                 : "0.00"
+            }
+            arrearsBroughtForward={
+              paymentMetrics?.data?.arrearsBroughtForward
+                ? formatNaira(paymentMetrics.data.arrearsBroughtForward)
+                : undefined
             }
           />
         </div>

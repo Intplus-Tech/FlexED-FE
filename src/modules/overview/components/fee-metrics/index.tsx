@@ -5,6 +5,7 @@ export function FeeMetrics({
   feesCollected,
   totalOutstanding,
   percentageOutstanding,
+  arrearsBroughtForward,
 }: FeeMetricsProps) {
   return (
     <div className="bg-[linear-gradient(134.13deg,#8147E7_3.11%,#5C00FF_99.09%)] rounded-2xl p-4 text-white">
@@ -28,6 +29,11 @@ export function FeeMetrics({
             Total Outstanding for this Term
           </h3>
           <p className="text-2xl font-bold mb-2">{totalOutstanding}</p>
+          {arrearsBroughtForward && (
+            <p className="text-xs text-purple-200 mb-2">
+              + {arrearsBroughtForward} from previous terms
+            </p>
+          )}
           <p className="text-lg font-semibold text-purple-100">
             Percentage Outstanding
           </p>

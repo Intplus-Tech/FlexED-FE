@@ -14,6 +14,10 @@ export interface CollectionsTotals {
   totalExpectedPeriod: number;
   outstandingAll: number;
   outstandingPeriod: number;
+  /** Still owed by enrolled students on fees from periods that started before the reported one. */
+  arrearsBroughtForward: number;
+  /** `outstandingPeriod + arrearsBroughtForward`. */
+  outstandingWithArrears: number;
 }
 
 export interface AcademicPeriodSummary {

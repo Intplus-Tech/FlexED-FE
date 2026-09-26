@@ -32,7 +32,7 @@ export const academicSessionApi = apiSlice.injectEndpoints({
         method: methods.POST,
         body: request,
       }),
-      invalidatesTags: ["academicSession"],
+      invalidatesTags: ["academicSession", "Transaction", "SchoolMetrics"],
     }),
 
     updateAcademicSession: builder.mutation<
@@ -44,7 +44,7 @@ export const academicSessionApi = apiSlice.injectEndpoints({
         method: methods.PATCH,
         body: request,
       }),
-      invalidatesTags: ["academicSession"],
+      invalidatesTags: ["academicSession", "Transaction", "SchoolMetrics"],
     }),
 
     updateAcademicSessionStatus: builder.mutation<
@@ -55,7 +55,7 @@ export const academicSessionApi = apiSlice.injectEndpoints({
         url: ApiEndpoints.academicSession.setAcademicSessionStatus(id as string),
         method: methods.POST,
       }),
-      invalidatesTags: ["academicSession"],
+      invalidatesTags: ["academicSession", "Transaction", "SchoolMetrics"],
     }),
   }),
 });

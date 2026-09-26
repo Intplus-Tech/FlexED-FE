@@ -19,6 +19,8 @@ export interface FeeMetricsProps {
   feesCollected: string;
   totalOutstanding: string;
   percentageOutstanding: string;
+  /** Formatted, e.g. "₦150,000". Rendered as a sub-line when its raw amount is > 0. */
+  arrearsBroughtForward?: string;
 }
 
 export interface RecentTransactionsProps {
