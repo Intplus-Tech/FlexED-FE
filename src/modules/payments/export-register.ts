@@ -22,6 +22,10 @@ export type ExportRow = Record<string, string | number>;
  * Only PAID transactions count, matching how the API computes `amountPaid` — a
  * pending or failed attempt is not money received. Balance Owing is signed:
  * negative means the student overpaid.
+ *
+ * ARREARS (debt carried forward from earlier terms) sits in its own column
+ * rather than folded into a fee item, since it isn't billed under any one fee.
+ * BALANCE OWING is the API's totalOutstanding, which already includes it.
  */
 export function buildFeeRegister(
   groups: StudentTransactionGroup[],
@@ -47,6 +51,11 @@ export function buildFeeRegister(
   const rows: ExportRow[] = groups.map((group, index) => {
     const totalBill = group.totalBilled ?? group.totalOwed ?? 0;
     const amountPaid = group.totalAmountPaid ?? group.totalPaid ?? 0;
+    const arrears = group.arrears ?? 0;
+    // The API's own totalOutstanding, not totalBill - amountPaid: with an
+    // academic period selected it already folds in arrears, which the local
+    // subtraction has no way to account for.
+    const balanceOwing = group.totalOutstanding ?? group.outstanding ?? 0;
     const perItem = paidPerStudent[index];
 
     // Every row carries every fee column, zero-filled — a sparse row would
@@ -63,14 +72,16 @@ export function buildFeeRegister(
       }`.trim(),
       CLASS: resolveClass(group),
       ...feeCells,
+      ARREARS: arrears,
       "TOTAL BILL": totalBill,
       "AMOUNT PAID": amountPaid,
-      "BALANCE OWING": totalBill - amountPaid,
+      "BALANCE OWING": balanceOwing,
     };
   });
 
   const numericColumns = [
     ...feeColumns.map((name) => name.toUpperCase()),
+    "ARREARS",
     "TOTAL BILL",
     "AMOUNT PAID",
     "BALANCE OWING",

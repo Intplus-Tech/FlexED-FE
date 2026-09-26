@@ -63,6 +63,8 @@ export const transactionApi = apiSlice.injectEndpoints({
         classId?: string;
         status?: string;
         category?: string;
+        /** `true` lists only students with at least one matching transaction — the pre-register behaviour. */
+        onlyWithTransactions?: boolean;
       }
     >({
       query: (request) =>

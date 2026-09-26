@@ -127,7 +127,11 @@ export interface StudentTransactionGroup {
   totalAmountPaid: number;
   /** Alias of `totalAmountPaid`. */
   totalPaid: number;
-  /** What the student still owes (never negative — overpayment is reported separately). */
+  /**
+   * What the student still owes (never negative — overpayment is reported
+   * separately). With `academicPeriod` set, this includes `arrears` from
+   * earlier periods — it is not just the selected period's balance.
+   */
   totalOutstanding: number;
   /** Alias of `totalOutstanding`. */
   outstanding: number;
@@ -137,13 +141,21 @@ export interface StudentTransactionGroup {
   totalOwed: number;
   /** Amount paid above what was billed, if any. */
   overpaid: number;
+  /** Owed for the selected period alone (equals `totalOutstanding` when unscoped). */
+  termOutstanding: number;
+  /** Still owed on fees from periods that started before `academicPeriod`. 0 when unscoped. */
+  arrears: number;
   status: "COMPLETED" | "PART_PAYMENT" | "OUTSTANDING";
   /** Number of entries in `payments`. */
   paymentCount: number;
   /** Sum of the `amount` of every entry in `payments`. */
   paymentsTotalAmount: number;
-  /** Timestamp of the student's most recent matching transaction; the sort key. */
-  lastTransactionAt: string;
+  /**
+   * Timestamp of the student's most recent matching transaction; the sort
+   * key. Null for a student with no matching transaction — the register now
+   * lists the whole roster, not just students who have paid.
+   */
+  lastTransactionAt: string | null;
   /** The student's matching transactions, newest first, each with `paymentItem` populated. */
   payments: Transaction[];
 }
@@ -285,23 +297,58 @@ export interface GetPaymentsSummaryResponse {
 
 export interface PaymentsSummaryData {
   schoolId: string;
+  /** Academic period the figures are scoped to. Null when the school has none, in which case all fees are included. */
+  period: AcademicPeriodSummary | null;
+  /** Sums across all three categories. */
+  totals: PaymentsSummaryTotals;
   categories: PaymentCategoryItem[];
+}
+
+export interface PaymentsSummaryTotals {
+  studentCount: number;
+  totalBilled: number;
+  totalPaid: number;
+  totalArrears: number;
+  totalOutstanding: number;
 }
 
 export interface PaymentCategoryItem {
   category: "FULLY_PAID" | "PARTIALLY_PAID" | "OVERDUE";
   label: string;
+  /**
+   * Legacy headline figure, kept for older clients: `totalPaid` for
+   * FULLY_PAID/PARTIALLY_PAID, `totalOutstanding` for OVERDUE. Prefer the
+   * explicit fields below in new UI.
+   */
   totalAmount: number;
+  /** Collected this period from students in this category. */
+  totalPaid: number;
+  /** This period's fees for students in this category. */
+  totalBilled: number;
+  /** Carried forward from earlier periods for students in this category. */
+  totalArrears: number;
+  /** `totalBilled + totalArrears`. */
+  totalOwed: number;
+  /** Still due — sum of each student's `amountOutstanding`. */
+  totalOutstanding: number;
   studentCount: number;
   students: PaymentStudentItem[];
 }
 
 export interface PaymentStudentItem {
-  time: string; // ISO date string
-  transactionId: string;
+  studentId: string;
   studentName: string;
-  className: string;
+  className: string | null;
+  /** This period's fees. */
+  amountBilled: number;
+  /** Paid toward this period's fees. */
   amountPaid: number;
+  /** Still owed from earlier periods. */
+  arrears: number;
+  /** `amountBilled + arrears`. */
+  amountOwed: number;
+  /** This period's balance + arrears. */
+  amountOutstanding: number;
 }
 
 export interface CreatePaymentCategory {

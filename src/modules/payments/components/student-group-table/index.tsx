@@ -40,11 +40,22 @@ export function resolveClassName(
 function groupTotals(group: StudentTransactionGroup) {
   const totalBill = group.totalBilled ?? group.totalOwed ?? 0;
   const amountPaid = group.totalAmountPaid ?? group.totalPaid ?? 0;
-  return { totalBill, amountPaid, balanceOwing: totalBill - amountPaid };
+  // Balance Owing comes from the API's own totalOutstanding rather than
+  // `totalBill - amountPaid`: with an academic period selected, totalOutstanding
+  // already folds in `arrears` (debt from earlier terms), which the local
+  // subtraction has no way to know about and would silently drop.
+  const balanceOwing = group.totalOutstanding ?? group.outstanding ?? 0;
+  const arrears = group.arrears ?? 0;
+  return { totalBill, amountPaid, balanceOwing, arrears };
 }
 
 function groupId(group: StudentTransactionGroup): string {
-  return group.student?._id ?? group.student?.id ?? group.lastTransactionAt ?? "";
+  // `lastTransactionAt` was a third fallback here, but it's the one field the
+  // register's "students with no payments" change (Term Billing Handoff,
+  // section D) makes null for unpaid students — several such rows would all
+  // resolve to the same key. It only ever covered a malformed student record
+  // (no _id and no id), which student._id should never actually be.
+  return group.student?._id ?? group.student?.id ?? "";
 }
 
 interface StudentGroupTableProps {
@@ -211,13 +222,20 @@ export function StudentGroupTable({
         id: "balanceOwing",
         header: "Balance Owing",
         cell: ({ row }) => {
-          const { balanceOwing } = groupTotals(row.original);
+          const { balanceOwing, arrears } = groupTotals(row.original);
           return (
-            <span
-              className={`font-semibold tabular-nums ${balanceClass(balanceOwing)}`}
-            >
-              {formatNaira(balanceOwing)}
-            </span>
+            <div>
+              <span
+                className={`font-semibold tabular-nums ${balanceClass(balanceOwing)}`}
+              >
+                {formatNaira(balanceOwing)}
+              </span>
+              {arrears > 0 && (
+                <p className="text-xs text-amber-600">
+                  incl. {formatNaira(arrears)} arrears
+                </p>
+              )}
+            </div>
           );
         },
       },
@@ -252,9 +270,16 @@ export function StudentGroupTable({
       renderExpandedRow={(group) => {
         const { totalBill, amountPaid } = groupTotals(group);
         if (!group.payments?.length) {
+          // amountPaid is the student's unfiltered total for the period — if
+          // it's 0 they have genuinely never paid; if it's positive, they have,
+          // but the current status/category filter hides those transactions
+          // from `payments` (those fields are documented as unaffected by
+          // those filters), so the two cases need different copy.
           return (
             <p className="text-sm text-gray-500">
-              No transactions match the current filters for this student.
+              {amountPaid === 0
+                ? "No payments yet."
+                : "No transactions match the current filters for this student."}
             </p>
           );
         }

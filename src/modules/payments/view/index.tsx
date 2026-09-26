@@ -41,6 +41,7 @@ export default function PaymentView() {
     status: "",
     category: "",
   });
+  const [onlyWithTransactions, setOnlyWithTransactions] = useState(false);
 
   const [selectedStatus, setSelectedStatus] =
     useState<PaymentStatus>("FULLY_PAID");
@@ -56,15 +57,24 @@ export default function PaymentView() {
   const { data: classItems } = useGetAllClassesQuery();
 
   // Default the Academic Period filter to whichever session is currently
-  // active, once — a user's own selection afterward should stick.
-  const hasSetDefaultPeriodRef = useRef(false);
+  // active, and keep following it when a new term is activated — a page left
+  // open across a term change shouldn't strand an admin on a term that's no
+  // longer current. Tracks the id we last defaulted *to*, not a one-shot flag,
+  // so this re-fires on every activation; a user who has explicitly picked a
+  // different (non-default) term keeps their own choice.
+  const defaultedPeriodIdRef = useRef<string | null>(null);
   useEffect(() => {
-    if (hasSetDefaultPeriodRef.current) return;
     const activeSession = academicSessions?.data?.items?.find((s) => s.isActive);
-    if (activeSession) {
-      setFilters((prev) => ({ ...prev, academicPeriod: activeSession._id }));
-      hasSetDefaultPeriodRef.current = true;
+    if (!activeSession || activeSession._id === defaultedPeriodIdRef.current) {
+      return;
     }
+    setFilters((prev) =>
+      prev.academicPeriod === "" ||
+      prev.academicPeriod === defaultedPeriodIdRef.current
+        ? { ...prev, academicPeriod: activeSession._id }
+        : prev,
+    );
+    defaultedPeriodIdRef.current = activeSession._id;
   }, [academicSessions]);
 
   const { data, isFetching, isLoading, isError, error, refetch } =
@@ -74,6 +84,7 @@ export default function PaymentView() {
         page: pageIndex + 1,
         limit: pageSize,
         search: searchQuery,
+        onlyWithTransactions,
         ...filters,
       },
       { skip: !authstate.currentUser },
@@ -88,32 +99,12 @@ export default function PaymentView() {
   const { data: schoolMetrics } = useGetSchoolMetricsQuery(
     {
       schoolId: String(authstate.currentUser?.schoolId),
+      academicPeriod: filters.academicPeriod,
     },
     { skip: !authstate.currentUser || isStaff },
   );
 
-  const getCategoryColor = (category: string) => {
-    switch (category) {
-      case "FULLY_PAID":
-        return "green";
-      case "PARTIALLY_PAID":
-        return "yellow";
-      case "OVERDUE":
-        return "red";
-      default:
-        return "gray";
-    }
-  };
-
-  const schoolMetric =
-    schoolMetrics?.data?.categories?.map((category) => ({
-      ...category,
-      color: getCategoryColor(category.category) as
-        | "green"
-        | "red"
-        | "gray"
-        | "yellow",
-    })) ?? [];
+  const schoolMetric = schoolMetrics?.data?.categories ?? [];
 
   const studentGroups = useMemo(
     () => data?.data?.items ?? [],
@@ -146,14 +137,15 @@ export default function PaymentView() {
     const collected: typeof studentGroups = [];
     let page = 1;
     let totalPages = 1;
-    // Period / class / category / search still scope the register, but the
-    // transaction-status filter is dropped: it narrows each student's
-    // `payments` array, and the fee columns count PAID entries only — exporting
-    // under "Pending" would hand back a sheet of zeros.
+    // Period / class / category / search / payers-only still scope the
+    // register, but the transaction-status filter is dropped: it narrows each
+    // student's `payments` array, and the fee columns count PAID entries only
+    // — exporting under "Pending" would hand back a sheet of zeros.
     const exportFilters = {
       academicPeriod: filters.academicPeriod,
       classId: filters.classId,
       category: filters.category,
+      onlyWithTransactions,
     };
 
     do {
@@ -202,18 +194,20 @@ export default function PaymentView() {
 
         {!isStaff && (
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            {schoolMetric?.map((category) => {
-              return (
-                <MetricCard
-                  key={category?.label}
-                  title={category.label}
-                  amount={formatNaira(category.totalAmount)}
-                  amountColor={category.color}
-                  studentCount={category.studentCount}
-                  onClick={() => handleViewList(category.category)}
-                />
-              );
-            })}
+            {schoolMetric.map((category) => (
+              <MetricCard
+                key={category.category}
+                title={category.label}
+                studentCount={category.studentCount}
+                collected={formatNaira(category.totalPaid)}
+                outstanding={
+                  category.category === "FULLY_PAID"
+                    ? undefined
+                    : formatNaira(category.totalOutstanding)
+                }
+                onClick={() => handleViewList(category.category)}
+              />
+            ))}
           </div>
         )}
 
@@ -226,6 +220,18 @@ export default function PaymentView() {
               <CardSim />
               Add Payment
             </button>
+            <label className="flex items-center gap-2 text-sm text-gray-600 cursor-pointer select-none">
+              <input
+                type="checkbox"
+                checked={onlyWithTransactions}
+                onChange={(e) => {
+                  setOnlyWithTransactions(e.target.checked);
+                  setPageIndex(0);
+                }}
+                className="w-4 h-4 rounded border-gray-300 accent-purple-600 cursor-pointer"
+              />
+              Only students with payments
+            </label>
           </div>
           <ExportButton
             data={exportData}

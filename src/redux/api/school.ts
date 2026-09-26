@@ -11,9 +11,11 @@ export const schoolApi = apiSlice.injectEndpoints({
   endpoints: (builder) => ({
     getSchoolMetrics: builder.query<
       GetPaymentsSummaryResponse,
-      { schoolId: string }
+      { schoolId: string; academicPeriod?: string }
     >({
-      query: ({ schoolId }) => ApiEndpoints.school.getSchoolMetrics(schoolId),
+      query: ({ schoolId, ...params }) =>
+        QueryHelper(ApiEndpoints.school.getSchoolMetrics(schoolId), params),
+      providesTags: ["SchoolMetrics"],
     }),
     getShoolProfile: builder.query<SchoolProfileResponse, void>({
       query: () => ApiEndpoints.school.getSchool,
