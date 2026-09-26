@@ -3995,8 +3995,18 @@
             },
             "isCurrentPeriod": {
               "type": "boolean",
-              "description": "True when this fee belongs to the school's current academic period. Sum the outstanding of these for the parent's Term OS figure.",
+              "description": "True when this fee belongs to the school's current (active) academic period.",
               "example": true
+            },
+            "isSelectedPeriod": {
+              "type": "boolean",
+              "description": "True when this fee belongs to the selected academic period (the requested `academicPeriod`, else the active one). Sum the outstanding of these for the Term OS figure.",
+              "example": true
+            },
+            "isPriorPeriod": {
+              "type": "boolean",
+              "description": "True when this fee belongs to a period that started before the selected one. Its outstanding is arrears carried forward.",
+              "example": false
             }
           },
           "required": [
@@ -10439,10 +10449,21 @@
             "Parents"
           ],
           "summary": "Parent dashboard - children and outstanding balances",
-          "description": "Returns outstanding balances for the authenticated parent, as two distinct figures: `termOutstanding` (owed for the school's current academic period - the \"Term OS\" card) and `totalOutstanding` (owed across every term, for every linked child - the \"Total OS\" card). Both are also broken down per student, and each due item carries the period it belongs to.\n",
+          "description": "Returns outstanding balances for the authenticated parent, as two distinct figures: `termOutstanding` (owed for the school's current academic period - the \"Term OS\" card) and `totalOutstanding` (owed across every term, for every linked child - the \"Total OS\" card). Both are also broken down per student, and each due item carries the period it belongs to.\n\n**Term switching.** Pass `academicPeriod` to report the `term*` figures for that period instead of the active one (it applies to children at the school that owns the period). `academicPeriods` lists every period of the children's schools, newest first, for the switcher.\n\n**Carry-forward.** `arrears` is what is still owed on fees from periods that started before the selected one; `termDue = termOutstanding + arrears`. `termBilled` / `termPaid` include items paid in full, so use them (or per-student `termPercentPaid`) for \"amount paid\" and progress bars — `items` only carries items still owed. `termItems` is every item of the selected period.\n",
           "security": [
             {
               "bearerAuth": []
+            }
+          ],
+          "parameters": [
+            {
+              "in": "query",
+              "name": "academicPeriod",
+              "required": false,
+              "schema": {
+                "type": "string"
+              },
+              "description": "Academic period ObjectId to report on. Defaults to each school's active period. 404 if it does not belong to any of the children's schools."
             }
           ],
           "responses": {
@@ -10470,8 +10491,72 @@
                               "termOutstanding": {
                                 "type": "number",
                                 "format": "float",
-                                "description": "Owed for the current academic period only, for every linked child.",
+                                "description": "Owed for the selected academic period only, for every linked child.",
                                 "example": 1250000
+                              },
+                              "termBilled": {
+                                "type": "number",
+                                "format": "float",
+                                "description": "Billed for the selected period (including items paid in full)."
+                              },
+                              "termPaid": {
+                                "type": "number",
+                                "format": "float",
+                                "description": "Paid toward the selected period's fees."
+                              },
+                              "arrears": {
+                                "type": "number",
+                                "format": "float",
+                                "description": "Still owed from periods that started before the selected one."
+                              },
+                              "termDue": {
+                                "type": "number",
+                                "format": "float",
+                                "description": "`termOutstanding + arrears`"
+                              },
+                              "selectedPeriods": {
+                                "type": "array",
+                                "description": "The period(s) the `term*` figures cover.",
+                                "items": {
+                                  "type": "object",
+                                  "properties": {
+                                    "id": {
+                                      "type": "string"
+                                    },
+                                    "name": {
+                                      "type": "string"
+                                    }
+                                  }
+                                }
+                              },
+                              "academicPeriods": {
+                                "type": "array",
+                                "description": "Every period of the children's schools, newest first.",
+                                "items": {
+                                  "type": "object",
+                                  "properties": {
+                                    "id": {
+                                      "type": "string"
+                                    },
+                                    "name": {
+                                      "type": "string"
+                                    },
+                                    "schoolId": {
+                                      "type": "string"
+                                    },
+                                    "startDate": {
+                                      "type": "string",
+                                      "format": "date-time"
+                                    },
+                                    "endDate": {
+                                      "type": "string",
+                                      "format": "date-time"
+                                    },
+                                    "isActive": {
+                                      "type": "boolean"
+                                    }
+                                  }
+                                }
                               },
                               "activePeriods": {
                                 "type": "array",
@@ -10535,9 +10620,49 @@
                                         }
                                       }
                                     },
+                                    "termBilled": {
+                                      "type": "number",
+                                      "format": "float"
+                                    },
+                                    "termPaid": {
+                                      "type": "number",
+                                      "format": "float"
+                                    },
+                                    "termPercentPaid": {
+                                      "type": "number",
+                                      "format": "float",
+                                      "description": "`termPaid / termBilled` as 0-100; 0 when nothing is billed."
+                                    },
+                                    "arrears": {
+                                      "type": "number",
+                                      "format": "float"
+                                    },
+                                    "termDue": {
+                                      "type": "number",
+                                      "format": "float"
+                                    },
+                                    "selectedPeriod": {
+                                      "type": "object",
+                                      "nullable": true,
+                                      "properties": {
+                                        "id": {
+                                          "type": "string"
+                                        },
+                                        "name": {
+                                          "type": "string"
+                                        }
+                                      }
+                                    },
                                     "items": {
                                       "type": "array",
-                                      "description": "Due payment items for this student.",
+                                      "description": "Due payment items for this student (outstanding > 0, every period).",
+                                      "items": {
+                                        "$ref": "#/components/schemas/DuePaymentItem"
+                                      }
+                                    },
+                                    "termItems": {
+                                      "type": "array",
+                                      "description": "Every payment item of the selected period, including ones paid in full.",
                                       "items": {
                                         "$ref": "#/components/schemas/DuePaymentItem"
                                       }
@@ -14220,10 +14345,21 @@
             "Payments"
           ],
           "summary": "Get total collections and outstanding amounts",
-          "description": "Returns total paid, expected, and outstanding amounts overall and for the active academic period (if any) for the authenticated school.",
+          "description": "Returns total paid, expected, and outstanding amounts overall and for one academic period (the active one unless `academicPeriod` is given) for the authenticated school. The `*Period` figures start at zero when a new term begins; `arrearsBroughtForward` is what enrolled students still owe from earlier periods, and `outstandingWithArrears` adds it to `outstandingPeriod`.\n",
           "security": [
             {
               "bearerAuth": []
+            }
+          ],
+          "parameters": [
+            {
+              "in": "query",
+              "name": "academicPeriod",
+              "required": false,
+              "schema": {
+                "type": "string"
+              },
+              "description": "Academic period ObjectId to report on. Defaults to the school's active period. 404 if it is not the school's."
             }
           ],
           "responses": {
@@ -14283,6 +14419,16 @@
                           "outstandingPeriod": {
                             "type": "number",
                             "format": "float"
+                          },
+                          "arrearsBroughtForward": {
+                            "type": "number",
+                            "format": "float",
+                            "description": "Still owed by enrolled students on fees from periods that started before the reported one."
+                          },
+                          "outstandingWithArrears": {
+                            "type": "number",
+                            "format": "float",
+                            "description": "`outstandingPeriod + arrearsBroughtForward`"
                           }
                         }
                       },
@@ -14297,6 +14443,16 @@
             },
             "401": {
               "description": "Missing or invalid authentication token",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "$ref": "#/components/schemas/ApiErrorResponse"
+                  }
+                }
+              }
+            },
+            "404": {
+              "description": "Academic period not found for this school",
               "content": {
                 "application/json": {
                   "schema": {
@@ -16220,7 +16376,7 @@
             "Payments"
           ],
           "summary": "List transactions grouped by student",
-          "description": "Returns the same transactions as `GET /payments/transactions`, with the same search and filters, but grouped under the student who owes them — one row per student, carrying the student's billing totals plus the array of their matching payments. Built for a collapsible list: the header shows total paid / total outstanding at a glance, the expanded body shows the individual payments.\n\n**Pagination is by student.** `limit: 20` returns 20 students with *all* of their matching payments attached, so a student's payments are never split across two pages. `meta.total` is the number of matching students, not transactions.\n\n**The two totals answer different questions:**\n- `totalAmountPaid` / `totalOutstanding` / `totalBilled` describe the student's whole fee\n  position for the academic period (defaulting to every period when `academicPeriod` is\n  omitted). They are **not** narrowed by the `status` or `category` filters, so filtering to\n  `PENDING` does not zero out what the student has already paid.\n\n- `paymentsTotalAmount` is the sum of the `payments` array actually returned, which is what\n  the expanded list adds up to.\n\n\nRows are ordered by each student's most recent matching transaction, newest first. Transactions with no student attached (school-recorded payments with no identifiable payer) cannot be grouped and are excluded — use the flat `GET /payments/transactions` for those.\n",
+          "description": "Returns the same transactions as `GET /payments/transactions`, with the same search and filters, but grouped under the student who owes them — one row per student, carrying the student's billing totals plus the array of their matching payments. Built for a collapsible list: the header shows total paid / total outstanding at a glance, the expanded body shows the individual payments.\n\n**Pagination is by student.** `limit: 20` returns 20 students with *all* of their matching payments attached, so a student's payments are never split across two pages. `meta.total` is the number of matching students, not transactions.\n\n**The two totals answer different questions:**\n- `totalAmountPaid` / `totalOutstanding` / `totalBilled` describe the student's whole fee\n  position for the academic period (defaulting to every period when `academicPeriod` is\n  omitted). They are **not** narrowed by the `status` or `category` filters, so filtering to\n  `PENDING` does not zero out what the student has already paid.\n\n- `paymentsTotalAmount` is the sum of the `payments` array actually returned, which is what\n  the expanded list adds up to.\n\n\n**Students who have not paid are listed too.** Rows come from the enrolled roster (narrowed by `classId` / `search`) plus any student with a matching transaction, so on the first day of a term every student appears with their full balance and `payments: []`. Setting `status` or `category` (which describe payments) or `onlyWithTransactions=true` restores the old behaviour of listing only students with a matching transaction.\n\n**Arrears.** When `academicPeriod` is set, `totalOutstanding` / `outstanding` include `arrears` — what is still owed on fees from earlier periods. `termOutstanding` is the selected period's balance alone.\n\nStudents with payments come first, ordered by their most recent matching transaction (newest first); students with none follow alphabetically (`lastTransactionAt: null`). Transactions with no student attached (school-recorded payments with no identifiable payer) cannot be grouped and are excluded — use the flat `GET /payments/transactions` for those.\n",
           "security": [
             {
               "bearerAuth": []
@@ -16304,6 +16460,16 @@
             },
             {
               "in": "query",
+              "name": "onlyWithTransactions",
+              "required": false,
+              "schema": {
+                "type": "boolean",
+                "default": false
+              },
+              "description": "When true, list only students with at least one matching transaction (the pre-roster behaviour)."
+            },
+            {
+              "in": "query",
               "name": "schoolId",
               "required": false,
               "schema": {
@@ -16352,13 +16518,23 @@
                                 },
                                 "totalOutstanding": {
                                   "type": "number",
-                                  "description": "What the student still owes (never negative — overpayment is reported separately).",
+                                  "description": "What the student still owes (never negative — overpayment is reported separately). With `academicPeriod` set, includes `arrears` from earlier periods.\n",
                                   "example": 50000
                                 },
                                 "outstanding": {
                                   "type": "number",
                                   "description": "Alias of `totalOutstanding`.",
                                   "example": 50000
+                                },
+                                "termOutstanding": {
+                                  "type": "number",
+                                  "description": "Owed for the selected period alone (equals `totalOutstanding` when unscoped).",
+                                  "example": 30000
+                                },
+                                "arrears": {
+                                  "type": "number",
+                                  "description": "Still owed on fees from periods that started before `academicPeriod`. 0 when unscoped.",
+                                  "example": 20000
                                 },
                                 "totalBilled": {
                                   "type": "number",
@@ -20413,7 +20589,7 @@
             "Schools"
           ],
           "summary": "Get aggregated payments summary for a school",
-          "description": "Returns summary cards and per-student payment rows for the specified school, grouped into Fully Paid, Partially Paid, and Overdue categories.\n",
+          "description": "Returns summary cards and per-student payment rows for the specified school, grouped into Fully Paid, Partially Paid, and Overdue categories, for one academic period (the active one unless `academicPeriod` is given). Debt left over from earlier periods is carried forward as `arrears` and counts toward what a student owes, so a student is only FULLY_PAID once this term's fees and any arrears are settled. Categories are decided on `amountOutstanding` (this period's balance + arrears): FULLY_PAID when nothing is due, PARTIALLY_PAID when something is due and something was paid this period, OVERDUE otherwise.\n",
           "security": [
             {
               "bearerAuth": []
@@ -20428,6 +20604,15 @@
                 "type": "string"
               },
               "description": "ID of the school (School ObjectId)"
+            },
+            {
+              "in": "query",
+              "name": "academicPeriod",
+              "required": false,
+              "schema": {
+                "type": "string"
+              },
+              "description": "Academic period ObjectId to report on. Defaults to the school's active period. 404 if it is not the school's."
             }
           ],
           "responses": {
@@ -20452,13 +20637,38 @@
                               "period": {
                                 "type": "object",
                                 "nullable": true,
-                                "description": "Active academic period the figures are scoped to. Null when the school has no active period, in which case all periods are included.\n",
+                                "description": "Academic period the figures are scoped to. Null when the school has no periods, in which case all fees are included.\n",
                                 "properties": {
                                   "id": {
                                     "type": "string"
                                   },
                                   "name": {
                                     "type": "string"
+                                  }
+                                }
+                              },
+                              "totals": {
+                                "type": "object",
+                                "description": "Sums across all three categories.",
+                                "properties": {
+                                  "studentCount": {
+                                    "type": "integer"
+                                  },
+                                  "totalBilled": {
+                                    "type": "number",
+                                    "format": "float"
+                                  },
+                                  "totalPaid": {
+                                    "type": "number",
+                                    "format": "float"
+                                  },
+                                  "totalArrears": {
+                                    "type": "number",
+                                    "format": "float"
+                                  },
+                                  "totalOutstanding": {
+                                    "type": "number",
+                                    "format": "float"
                                   }
                                 }
                               },
@@ -20483,22 +20693,32 @@
                                     "totalAmount": {
                                       "type": "number",
                                       "format": "float",
-                                      "description": "Headline figure for the category card. Amount collected for FULLY_PAID and PARTIALLY_PAID; amount still outstanding for OVERDUE, where nothing has been collected by definition.\n"
+                                      "description": "Legacy headline figure, kept for older clients: `totalPaid` for FULLY_PAID and PARTIALLY_PAID, `totalOutstanding` for OVERDUE. Prefer the explicit fields below.\n"
                                     },
                                     "totalPaid": {
                                       "type": "number",
                                       "format": "float",
-                                      "description": "Total amount paid by students in this category"
+                                      "description": "Collected this period from students in this category"
+                                    },
+                                    "totalBilled": {
+                                      "type": "number",
+                                      "format": "float",
+                                      "description": "This period's fees for students in this category"
+                                    },
+                                    "totalArrears": {
+                                      "type": "number",
+                                      "format": "float",
+                                      "description": "Carried forward from earlier periods for students in this category"
                                     },
                                     "totalOwed": {
                                       "type": "number",
                                       "format": "float",
-                                      "description": "Total amount owed by students in this category"
+                                      "description": "`totalBilled + totalArrears`"
                                     },
                                     "totalOutstanding": {
                                       "type": "number",
                                       "format": "float",
-                                      "description": "`max(0, totalOwed - totalPaid)` for this category"
+                                      "description": "Still due (sum of each student's `amountOutstanding`)"
                                     },
                                     "studentCount": {
                                       "type": "integer",
@@ -20509,6 +20729,9 @@
                                       "items": {
                                         "type": "object",
                                         "properties": {
+                                          "studentId": {
+                                            "type": "string"
+                                          },
                                           "studentName": {
                                             "type": "string"
                                           },
@@ -20519,12 +20742,27 @@
                                           "amountOwed": {
                                             "type": "number",
                                             "format": "float",
-                                            "description": "Total amount owed by the student"
+                                            "description": "`amountBilled + arrears`"
+                                          },
+                                          "amountBilled": {
+                                            "type": "number",
+                                            "format": "float",
+                                            "description": "This period's fees"
                                           },
                                           "amountPaid": {
                                             "type": "number",
                                             "format": "float",
-                                            "description": "Total amount paid by the student"
+                                            "description": "Paid toward this period's fees"
+                                          },
+                                          "arrears": {
+                                            "type": "number",
+                                            "format": "float",
+                                            "description": "Still owed from earlier periods"
+                                          },
+                                          "amountOutstanding": {
+                                            "type": "number",
+                                            "format": "float",
+                                            "description": "This period's balance + arrears"
                                           }
                                         }
                                       }
